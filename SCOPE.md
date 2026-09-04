@@ -26,14 +26,15 @@ built to see through clouds. Owls see in the dark; so does SAR.
 - **Propagation:** satellite.js (SGP4)
 - **Rendering:** deck.gl over a MapLibre GL basemap (OpenFreeMap vector tiles — free, no API key)
 - **Testing:** Vitest + React Testing Library; UI smoke tests for the map wiring
-- **CI/CD:** GitHub Actions — lint/test/build on push, deploy to GitHub Pages,
-  scheduled daily TLE refresh workflow. Fully automated: merge → production.
+- **CI:** GitHub Actions — lint/test/build on push; scheduled daily TLE refresh workflow
+- **Hosting:** https://nebulosa.misaki.fi — owner-managed host (pm2, same pattern as
+  sibling projects); deploy picks up main, including TLE data refresh commits
 - **License:** MIT
 
 ## Features
 
 ### M0 — skeleton
-Vite scaffold, CI pipeline green, Pages deploy live from day one (walking skeleton).
+Vite scaffold, CI pipeline green, site live at nebulosa.misaki.fi from day one (walking skeleton).
 
 ### M1 — MVP
 - All 8 satellites: current position + ground track (±1 orbit), color-coded by orbit family
