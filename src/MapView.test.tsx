@@ -2,7 +2,7 @@ import { render } from '@testing-library/react'
 import { MapboxOverlay } from '@deck.gl/mapbox'
 import { Map as MapLibre } from 'maplibre-gl'
 import { epochOf } from './elements'
-import { strix1, strix9 } from './fixtures'
+import { strix1, strix9 } from './test/fixtures'
 import { MapView } from './MapView'
 import { satelliteFrom } from './orbit'
 

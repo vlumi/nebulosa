@@ -1,5 +1,5 @@
 import { epochOf } from './elements'
-import { strix1, strix9 } from './fixtures'
+import { strix1, strix9 } from './test/fixtures'
 import { buildLayers, FAMILY_COLORS } from './layers'
 import { satelliteFrom } from './orbit'
 

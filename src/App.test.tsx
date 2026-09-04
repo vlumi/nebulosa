@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import App from './App'
-import { strix1, strix9 } from './fixtures'
+import { strix1, strix9 } from './test/fixtures'
 
 vi.mock('maplibre-gl', () => ({
   Map: vi.fn(function () { return { addControl: vi.fn(), remove: vi.fn() } }),
