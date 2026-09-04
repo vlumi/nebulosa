@@ -1,6 +1,6 @@
 import { epochOf } from './elements'
 import { satelliteFrom } from './orbit'
-import { lookAt, passesOver, upcomingPasses } from './passes'
+import { computePasses, lookAt, passesOver, upcomingPasses } from './passes'
 import { strix1, strix9 } from '../test/fixtures'
 
 const tokyo = { lat: 35.68, lon: 139.69 }
@@ -44,4 +44,17 @@ test('a pass already in progress keeps its true rise time', () => {
   expect(Math.abs(inProgress.peakMs - first.peakMs)).toBeLessThan(2000)
   expect(inProgress.endMs).toBeCloseTo(first.endMs, -3)
   expect(passesOver(sat, tokyo, new Date(first.endMs + 60_000), 24)[0].startMs).toBeGreaterThan(first.endMs)
+})
+
+test('a pass request computes the same list as the direct call', () => {
+  const from = epochOf(strix1)
+  const direct = upcomingPasses([strix1, strix9].map(satelliteFrom), tokyo, from, 12)
+  const viaRequest = computePasses({
+    id: 1,
+    elements: [strix1, strix9],
+    location: tokyo,
+    fromMs: from.getTime(),
+    hours: 12,
+  })
+  expect(viaRequest).toEqual(direct)
 })

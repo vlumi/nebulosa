@@ -71,7 +71,7 @@ test('showing a pass selects the satellite without touching the clock; going to 
   render(<App />)
   const passes = within(await screen.findByRole('complementary', { name: 'Passes' }))
   expect(passes.getByText(/Passes over 35.68°N 139.69°E/)).toBeInTheDocument()
-  const firstRow = passes.getAllByRole('listitem')[0]
+  const firstRow = (await passes.findAllByRole('listitem'))[0]
 
   await userEvent.click(firstRow.querySelector('button')!)
   expect(screen.getAllByRole('button', { pressed: true })).toHaveLength(1)
@@ -93,7 +93,7 @@ test('selecting a satellite narrows the pass list to it until the filter is turn
   render(<App />)
   const panel = within(screen.getByRole('complementary', { name: 'Constellation' }))
   const passes = within(await screen.findByRole('complementary', { name: 'Passes' }))
-  const all = passes.getAllByRole('listitem').length
+  const all = (await passes.findAllByRole('listitem')).length
   expect(all).toBeGreaterThan(1)
   expect(passes.queryByRole('checkbox')).toBeNull()
 
@@ -110,7 +110,7 @@ test('the minimum-elevation filter drops low passes', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
   render(<App />)
   const passes = within(await screen.findByRole('complementary', { name: 'Passes' }))
-  const all = passes.getAllByRole('listitem').length
+  const all = (await passes.findAllByRole('listitem')).length
   await userEvent.selectOptions(passes.getByRole('combobox', { name: 'Minimum elevation' }), '45')
   const high = passes.queryAllByRole('listitem')
   expect(high.length).toBeLessThan(all)

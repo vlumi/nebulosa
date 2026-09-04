@@ -1,5 +1,6 @@
 import { ecfToLookAngles, eciToEcf, gstime, propagate } from 'satellite.js'
-import type { Satellite } from './orbit'
+import type { Omm } from './elements'
+import { satelliteFrom, type Satellite } from './orbit'
 
 const RAD = Math.PI / 180
 const DEG = 180 / Math.PI
@@ -122,4 +123,17 @@ function finish(
 
 export function upcomingPasses(satellites: Satellite[], location: Location, from: Date, hours = 24): Pass[] {
   return satellites.flatMap((sat) => passesOver(sat, location, from, hours)).sort((a, b) => a.startMs - b.startMs)
+}
+
+/** A pass computation as sent to the worker: plain data only, so it survives structured cloning. */
+export interface PassRequest {
+  id: number
+  elements: Omm[]
+  location: Location
+  fromMs: number
+  hours: number
+}
+
+export function computePasses({ elements, location, fromMs, hours }: PassRequest): Pass[] {
+  return upcomingPasses(elements.map(satelliteFrom), location, new Date(fromMs), hours)
 }
