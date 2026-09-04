@@ -11,7 +11,7 @@ Unofficial demo project; not affiliated with Synspective.
 
 See [SCOPE.md](SCOPE.md) for the plan. Live at [nebulosa.misaki.fi](https://nebulosa.misaki.fi).
 
-![StriX-3 selected: its orbit details inline in the panel, its track highlighted and the map centered on it, the other eight dimmed](docs/screenshots/2026-09-04-m3.png)
+![A pass of StriX-8 over Tokyo picked from the passes list: the clock paused at the pass peak, the satellite beside the observer pin, its orbit details in the panel](docs/screenshots/2026-09-04-m4.png)
 
 Earlier captures, one per milestone, are kept in [docs/screenshots](docs/screenshots/README.md).
 
