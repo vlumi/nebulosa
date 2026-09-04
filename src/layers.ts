@@ -1,6 +1,7 @@
 import type { Layer } from '@deck.gl/core'
 import { PathLayer, ScatterplotLayer, SolidPolygonLayer, TextLayer } from '@deck.gl/layers'
-import { groundTrack, positionAt, type LonLat, type OrbitFamily, type Satellite } from './orbit'
+import { formatOffset } from './clock'
+import { nearestSample, positionAt, trackSamples, type LonLat, type OrbitFamily, type Satellite, type TrackSample } from './orbit'
 import { nightPolygon } from './sun'
 
 export type Rgb = [number, number, number]
@@ -17,7 +18,14 @@ export interface SatelliteDatum {
 }
 
 export interface TrackDatum extends SatelliteDatum {
+  samples: TrackSample[]
+}
+
+interface SegmentDatum extends SatelliteDatum {
   path: LonLat[]
+  half: 'past' | 'future'
+  /** 0 at the satellite, 1 at the oldest point of the flown half. */
+  age: number
 }
 
 interface PositionDatum extends SatelliteDatum {
@@ -25,12 +33,70 @@ interface PositionDatum extends SatelliteDatum {
   lonLat: LonLat
 }
 
+/** A point on a track under the pointer, with the moment the satellite is there. */
+export interface Hover {
+  noradId: number
+  lonLat: LonLat
+  timeMs: number
+}
+
 export function trackData(satellites: Satellite[], time: Date): TrackDatum[] {
-  return satellites.map((sat) => ({ path: groundTrack(sat, time), noradId: sat.omm.NORAD_CAT_ID, family: sat.family }))
+  return satellites.map((sat) => ({ samples: trackSamples(sat, time), noradId: sat.omm.NORAD_CAT_ID, family: sat.family }))
+}
+
+export function hoverAt(track: TrackDatum, lonLat: LonLat): Hover {
+  const sample = track.samples[nearestSample(track.samples, lonLat)]
+  return { noradId: track.noradId, lonLat: sample.lonLat, timeMs: sample.timeMs }
+}
+
+const TAIL_CHUNKS = 60
+/** Share of the flown half over which the tail fades from full to floor; flat beyond it. */
+const TAIL_FADE_SPAN = 0.12
+
+/**
+ * The track split at `now`. The half ahead is one segment; the flown half is a run of chunks with
+ * increasing `age`, so it can fade out behind the satellite. Neighbours share a boundary point.
+ */
+function segmentsOf(track: TrackDatum, nowMs: number): SegmentDatum[] {
+  const i = track.samples.findIndex((s) => s.timeMs > nowMs)
+  const split = i === -1 ? track.samples.length : i
+  const path = track.samples.map((s) => s.lonLat)
+  const past = path.slice(0, split + 1)
+  const segments: SegmentDatum[] = []
+  const chunkSize = Math.max(2, Math.ceil(past.length / TAIL_CHUNKS))
+  for (let start = 0; start < past.length - 1; start += chunkSize - 1) {
+    const chunk = past.slice(start, start + chunkSize)
+    const age = 1 - (start + chunk.length - 1) / (past.length - 1)
+    segments.push({ ...track, half: 'past', age, path: chunk })
+  }
+  const future = path.slice(Math.max(0, split - 1))
+  if (future.length > 1) segments.push({ ...track, half: 'future', age: 0, path: future })
+  return segments
+}
+
+const ALPHA = {
+  selected: { ahead: 255, oldest: 130 },
+  normal: { ahead: 200, oldest: 40 },
+  dimmed: { ahead: 40, oldest: 12 },
+}
+const WIDTH = { selected: 3, normal: 1.5, dimmed: 1.5 }
+
+/** Smoothstep from 0 at the satellite to 1 at TAIL_FADE_SPAN of the way back, then 1. */
+function tailFade(age: number): number {
+  const t = Math.min(1, age / TAIL_FADE_SPAN)
+  return t * t * (3 - 2 * t)
 }
 
 /** `selected` is a NORAD catalog number; everything else is dimmed while one is set. */
-export function buildLayers(satellites: Satellite[], tracks: TrackDatum[], now: Date, selected: number | null = null): Layer[] {
+export function buildLayers(
+  satellites: Satellite[],
+  tracks: TrackDatum[],
+  now: Date,
+  selected: number | null = null,
+  hover: Hover | null = null,
+): Layer[] {
+  const nowMs = now.getTime()
+  const segments = tracks.flatMap((track) => segmentsOf(track, nowMs))
   const positions: PositionDatum[] = satellites.flatMap((sat) => {
     const p = positionAt(sat, now)
     if (!p) return []
@@ -38,25 +104,27 @@ export function buildLayers(satellites: Satellite[], tracks: TrackDatum[], now: 
   })
   const emphasis = (d: SatelliteDatum): 'selected' | 'dimmed' | 'normal' =>
     selected === null ? 'normal' : d.noradId === selected ? 'selected' : 'dimmed'
-  const alpha = { selected: 255, normal: 160, dimmed: 50 }
-  const color = (d: SatelliteDatum): Rgba => [...FAMILY_COLORS[d.family], alpha[emphasis(d)]]
+  const color = (d: SatelliteDatum, alpha: number): Rgba => [...FAMILY_COLORS[d.family], alpha]
 
-  return [
+  const layers: Layer[] = [
     new SolidPolygonLayer<LonLat[]>({
       id: 'night',
       data: [nightPolygon(now)],
       getPolygon: (d) => d,
-      getFillColor: [0, 0, 0, 110],
+      getFillColor: [0, 4, 20, 90],
       pickable: false,
     }),
-    new PathLayer<TrackDatum>({
+    new PathLayer<SegmentDatum>({
       id: 'tracks',
-      data: tracks,
+      data: segments,
       pickable: true,
       wrapLongitude: true,
       getPath: (d) => d.path,
-      getColor: color,
-      getWidth: (d) => (emphasis(d) === 'selected' ? 3 : 1.5),
+      getColor: (d) => {
+        const { ahead, oldest } = ALPHA[emphasis(d)]
+        return color(d, Math.round(ahead + (oldest - ahead) * tailFade(d.age)))
+      },
+      getWidth: (d) => WIDTH[emphasis(d)],
       widthUnits: 'pixels',
       updateTriggers: { getColor: selected, getWidth: selected },
     }),
@@ -65,7 +133,7 @@ export function buildLayers(satellites: Satellite[], tracks: TrackDatum[], now: 
       data: positions,
       pickable: true,
       getPosition: (d) => d.lonLat,
-      getFillColor: color,
+      getFillColor: (d) => color(d, emphasis(d) === 'dimmed' ? 50 : 255),
       getLineColor: [11, 13, 20],
       stroked: true,
       lineWidthMinPixels: 1.5,
@@ -86,4 +154,34 @@ export function buildLayers(satellites: Satellite[], tracks: TrackDatum[], now: 
       updateTriggers: { getColor: selected },
     }),
   ]
+
+  if (hover) {
+    const name = satellites.find((s) => s.omm.NORAD_CAT_ID === hover.noradId)?.omm.OBJECT_NAME ?? ''
+    const at = new Date(hover.timeMs).toISOString().slice(11, 19)
+    layers.push(
+      new ScatterplotLayer<Hover>({
+        id: 'hover-marker',
+        data: [hover],
+        getPosition: (d) => d.lonLat,
+        getFillColor: [255, 255, 255],
+        getRadius: 4,
+        radiusUnits: 'pixels',
+      }),
+      new TextLayer<Hover>({
+        id: 'hover-label',
+        data: [hover],
+        getPosition: (d) => d.lonLat,
+        getText: () => `${name} · ${at} UTC · ${formatOffset(hover.timeMs, nowMs)}`,
+        getColor: [214, 217, 224],
+        getSize: 12,
+        getPixelOffset: [0, 16],
+        background: true,
+        getBackgroundColor: [11, 13, 20, 220],
+        backgroundPadding: [6, 3],
+        fontFamily: 'system-ui, sans-serif',
+      }),
+    )
+  }
+
+  return layers
 }

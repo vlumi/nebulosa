@@ -34,13 +34,37 @@ export function positionAt(sat: Satellite, date: Date): GeoPoint | null {
   return { lon: degreesLong(geo.longitude), lat: degreesLat(geo.latitude), altKm: geo.height }
 }
 
+export interface TrackSample {
+  lonLat: LonLat
+  timeMs: number
+}
+
 /** One orbit before to one orbit after `center`; longitudes stay in [-180, 180], the renderer wraps. */
-export function groundTrack(sat: Satellite, center: Date, stepSeconds = 30): LonLat[] {
+export function trackSamples(sat: Satellite, center: Date, stepSeconds = 30): TrackSample[] {
   const halfSpanMs = sat.periodMinutes * 60_000
-  const path: LonLat[] = []
+  const samples: TrackSample[] = []
   for (let t = center.getTime() - halfSpanMs; t <= center.getTime() + halfSpanMs; t += stepSeconds * 1000) {
     const p = positionAt(sat, new Date(t))
-    if (p) path.push([p.lon, p.lat])
+    if (p) samples.push({ lonLat: [p.lon, p.lat], timeMs: t })
   }
-  return path
+  return samples
+}
+
+export function groundTrack(sat: Satellite, center: Date, stepSeconds = 30): LonLat[] {
+  return trackSamples(sat, center, stepSeconds).map((s) => s.lonLat)
+}
+
+/** Index of the sample closest to `lonLat`, measured in degrees with longitude wrapped. */
+export function nearestSample(samples: TrackSample[], [lon, lat]: LonLat): number {
+  let best = 0
+  let bestDistance = Infinity
+  samples.forEach(({ lonLat: [sLon, sLat] }, i) => {
+    const dLon = Math.min(Math.abs(sLon - lon), 360 - Math.abs(sLon - lon)) * Math.cos((lat * Math.PI) / 180)
+    const d = dLon * dLon + (sLat - lat) * (sLat - lat)
+    if (d < bestDistance) {
+      bestDistance = d
+      best = i
+    }
+  })
+  return best
 }

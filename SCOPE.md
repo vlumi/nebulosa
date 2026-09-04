@@ -58,6 +58,7 @@ Vite scaffold, CI pipeline green, site live at nebulosa.misaki.fi from day one (
 - Per-satellite panel: inclination, period, altitude, eccentricity, epoch — decoded
   into human-readable form from the elements
 - Selecting a satellite from the list also centers the map on its current position
+- Esc clears the selection
 
 ### M4 — passes
 - Pick a location on the map (default: Tokyo) → upcoming passes per satellite

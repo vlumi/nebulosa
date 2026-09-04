@@ -2,12 +2,12 @@ import { MapboxOverlay } from '@deck.gl/mapbox'
 import { Map as MapLibre, NavigationControl, setWorkerUrl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
-import { useEffect, useMemo, useRef } from 'react'
-import { buildLayers, trackData, type SatelliteDatum } from './layers'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { buildLayers, hoverAt, trackData, type Hover, type SatelliteDatum, type TrackDatum } from './layers'
 import type { Satellite } from './orbit'
 import { useThrottled } from './useThrottled'
 
-const BASEMAP = 'https://tiles.openfreemap.org/styles/dark'
+const BASEMAP = 'https://tiles.openfreemap.org/styles/fiord'
 
 // MapLibre 6 resolves its worker relative to its own script URL, which a bundled app does not provide.
 setWorkerUrl(maplibreWorkerUrl)
@@ -26,6 +26,8 @@ export function MapView({ satellites, now, selected, onSelect }: Props) {
   useEffect(() => {
     select.current = onSelect
   }, [onSelect])
+  const [hover, setHover] = useState<Hover | null>(null)
+  const currentTracks = useRef<TrackDatum[]>([])
 
   useEffect(() => {
     const map = new MapLibre({
@@ -40,6 +42,11 @@ export function MapView({ satellites, now, selected, onSelect }: Props) {
       layers: [],
       pickingRadius: 8,
       onClick: (info) => select.current((info.object as SatelliteDatum | undefined)?.noradId ?? null),
+      onHover: (info) => {
+        const over = info.layer?.id === 'tracks' ? (info.object as SatelliteDatum | undefined) : undefined
+        const track = over && currentTracks.current.find((t) => t.noradId === over.noradId)
+        setHover(track && info.coordinate ? hoverAt(track, info.coordinate as [number, number]) : null)
+      },
       getCursor: ({ isHovering, isDragging }) => (isDragging ? 'grabbing' : isHovering ? 'pointer' : 'grab'),
     })
     map.addControl(overlay.current)
@@ -55,8 +62,12 @@ export function MapView({ satellites, now, selected, onSelect }: Props) {
   const tracks = useMemo(() => trackData(satellites, new Date(trackMinute * 60_000)), [satellites, trackMinute])
 
   useEffect(() => {
-    overlay.current?.setProps({ layers: buildLayers(satellites, tracks, now, selected) })
-  }, [satellites, tracks, now, selected])
+    currentTracks.current = tracks
+  }, [tracks])
+
+  useEffect(() => {
+    overlay.current?.setProps({ layers: buildLayers(satellites, tracks, now, selected, hover) })
+  }, [satellites, tracks, now, selected, hover])
 
   return <div ref={container} className="map" />
 }
