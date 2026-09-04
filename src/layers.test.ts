@@ -67,3 +67,13 @@ test('hovering a track adds a marker and a label with the time at that point', (
   const { getText } = layers[5].props as unknown as { getText: () => string }
   expect(getText()).toMatch(/^STRIX-1 · \d\d:\d\d:\d\d UTC · −1 h 2\d min$/)
 })
+
+test('a ghost draws a hollow marker where the satellite will be at the given time', () => {
+  const sats = [strix1].map(satelliteFrom)
+  const at = epochOf(strix1)
+  const later = at.getTime() + 15 * 60_000
+  const layers = buildLayers(sats, trackData(sats, at), at, null, null, { noradId: strix1.NORAD_CAT_ID, timeMs: later })
+  expect(layers.map((l) => l.id)).toEqual(['night', 'tracks', 'positions', 'labels', 'ghost', 'ghost-label'])
+  const { getText } = layers[5].props as unknown as { getText: () => string }
+  expect(getText()).toBe(`STRIX-1 · ${new Date(later).toISOString().slice(11, 16)} UTC`)
+})

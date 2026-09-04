@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { liveClock, scrubbedTo, simTime, withRate } from './clock'
 import { loadElements, type Omm } from './elements'
+import { type Ghost } from './layers'
 import { MapView, type Focus } from './MapView'
 import { satelliteFrom } from './orbit'
 import { Panel } from './Panel'
@@ -19,6 +20,7 @@ function App() {
   const [selected, setSelected] = useState<number | null>(null)
   const [focus, setFocus] = useState<Focus | null>(null)
   const [location, setLocation] = useState<Location>(TOKYO)
+  const [ghost, setGhost] = useState<Ghost | null>(null)
   const [clock, setClock] = useState(() => liveClock(Date.now()))
   const now = useNow()
   const time = useSmoothedTime(simTime(clock, now.getTime()))
@@ -31,14 +33,22 @@ function App() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setSelected(null)
+      if (e.key === 'Escape') {
+        setSelected(null)
+        setGhost(null)
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  const selectFromList = (noradId: number | null, timeMs?: number) => {
+  const select = (noradId: number | null) => {
     setSelected(noradId)
+    setGhost(null)
+  }
+
+  const selectFromList = (noradId: number | null, timeMs?: number) => {
+    select(noradId)
     if (noradId !== null) setFocus({ noradId, seq: (focus?.seq ?? 0) + 1, timeMs })
   }
 
@@ -47,8 +57,8 @@ function App() {
     [loaded],
   )
 
-  // Passes are looked up from the displayed minute; a minute of drift is far below their resolution.
-  const passMinute = Math.floor(time.getTime() / 60_000)
+  // Passes are listed from real time, so scrubbing the clock never changes the list under the reader.
+  const passMinute = Math.floor(now.getTime() / 60_000)
   const passes = useMemo(
     () => upcomingPasses(satellites, location, new Date(passMinute * 60_000), 24),
     [satellites, location, passMinute],
@@ -56,6 +66,11 @@ function App() {
   const familyOf = (noradId: number) => satellites.find((s) => s.omm.NORAD_CAT_ID === noradId)?.family ?? 'mid-inclination'
 
   const showPass = (pass: Pass) => {
+    selectFromList(pass.noradId, pass.peakMs)
+    setGhost({ noradId: pass.noradId, timeMs: pass.peakMs })
+  }
+
+  const goToPass = (pass: Pass) => {
     const realMs = Date.now()
     setClock(withRate(scrubbedTo(clock, pass.peakMs, realMs), 0, realMs))
     selectFromList(pass.noradId, pass.peakMs)
@@ -72,10 +87,11 @@ function App() {
           satellites={satellites}
           now={time}
           selected={selected}
-          onSelect={setSelected}
+          onSelect={select}
           focus={focus}
           location={location}
           onLocationChange={setLocation}
+          ghost={ghost}
         />
         <aside className="panel" aria-label="Constellation">
           {loaded === null && <p>Loading orbital elements…</p>}
@@ -86,7 +102,7 @@ function App() {
         </aside>
         {satellites.length > 0 && (
           <aside className="passes" aria-label="Passes">
-            <PassList location={location} passes={passes} familyOf={familyOf} onPick={showPass} />
+            <PassList location={location} passes={passes} familyOf={familyOf} onShow={showPass} onGoTo={goToPass} />
           </aside>
         )}
         <TimeBar clock={clock} now={now} onChange={setClock} />
