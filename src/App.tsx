@@ -13,7 +13,7 @@ function App() {
   const [loaded, setLoaded] = useState<Loaded>(null)
   const [selected, setSelected] = useState<number | null>(null)
   const [clock, setClock] = useState(() => liveClock(Date.now()))
-  const now = useNow(clock.rate > 1 ? 200 : 1000)
+  const now = useNow(clock.rate > 1 ? 0 : 1000)
   const time = useMemo(() => new Date(simTime(clock, now.getTime())), [clock, now])
 
   useEffect(() => {
