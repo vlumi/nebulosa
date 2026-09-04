@@ -31,3 +31,9 @@ test('the night polygon covers the antisolar point and leaves the subsolar point
   expect(inside(sun.lon, sun.lat)).toBe(false)
   expect(polygon[0]).toEqual(polygon[polygon.length - 1])
 })
+
+test('the night polygon closes over whichever pole is dark: south in June, north in December', () => {
+  const closing = (iso: string) => nightPolygon(new Date(iso)).at(-2)![1]
+  expect(closing('2026-06-21T12:00:00Z')).toBe(-85)
+  expect(closing('2026-12-21T12:00:00Z')).toBe(85)
+})
