@@ -10,6 +10,10 @@ A static single-page app. Once a day a cron job on the host fetches the orbital 
 
 Grouped by domain, not by kind of file. `orbit/` is everything about the satellites and the sky: elements, propagation and tracks, passes, the Sun, human-readable orbit descriptions. `time/` is the clock model, its easing, and the time bar. `map/` is the MapLibre and deck.gl wiring and the layer builders. `panels/` is the two side panels and their disclosure. `shared/` is what several domains use: formatting, the colour palette, two small hooks. `App.tsx` at the root holds the state and wires the domains together. Tests sit next to what they test; fixtures live in `test/`. Dependencies point inward: panels and map use orbit and shared, time and orbit use only shared, shared uses nothing but a type from orbit.
 
+## State
+
+Two zustand stores. `store.ts` holds what the reader has chosen: the selection (satellite, ghost, active pass, probe), the observer location, the pass filters, the track span, the clock, and which panels are open; its actions, such as showing a pass or the layered Esc, are plain functions and are unit-tested without React. `time/frame.ts` holds the two per-frame values, real time and the eased displayed time, written by one animation loop; only the map and the time bar subscribe to it, and a minute-rounded selector serves the age displays and the pass computation, so the rest of the tree never re-renders for a frame. Data loading and the passes worker stay in `App.tsx`, which passes lists to prop-driven components.
+
 ## Data
 
 **Source.** CelesTrak's GP API returns the current mean elements per satellite. The request asks for CCSDS OMM in JSON rather than the classic two-line element set: TLE has a five-digit catalog number field, the catalog passed 99999 in July 2026, and objects numbered from 100000 up, StriX-9 among them, are simply absent from TLE output. OMM has no such limit and gives the epoch as an ISO timestamp.
