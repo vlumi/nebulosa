@@ -9,5 +9,33 @@ as the satellites, the iconic owl of Finland, and Latin for "cloudy": an owl nam
 
 Unofficial demo project; not affiliated with Synspective.
 
-See [SCOPE.md](SCOPE.md) for the plan. Live site, screenshots, and setup instructions
-land with the MVP.
+See [SCOPE.md](SCOPE.md) for the plan. Live at [nebulosa.misaki.fi](https://nebulosa.misaki.fi);
+screenshots land with the MVP.
+
+## Develop
+
+```sh
+npm install
+npm run dev      # Vite dev server
+npm test         # Vitest
+npm run lint     # oxlint
+npm run tles     # refresh data/tles.json from CelesTrak
+```
+
+## Deploy
+
+Static files behind nginx over HTTPS (Let's Encrypt / certbot). [`deploy.sh`](deploy.sh)
+pulls, builds, and swaps the result into the web root; the root is asked on first run and
+saved to `.deploy.local`.
+
+```sh
+./deploy.sh                          # pull, build, publish
+./deploy.sh --no-pull                # build the working tree as-is
+WEBROOT=/some/other/path ./deploy.sh # override the publish dir
+```
+
+[`nginx.conf.example`](nginx.conf.example) is the server block it's served from.
+
+## License
+
+MIT. Orbital data from [CelesTrak](https://celestrak.org/).

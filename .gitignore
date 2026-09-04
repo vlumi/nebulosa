@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Orbital elements: fetched, never committed (npm run tles)
+data/
