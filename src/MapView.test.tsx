@@ -4,10 +4,10 @@ import { Map as MapLibre } from 'maplibre-gl'
 import { epochOf } from './elements'
 import { strix1, strix9 } from './test/fixtures'
 import { MapView } from './MapView'
-import { satelliteFrom } from './orbit'
+import { positionAt, satelliteFrom } from './orbit'
 
 const { mapInstance, overlayInstance } = vi.hoisted(() => ({
-  mapInstance: { addControl: vi.fn(), remove: vi.fn() },
+  mapInstance: { addControl: vi.fn(), remove: vi.fn(), easeTo: vi.fn() },
   overlayInstance: { setProps: vi.fn() },
 }))
 vi.mock('maplibre-gl', () => ({
@@ -50,4 +50,17 @@ test('mounts a MapLibre map with a deck.gl overlay and feeds it the layers', () 
 
   unmount()
   expect(mapInstance.remove).toHaveBeenCalled()
+})
+
+test('a focus request eases the map to the satellite\'s current position', () => {
+  const sats = [strix1, strix9].map(satelliteFrom)
+  const at = epochOf(strix9)
+  const { rerender } = render(<MapView satellites={sats} now={at} selected={null} onSelect={vi.fn()} focus={null} />)
+  expect(mapInstance.easeTo).not.toHaveBeenCalled()
+
+  rerender(<MapView satellites={sats} now={at} selected={strix9.NORAD_CAT_ID} onSelect={vi.fn()} focus={{ noradId: strix9.NORAD_CAT_ID, seq: 1 }} />)
+  const expected = positionAt(sats[1], at)!
+  const { center } = mapInstance.easeTo.mock.lastCall![0]
+  expect(center[0]).toBeCloseTo(expected.lon, 6)
+  expect(center[1]).toBeCloseTo(expected.lat, 6)
 })
