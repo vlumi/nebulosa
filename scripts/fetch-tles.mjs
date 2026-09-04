@@ -1,7 +1,8 @@
-import { writeFile } from 'node:fs/promises'
+import { mkdir, rename, writeFile } from 'node:fs/promises'
+import { dirname } from 'node:path'
 
 const SOURCE = 'https://celestrak.org/NORAD/elements/gp.php?NAME=STRIX&FORMAT=TLE'
-const OUTPUT = 'data/tles.json'
+const output = process.argv[2] ?? 'public/data/tles.json'
 
 const response = await fetch(SOURCE)
 if (!response.ok) throw new Error(`CelesTrak responded ${response.status}`)
@@ -16,5 +17,8 @@ for (let i = 0; i < lines.length; i += 3) {
 }
 satellites.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
 
-await writeFile(OUTPUT, JSON.stringify(satellites, null, 2) + '\n')
-console.log(`${satellites.length} satellites → ${OUTPUT}`)
+await mkdir(dirname(output), { recursive: true })
+const partial = `${output}.tmp`
+await writeFile(partial, JSON.stringify(satellites, null, 2) + '\n')
+await rename(partial, output)
+console.log(`${satellites.length} satellites → ${output}`)
