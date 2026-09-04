@@ -101,6 +101,18 @@ main > .map {
   flex: none;
 }
 
+.keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.7rem;
+  font-size: 0.75rem;
+}
+
+.keys kbd {
+  font: inherit;
+  color: var(--text);
+}
+
 .satellites li.dimmed,
 .passes li.dimmed {
   opacity: 0.45;
@@ -365,6 +377,10 @@ main > .map {
 
   .satellites ul {
     max-height: 45vh;
+  }
+
+  .keys {
+    display: none;
   }
 
   .satellites:has(.summary[aria-expanded='true']),

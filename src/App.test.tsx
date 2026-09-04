@@ -140,3 +140,39 @@ test('on a phone, opening one panel closes the other', async () => {
   expect(passesToggle).toHaveAttribute('aria-expanded', 'true')
   expect(satellitesToggle).toHaveAttribute('aria-expanded', 'false')
 })
+
+test('keyboard: arrows pick satellites, Shift-arrows pick passes, Enter goes there, Space pauses, S folds the panel, Esc clears', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
+  render(<App />)
+  const panel = within(screen.getByRole('complementary', { name: 'Constellation' }))
+  await panel.findByText('STRIX-1')
+  const passes = within(screen.getByRole('complementary', { name: 'Passes' }))
+  await passes.findAllByRole('listitem')
+
+  await userEvent.keyboard('{ArrowDown}')
+  expect(panel.getByRole('button', { name: /STRIX-1/ })).toHaveAttribute('aria-pressed', 'true')
+  await userEvent.keyboard('{ArrowDown}')
+  expect(panel.getByRole('button', { name: /STRIX-9/ })).toHaveAttribute('aria-pressed', 'true')
+  await userEvent.keyboard('{ArrowUp}')
+  expect(panel.getByRole('button', { name: /STRIX-1/ })).toHaveAttribute('aria-pressed', 'true')
+
+  await userEvent.keyboard('{Shift>}{ArrowDown}{/Shift}')
+  const rows = passes.getAllByRole('listitem')
+  expect(rows[0].querySelector('button')).toHaveAttribute('aria-current', 'true')
+  expect(screen.getByRole('button', { name: 'Live' })).toBeDisabled()
+
+  await userEvent.keyboard('{Enter}')
+  expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument()
+  await userEvent.keyboard(' ')
+  expect(screen.getByRole('button', { name: 'Pause' })).toBeInTheDocument()
+  await userEvent.keyboard('l')
+  expect(screen.getByRole('button', { name: 'Live' })).toBeDisabled()
+
+  await userEvent.keyboard('s')
+  expect(panel.getByRole('button', { name: /^Satellites/ })).toHaveAttribute('aria-expanded', 'false')
+  await userEvent.keyboard('s')
+  expect(panel.getByRole('button', { name: /^Satellites/ })).toHaveAttribute('aria-expanded', 'true')
+
+  await userEvent.keyboard('{Escape}')
+  expect(panel.queryAllByRole('button', { pressed: true })).toHaveLength(0)
+})
