@@ -24,6 +24,7 @@ function App() {
   const [focus, setFocus] = useState<Focus | null>(null)
   const [location, setLocation] = useState<Location>(TOKYO)
   const [ghost, setGhost] = useState<Ghost | null>(null)
+  const [activePass, setActivePass] = useState<Pass | null>(null)
   const [horizonHours, setHorizonHours] = useState(24)
   const [minElevationDeg, setMinElevationDeg] = useState(0)
   const [onlySelected, setOnlySelected] = useState(true)
@@ -56,6 +57,7 @@ function App() {
       if (e.key === 'Escape') {
         setSelected(null)
         setGhost(null)
+        setActivePass(null)
       }
     }
     window.addEventListener('keydown', onKey)
@@ -65,6 +67,7 @@ function App() {
   const select = (noradId: number | null) => {
     setSelected(noradId)
     setGhost(null)
+    setActivePass(null)
   }
 
   const selectFromList = (noradId: number | null, timeMs?: number) => {
@@ -90,12 +93,14 @@ function App() {
   const showPass = (pass: Pass) => {
     selectFromList(pass.noradId, pass.peakMs)
     setGhost({ noradId: pass.noradId, timeMs: pass.peakMs })
+    setActivePass(pass)
   }
 
   const goToPass = (pass: Pass) => {
     const realMs = Date.now()
     setClock(withRate(scrubbedTo(clock, pass.peakMs, realMs), 0, realMs))
     selectFromList(pass.noradId, pass.peakMs)
+    setActivePass(pass)
   }
 
   return (
@@ -172,6 +177,7 @@ function App() {
                   familyOf={familyOf}
                   onShow={showPass}
                   onGoTo={goToPass}
+                  activePass={activePass}
                   now={now}
                 />
               </Disclosure>
