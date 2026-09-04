@@ -13,6 +13,10 @@
     "elements": "node scripts/fetch-elements.mjs"
   },
   "dependencies": {
+    "@deck.gl/core": "^9.3.11",
+    "@deck.gl/layers": "^9.3.11",
+    "@deck.gl/mapbox": "^9.3.11",
+    "maplibre-gl": "^6.7.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "satellite.js": "^7.1.0"

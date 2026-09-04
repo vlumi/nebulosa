@@ -9,8 +9,9 @@ as the satellites, the iconic owl of Finland, and Latin for "cloudy": an owl nam
 
 Unofficial demo project; not affiliated with Synspective.
 
-See [SCOPE.md](SCOPE.md) for the plan. Live at [nebulosa.misaki.fi](https://nebulosa.misaki.fi);
-screenshots land with the MVP.
+See [SCOPE.md](SCOPE.md) for the plan. Live at [nebulosa.misaki.fi](https://nebulosa.misaki.fi).
+
+![Ground tracks of the nine StriX satellites over a dark world map](docs/screenshot.png)
 
 ## Develop
 
