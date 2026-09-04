@@ -16,10 +16,10 @@ screenshots land with the MVP.
 
 ```sh
 npm install
+npm run tles     # fetch public/data/tles.json from CelesTrak (not committed; do this first)
 npm run dev      # Vite dev server
 npm test         # Vitest
 npm run lint     # oxlint
-npm run tles     # refresh data/tles.json from CelesTrak
 ```
 
 ## Deploy

@@ -24,4 +24,4 @@ dist-ssr
 *.sw?
 
 # Orbital elements: fetched, never committed (npm run tles)
-data/
+public/data/
