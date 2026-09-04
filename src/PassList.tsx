@@ -71,6 +71,7 @@ export function PassList({
             {utcDay(pass.startMs) !== utcDay(i === 0 ? now.getTime() : passes[i - 1].startMs) && (
               <div className="day muted">{dayLabel(pass.startMs)} UTC</div>
             )}
+            <div className="row">
             <button type="button" onClick={() => onShow(pass)} title="Show where the satellite will be at the peak">
               <span className="swatch" style={{ background: `rgb(${FAMILY_COLORS[familyOf(pass.noradId)].join(' ')})` }} />
               <span className="time">
@@ -84,6 +85,7 @@ export function PassList({
             <button type="button" className="goto" aria-label={`Go to ${pass.name} pass at ${hhmm(pass.peakMs)}`} onClick={() => onGoTo(pass)}>
               ⏱
             </button>
+            </div>
           </li>
         ))}
       </ol>
