@@ -23,5 +23,5 @@ dist-ssr
 *.sln
 *.sw?
 
-# Orbital elements: fetched, never committed (npm run tles)
+# Orbital elements: fetched, never committed (npm run elements)
 public/data/

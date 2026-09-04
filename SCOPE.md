@@ -11,16 +11,18 @@ built to see through clouds. Owls see in the dark; so does SAR.
 
 ## Data
 
-- **Source:** CelesTrak GP API — `https://celestrak.org/NORAD/elements/gp.php?NAME=STRIX&FORMAT=TLE`
-- **Constellation (as of 2026-09):** 8 satellites, two distinct orbit families:
+- **Source:** CelesTrak GP API — `https://celestrak.org/NORAD/elements/gp.php?NAME=STRIX&FORMAT=JSON`
+  (CCSDS OMM as JSON, not TLE: the catalog passed 99999 in July 2026 and newer objects, StriX-9
+  included, never appear in the fixed-width TLE format)
+- **Constellation (as of 2026-09):** 9 satellites, two distinct orbit families:
   - StriX-1, -2, -3 — ~97.5° sun-synchronous (NORAD 53815, 62406, 59224)
-  - StriX-4 … -8 — ~42–50° mid-inclination (NORAD 60352, 65971, 68291, 69177, 69701)
-- **Refresh strategy:** a cron job on the host fetches TLEs daily into the web root as
-  `data/tles.json`, which the app loads at runtime from its own origin; the first deploy fetches
+  - StriX-4 … -9 — ~38–50° mid-inclination (NORAD 60352, 65971, 68291, 69177, 69701, 100561)
+- **Refresh strategy:** a cron job on the host fetches the elements daily into the web root as
+  `data/elements.json`, which the app loads at runtime from its own origin; the first deploy fetches
   once to get started. Nothing is committed: CelesTrak is the single source. No backend, no
   browser-side dependency on CelesTrak, respectful of their rate limits. Optional in-browser
   "refresh now" live fetch as fallback.
-- TLE epoch age shown in the UI (stale elements = degraded accuracy; honesty in the UI).
+- Element epoch age shown in the UI (stale elements = degraded accuracy; honesty in the UI).
 
 ## Tech
 
@@ -40,7 +42,7 @@ Vite scaffold, CI pipeline green, site live at nebulosa.misaki.fi from day one (
 
 ### M1 — MVP
 - All 8 satellites: current position + ground track (±1 orbit), color-coded by orbit family
-- TLE decode: name, NORAD ID, epoch age
+- Element decode: name, NORAD ID, epoch age
 - Deployed, linkable, README with screenshot
 
 ### M2 — time
@@ -50,7 +52,7 @@ Vite scaffold, CI pipeline green, site live at nebulosa.misaki.fi from day one (
 
 ### M3 — detail
 - Per-satellite panel: inclination, period, altitude, eccentricity, epoch — decoded
-  into human-readable form from the TLE
+  into human-readable form from the elements
 - Select/highlight a satellite; dim the rest
 
 ### M4 — passes
@@ -60,6 +62,6 @@ Vite scaffold, CI pipeline green, site live at nebulosa.misaki.fi from day one (
 
 ## Non-goals
 
-- No backend, no accounts, no persistence beyond the static TLE snapshot
+- No backend, no accounts, no persistence beyond the fetched element set
 - No imaging/tasking simulation (SAR swath modeling is out — real antenna parameters aren't public)
 - No claim of operational accuracy — this is a visualization, not flight dynamics software

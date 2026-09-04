@@ -3,7 +3,7 @@
 Owls see in the dark. So does SAR.
 
 Ground-track visualizer for the Synspective StriX SAR constellation, built from public
-orbital data (CelesTrak GP). Named for *Strix nebulosa*, the great grey owl — same genus
+orbital data (CelesTrak GP, in OMM form). Named for *Strix nebulosa*, the great grey owl — same genus
 as the satellites, the iconic owl of Finland, and Latin for "cloudy": an owl named
 *cloudy*, for satellites built to see through clouds.
 
@@ -16,7 +16,7 @@ screenshots land with the MVP.
 
 ```sh
 npm install
-npm run tles     # fetch public/data/tles.json from CelesTrak (not committed; do this first)
+npm run elements # fetch public/data/elements.json from CelesTrak (not committed; do this first)
 npm run dev      # Vite dev server
 npm test         # Vitest
 npm run lint     # oxlint

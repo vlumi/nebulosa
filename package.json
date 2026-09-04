@@ -10,11 +10,12 @@
     "lint": "oxlint",
     "test": "vitest run",
     "preview": "vite preview",
-    "tles": "node scripts/fetch-tles.mjs"
+    "elements": "node scripts/fetch-elements.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "satellite.js": "^7.1.0"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.1",

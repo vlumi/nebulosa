@@ -7,7 +7,7 @@
 #
 # The web root must be writable by the deploying user; it is asked on first run and
 # saved to .deploy.local (git-ignored). nginx serves $WEBROOT/current and $WEBROOT/data.
-# The first run also installs the daily TLE refresh in the user's crontab.
+# The first run also installs the daily orbital-element refresh in the user's crontab.
 set -euo pipefail
 
 cd "$(dirname "$0")"
@@ -39,13 +39,13 @@ release="$WEBROOT/releases/$(git rev-parse --short HEAD)"
 rm -rf "$release"
 mkdir -p "$WEBROOT/releases"
 cp -R dist "$release"
-[[ -e "$WEBROOT/data/tles.json" ]] || node scripts/fetch-tles.mjs "$WEBROOT/data/tles.json"
+[[ -e "$WEBROOT/data/elements.json" ]] || node scripts/fetch-elements.mjs "$WEBROOT/data/elements.json"
 ln -sfn "releases/$(basename "$release")" "$WEBROOT/current"
 ls -1dt "$WEBROOT"/releases/* | tail -n +4 | xargs -r rm -rf
 
-fetch="$PWD/scripts/fetch-tles.mjs"
+fetch="$PWD/scripts/fetch-elements.mjs"
 if ! crontab -l 2>/dev/null | grep -qF "$fetch"; then
-  cron_line="17 3 * * * $(command -v node) $fetch $WEBROOT/data/tles.json >> $WEBROOT/fetch-tles.log 2>&1"
+  cron_line="17 3 * * * $(command -v node) $fetch $WEBROOT/data/elements.json >> $WEBROOT/fetch-elements.log 2>&1"
   { crontab -l 2>/dev/null || true; echo "$cron_line"; } | crontab -
   echo "Installed cron job: $cron_line"
 fi
