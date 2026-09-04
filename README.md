@@ -11,7 +11,7 @@ Unofficial demo project; not affiliated with Synspective.
 
 See [SCOPE.md](SCOPE.md) for the plan. Live at [nebulosa.misaki.fi](https://nebulosa.misaki.fi).
 
-![Nine StriX satellites with fading ground tracks and the night side shaded, over a blue-gray world map](docs/screenshots/2026-09-04-m2.png)
+![StriX-3 selected: its orbit details inline in the panel, its track highlighted and the map centered on it, the other eight dimmed](docs/screenshots/2026-09-04-m3.png)
 
 Earlier captures, one per milestone, are kept in [docs/screenshots](docs/screenshots/README.md).
 
