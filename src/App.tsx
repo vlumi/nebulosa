@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { liveClock, scrubbedTo, simTime, withRate } from './clock'
-import { loadElements, type Omm } from './elements'
 import { type Ghost } from './layers'
 import { MapView, type Focus } from './MapView'
 import { satelliteFrom } from './orbit'
 import { Panel } from './Panel'
 import { PassList } from './PassList'
-import { upcomingPasses, type Location, type Pass } from './passes'
+import { formatAge, loadElements, newestEpoch, type Omm } from './elements'
+import { formatLocation, upcomingPasses, type Location, type Pass } from './passes'
 import { TimeBar } from './TimeBar'
+import { useNarrow } from './useNarrow'
 import { useNow } from './useNow'
 import { useSmoothedTime } from './useSmoothedTime'
 
@@ -23,6 +24,7 @@ function App() {
   const [ghost, setGhost] = useState<Ghost | null>(null)
   const [clock, setClock] = useState(() => liveClock(Date.now()))
   const now = useNow()
+  const narrow = useNarrow()
   const time = useSmoothedTime(simTime(clock, now.getTime()))
 
   useEffect(() => {
@@ -93,18 +95,37 @@ function App() {
           onLocationChange={setLocation}
           ghost={ghost}
         />
+        <div className="dock">
         <aside className="panel" aria-label="Constellation">
-          {loaded === null && <p>Loading orbital elements…</p>}
-          {loaded && 'error' in loaded && <p role="alert">{loaded.error}</p>}
-          {satellites.length > 0 && (
-            <Panel satellites={satellites} now={now} selected={selected} onSelect={selectFromList} />
-          )}
+          <details open={!narrow}>
+            <summary>
+              Satellites
+              {satellites.length > 0 && (
+                <span className="muted">
+                  {' '}
+                  · {satellites.length} · elements {formatAge(newestEpoch(satellites.map((s) => s.omm)), now)} old
+                </span>
+              )}
+            </summary>
+            {loaded === null && <p>Loading orbital elements…</p>}
+            {loaded && 'error' in loaded && <p role="alert">{loaded.error}</p>}
+            {satellites.length > 0 && (
+              <Panel satellites={satellites} now={now} selected={selected} onSelect={selectFromList} />
+            )}
+          </details>
         </aside>
         {satellites.length > 0 && (
           <aside className="passes" aria-label="Passes">
-            <PassList location={location} passes={passes} familyOf={familyOf} onShow={showPass} onGoTo={goToPass} />
+            <details open={!narrow}>
+              <summary>
+                Passes over {formatLocation(location)}
+                <span className="muted"> · {passes.length}</span>
+              </summary>
+              <PassList location={location} passes={passes} familyOf={familyOf} onShow={showPass} onGoTo={goToPass} />
+            </details>
           </aside>
         )}
+        </div>
         <TimeBar clock={clock} now={now} onChange={setClock} />
       </main>
       <footer>

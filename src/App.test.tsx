@@ -23,7 +23,8 @@ test('lists the constellation from /data/elements.json with the epoch age', asyn
   const panel = within(screen.getByRole('complementary', { name: 'Constellation' }))
   expect(await panel.findByText('STRIX-1')).toBeInTheDocument()
   expect(panel.getByText('STRIX-9')).toBeInTheDocument()
-  expect(panel.getByText(/2 satellites · elements from 2026-09-03 20:40 UTC/)).toBeInTheDocument()
+  expect(panel.getByText(/Elements from 2026-09-03 20:40 UTC/)).toBeInTheDocument()
+  expect(panel.getByText(/· 2 · elements/)).toBeInTheDocument()
   expect(fetch).toHaveBeenCalledWith('/data/elements.json')
 })
 
@@ -58,7 +59,7 @@ test('showing a pass selects the satellite without touching the clock; going to 
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
   render(<App />)
   const passes = within(await screen.findByRole('complementary', { name: 'Passes' }))
-  expect(passes.getByRole('heading', { level: 2 })).toHaveTextContent('Passes over 35.68°N 139.69°E')
+  expect(passes.getByText(/Passes over 35.68°N 139.69°E/)).toBeInTheDocument()
   const firstRow = passes.getAllByRole('listitem')[0]
 
   await userEvent.click(firstRow.querySelector('button')!)

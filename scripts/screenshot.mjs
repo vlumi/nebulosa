@@ -5,6 +5,7 @@
 //   CHROME=/usr/bin/google-chrome WAIT_MS=30000 node scripts/screenshot.mjs out.png
 //   EVAL="document.querySelector('.panel button').click()" node scripts/screenshot.mjs out.png  # act first
 //   HOVER=1 node scripts/screenshot.mjs out.png    # sweep the pointer across the map first (surfaces hover errors)
+//   WIDTH=390 HEIGHT=844 node scripts/screenshot.mjs phone.png   # phone-sized viewport
 import { spawn } from 'node:child_process'
 import { writeFile } from 'node:fs/promises'
 
@@ -17,8 +18,8 @@ const chrome = process.env.CHROME ?? '/Applications/Google Chrome.app/Contents/M
 const waitMs = Number(process.env.WAIT_MS ?? 15_000)
 const evalJs = process.env.EVAL
 const hover = process.env.HOVER === '1'
-const width = 1400
-const height = 900
+const width = Number(process.env.WIDTH ?? 1400)
+const height = Number(process.env.HEIGHT ?? 900)
 
 const browser = spawn(chrome, [
   '--headless=new',
@@ -66,7 +67,7 @@ const send = (method, params = {}) =>
 
 try {
   await send('Runtime.enable')
-  await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false })
+  await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 800 })
   await send('Page.navigate', { url })
   await new Promise((resolve) => setTimeout(resolve, waitMs))
   if (evalJs) {

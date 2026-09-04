@@ -69,6 +69,11 @@ Vite scaffold, CI pipeline green, site live at nebulosa.misaki.fi from day one (
 - The panels are desktop boxes today and cover the map on a phone. Collapsible panels, a bottom
   sheet for the lists on narrow viewports, the time bar reduced to its essentials.
 
+### M6 — settings
+- Track length, past and future separately (one orbit each way today)
+- Pass filters: minimum elevation, per satellite
+- A date picker for the clock, to look at solstices or a launch day
+
 ## Non-goals
 
 - No backend, no accounts, no persistence beyond the fetched element set

@@ -30,8 +30,7 @@ export function Panel({ satellites, now, selected, onSelect }: Props) {
         })}
       </ul>
       <p className="muted">
-        {satellites.length} satellites · elements from {epoch.toISOString().slice(0, 16).replace('T', ' ')} UTC ·{' '}
-        {formatAge(epoch, now)} old
+        Elements from {epoch.toISOString().slice(0, 16).replace('T', ' ')} UTC · {formatAge(epoch, now)} old
       </p>
     </>
   )

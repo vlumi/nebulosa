@@ -16,8 +16,9 @@ const hhmm = (ms: number) => new Date(ms).toISOString().slice(11, 16)
 export function PassList({ location, passes, familyOf, onShow, onGoTo, limit = 10 }: Props) {
   return (
     <>
-      <h2>Passes over {formatLocation(location)}</h2>
-      <p className="muted">Next 24 h from now, line of sight above the horizon. Drag the pin to move.</p>
+      <p className="muted">
+        Next 24 h from now over {formatLocation(location)}, line of sight above the horizon. Drag the pin to move.
+      </p>
       {passes.length === 0 && <p className="muted">None.</p>}
       <ol>
         {passes.slice(0, limit).map((pass) => (
