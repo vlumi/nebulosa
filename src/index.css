@@ -201,6 +201,24 @@ main > .map {
   list-style: none;
   padding: 0;
   margin: 0.5rem 0 0;
+  max-height: 50vh;
+  overflow: auto;
+}
+
+.pass-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 0.4rem;
+}
+
+.pass-controls select {
+  padding: 0.1rem 0.3rem;
+  border: 1px solid rgb(255 255 255 / 0.15);
+  border-radius: 0.25rem;
+  background: none;
+  color: inherit;
+  font: inherit;
 }
 
 .passes li {

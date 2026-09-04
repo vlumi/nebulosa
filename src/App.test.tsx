@@ -70,3 +70,21 @@ test('showing a pass selects the satellite without touching the clock; going to 
   expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Live' })).toBeEnabled()
 })
+
+test('selecting a satellite narrows the pass list to it until the filter is turned off', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
+  render(<App />)
+  const panel = within(screen.getByRole('complementary', { name: 'Constellation' }))
+  const passes = within(await screen.findByRole('complementary', { name: 'Passes' }))
+  const all = passes.getAllByRole('listitem').length
+  expect(all).toBeGreaterThan(1)
+  expect(passes.queryByRole('checkbox')).toBeNull()
+
+  await userEvent.click(panel.getByRole('button', { name: /STRIX-9/ }))
+  const narrowed = passes.getAllByRole('listitem')
+  expect(narrowed.length).toBeLessThan(all)
+  expect(narrowed.every((li) => li.textContent!.includes('STRIX-9'))).toBe(true)
+
+  await userEvent.click(passes.getByRole('checkbox', { name: /only STRIX-9/ }))
+  expect(passes.getAllByRole('listitem')).toHaveLength(all)
+})

@@ -22,6 +22,8 @@ function App() {
   const [focus, setFocus] = useState<Focus | null>(null)
   const [location, setLocation] = useState<Location>(TOKYO)
   const [ghost, setGhost] = useState<Ghost | null>(null)
+  const [horizonHours, setHorizonHours] = useState(24)
+  const [onlySelected, setOnlySelected] = useState(true)
   const [clock, setClock] = useState(() => liveClock(Date.now()))
   const now = useNow()
   const narrow = useNarrow()
@@ -61,10 +63,12 @@ function App() {
 
   // Passes are listed from real time, so scrubbing the clock never changes the list under the reader.
   const passMinute = Math.floor(now.getTime() / 60_000)
-  const passes = useMemo(
-    () => upcomingPasses(satellites, location, new Date(passMinute * 60_000), 24),
-    [satellites, location, passMinute],
+  const allPasses = useMemo(
+    () => upcomingPasses(satellites, location, new Date(passMinute * 60_000), horizonHours),
+    [satellites, location, passMinute, horizonHours],
   )
+  const selectedSatellite = satellites.find((s) => s.omm.NORAD_CAT_ID === selected)
+  const passes = selectedSatellite && onlySelected ? allPasses.filter((p) => p.noradId === selected) : allPasses
   const familyOf = (noradId: number) => satellites.find((s) => s.omm.NORAD_CAT_ID === noradId)?.family ?? 'mid-inclination'
 
   const showPass = (pass: Pass) => {
@@ -119,9 +123,20 @@ function App() {
             <details open={!narrow}>
               <summary>
                 Passes over {formatLocation(location)}
-                <span className="muted"> · {passes.length}</span>
+                <span className="muted"> · {passes.length} in {horizonHours} h</span>
               </summary>
-              <PassList location={location} passes={passes} familyOf={familyOf} onShow={showPass} onGoTo={goToPass} />
+              <PassList
+                location={location}
+                passes={passes}
+                horizonHours={horizonHours}
+                onHorizonChange={setHorizonHours}
+                selectedName={selectedSatellite?.omm.OBJECT_NAME}
+                onlySelected={onlySelected}
+                onOnlySelectedChange={setOnlySelected}
+                familyOf={familyOf}
+                onShow={showPass}
+                onGoTo={goToPass}
+              />
             </details>
           </aside>
         )}

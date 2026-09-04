@@ -24,7 +24,17 @@ test('lists passes with times, duration and max elevation; show and go-to are se
   const onGoTo = vi.fn()
   const passes = [pass('STRIX-1', 53815, 5, 47.4), pass('STRIX-9', 100561, 90, 12.2)]
   render(
-    <PassList location={{ lat: 35.68, lon: 139.69 }} passes={passes} familyOf={() => 'sun-synchronous'} onShow={onShow} onGoTo={onGoTo} />,
+    <PassList
+      location={{ lat: 35.68, lon: 139.69 }}
+      passes={passes}
+      horizonHours={24}
+      onHorizonChange={vi.fn()}
+      onlySelected={false}
+      onOnlySelectedChange={vi.fn()}
+      familyOf={() => 'sun-synchronous'}
+      onShow={onShow}
+      onGoTo={onGoTo}
+    />,
   )
   expect(screen.getByText(/over 35.68°N 139.69°E/)).toBeInTheDocument()
   const rows = screen.getAllByRole('listitem')
@@ -39,9 +49,29 @@ test('lists passes with times, duration and max elevation; show and go-to are se
   expect(onGoTo).toHaveBeenCalledWith(passes[1])
 })
 
-test('caps the list and says how many more there are', () => {
+test('shows every pass; the horizon and the selected-only filter are controls', async () => {
   const many = Array.from({ length: 13 }, (_, i) => pass('STRIX-1', 53815, i * 100, 30))
-  render(<PassList location={{ lat: 0, lon: 0 }} passes={many} familyOf={() => 'sun-synchronous'} onShow={vi.fn()} onGoTo={vi.fn()} limit={10} />)
-  expect(screen.getAllByRole('listitem')).toHaveLength(10)
-  expect(screen.getByText('and 3 more')).toBeInTheDocument()
+  const onHorizonChange = vi.fn()
+  const onOnlySelectedChange = vi.fn()
+  render(
+    <PassList
+      location={{ lat: 0, lon: 0 }}
+      passes={many}
+      horizonHours={24}
+      onHorizonChange={onHorizonChange}
+      selectedName="STRIX-1"
+      onlySelected={true}
+      onOnlySelectedChange={onOnlySelectedChange}
+      familyOf={() => 'sun-synchronous'}
+      onShow={vi.fn()}
+      onGoTo={vi.fn()}
+    />,
+  )
+  expect(screen.getAllByRole('listitem')).toHaveLength(13)
+  await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Hours ahead' }), '48')
+  expect(onHorizonChange).toHaveBeenCalledWith(48)
+  const only = screen.getByRole('checkbox', { name: /only STRIX-1/ })
+  expect(only).toBeChecked()
+  await userEvent.click(only)
+  expect(onOnlySelectedChange).toHaveBeenCalledWith(false)
 })
