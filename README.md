@@ -6,7 +6,7 @@ Ground-track visualizer for the Synspective StriX SAR constellation, built from 
 
 Unofficial demo project; not affiliated with Synspective.
 
-Live at [nebulosa.misaki.fi](https://nebulosa.misaki.fi). [SCOPE.md](SCOPE.md) is the plan it was built from.
+Live at [nebulosa.misaki.fi](https://nebulosa.misaki.fi). [SCOPE.md](SCOPE.md) is the plan it was built from; [ARCHITECTURE.md](ARCHITECTURE.md) explains how it works and the maths behind it.
 
 ![StriX-3 selected with a half-orbit tail and a two-orbit lead, the pass list filtered to it and to 30° or higher, the time bar with its date picker](docs/screenshots/2026-09-04-m6.png)
 
