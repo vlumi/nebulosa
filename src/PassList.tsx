@@ -14,12 +14,18 @@ interface Props {
   familyOf: (noradId: number) => OrbitFamily
   onShow: (pass: Pass) => void
   onGoTo: (pass: Pass) => void
-  /** Reference for the day marker: passes not on this UTC date are marked with +N d. */
+  /** Reference for the day separators: a row is inserted where the UTC date changes from today's. */
   now: Date
 }
 
 const hhmm = (ms: number) => new Date(ms).toISOString().slice(11, 16)
 const utcDay = (ms: number) => Math.floor(ms / 86_400_000)
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const dayLabel = (ms: number) => {
+  const d = new Date(ms)
+  return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`
+}
 
 export function PassList({
   location,
@@ -34,7 +40,6 @@ export function PassList({
   onGoTo,
   now,
 }: Props) {
-  const today = utcDay(now.getTime())
   return (
     <>
       <p className="muted">
@@ -61,13 +66,15 @@ export function PassList({
       </div>
       {passes.length === 0 && <p className="muted">None.</p>}
       <ol>
-        {passes.map((pass) => (
+        {passes.map((pass, i) => (
           <li key={`${pass.noradId}-${pass.startMs}`}>
+            {utcDay(pass.startMs) !== utcDay(i === 0 ? now.getTime() : passes[i - 1].startMs) && (
+              <div className="day muted">{dayLabel(pass.startMs)} UTC</div>
+            )}
             <button type="button" onClick={() => onShow(pass)} title="Show where the satellite will be at the peak">
               <span className="swatch" style={{ background: `rgb(${FAMILY_COLORS[familyOf(pass.noradId)].join(' ')})` }} />
               <span className="time">
                 {hhmm(pass.startMs)}–{hhmm(pass.endMs)}
-                {utcDay(pass.startMs) !== today && <span className="muted"> +{utcDay(pass.startMs) - today} d</span>}
               </span>
               {pass.name}
               <span className="muted">

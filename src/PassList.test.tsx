@@ -78,7 +78,7 @@ test('shows every pass; the horizon and the selected-only filter are controls', 
   expect(onOnlySelectedChange).toHaveBeenCalledWith(false)
 })
 
-test('passes on a later UTC day carry a day marker', () => {
+test('a separator row marks where the list crosses into a later UTC day', () => {
   const passes = [pass('STRIX-1', 53815, 60, 30), pass('STRIX-1', 53815, 60 + 24 * 60, 30)]
   render(
     <PassList
@@ -95,6 +95,6 @@ test('passes on a later UTC day carry a day marker', () => {
     />,
   )
   const rows = screen.getAllByRole('listitem')
-  expect(rows[0]).not.toHaveTextContent('+1 d')
-  expect(rows[1]).toHaveTextContent('13:00–13:08 +1 d')
+  expect(rows[0]).not.toHaveTextContent('UTC')
+  expect(rows[1]).toHaveTextContent('Sat 5 Sep UTC13:00–13:08')
 })

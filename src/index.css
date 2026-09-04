@@ -224,6 +224,13 @@ main > .map {
 .passes li {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+}
+
+.passes .day {
+  flex: 1 1 100%;
+  margin: 0.4rem 0 0.15rem;
+  font-size: 0.8rem;
 }
 
 .passes button {
