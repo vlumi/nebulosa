@@ -64,11 +64,13 @@ export function MapView({ satellites, now, selected, onSelect, focus = null, loc
       pickingRadius: 8,
       onClick: (info) => select.current((info.object as SatelliteDatum | undefined)?.noradId ?? null),
       onHover: (info) => {
-        const track =
-          info.layer?.id === 'ghost-track'
-            ? (info.object as TrackDatum | undefined)
+        const over = info.object as SatelliteDatum | undefined
+        const track = !over
+          ? undefined
+          : info.layer?.id === 'ghost-track'
+            ? (over as TrackDatum)
             : info.layer?.id === 'tracks'
-              ? currentTracks.current.find((t) => t.noradId === (info.object as SatelliteDatum).noradId)
+              ? currentTracks.current.find((t) => t.noradId === over.noradId)
               : undefined
         setHover(track && info.coordinate ? hoverAt(track, info.coordinate as [number, number]) : null)
       },
