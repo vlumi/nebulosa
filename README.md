@@ -2,20 +2,31 @@
 
 Owls see in the dark. So does SAR.
 
-Ground-track visualizer for the Synspective StriX SAR constellation, built from public
-orbital data (CelesTrak GP, in OMM form). Named for *Strix nebulosa*, the great grey owl — same genus
-as the satellites, the iconic owl of Finland, and Latin for "cloudy": an owl named
-*cloudy*, for satellites built to see through clouds.
+Ground-track visualizer for the Synspective StriX SAR constellation, built from public orbital data (CelesTrak GP, in OMM form). Named for *Strix nebulosa*, the great grey owl: same genus as the satellites, the iconic owl of Finland, and Latin for "cloudy", so an owl named *cloudy* for satellites built to see through clouds.
 
 Unofficial demo project; not affiliated with Synspective.
 
-See [SCOPE.md](SCOPE.md) for the plan. Live at [nebulosa.misaki.fi](https://nebulosa.misaki.fi).
+Live at [nebulosa.misaki.fi](https://nebulosa.misaki.fi). [SCOPE.md](SCOPE.md) is the plan it was built from.
 
 ![StriX-3 selected with a half-orbit tail and a two-orbit lead, the pass list filtered to it and to 30° or higher, the time bar with its date picker](docs/screenshots/2026-09-04-m6.png)
 
 <img src="docs/screenshots/2026-09-04-m5-phone.png" alt="The same site on a phone: the satellite and pass panels docked as collapsible bars over the map" width="260">
 
 Earlier captures, one per milestone, are kept in [docs/screenshots](docs/screenshots/README.md).
+
+## What it shows
+
+- Every StriX satellite's current position and ground track, propagated with SGP4 from the latest mean elements, colored by orbit family: sun-synchronous in yellow, mid-inclination in cyan. The flown part of a track fades behind the satellite, so the direction of travel is readable at a glance.
+- A clock: live, paused, or playing at up to 600×, with a slider over ±12 hours and a date picker. Positions, tracks and the day/night terminator follow it.
+- Hover a track to see when the satellite is at that point. Tap a satellite, its label, its track, or its row in the list to select it; the list shows launch, orbit, altitude, period, eccentricity and element epoch, and the rest dims.
+- Passes over a location: drag the pin, and the panel lists every line-of-sight pass over the next 6 to 48 hours with rise, set and peak elevation, filterable by minimum elevation and to the selected satellite. Show a pass to see where the satellite will be at its peak, or jump the clock to it.
+- The element epoch and its age are always visible, because stale elements mean degraded accuracy.
+
+Passes are geometric visibility above the horizon, not imaging opportunities; SAR swath modelling is out of scope, since the real antenna parameters aren't public.
+
+## Data
+
+The orbital elements come from the CelesTrak GP API as CCSDS OMM in JSON, not TLE: the satellite catalog passed 99999 in July 2026, and objects numbered from 100000 up, StriX-9 among them, never appear in the fixed-width TLE format. Nothing is committed to this repository; a cron job on the host refreshes `data/elements.json` daily, and the app loads it from its own origin. As of September 2026 the constellation has nine satellites in orbit: StriX-1 to -3 in roughly 97.5° sun-synchronous orbits, StriX-4 to -9 at 38° to 50°.
 
 ## Develop
 
@@ -27,18 +38,17 @@ npm test         # Vitest
 npm run lint     # oxlint
 ```
 
+Stack: React, TypeScript and Vite; satellite.js for SGP4; deck.gl over a MapLibre GL basemap with OpenFreeMap tiles; Vitest and React Testing Library. `scripts/screenshot.mjs` captures the site with headless Chrome over the DevTools protocol and reports page errors, with options to act on the page first, sweep the pointer across the map, and pick a viewport size.
+
 ## Deploy
 
-Static files behind nginx over HTTPS (Let's Encrypt / certbot). The web root is owned by the
-deploying user, so nothing needs root after the one-time setup:
+Static files behind nginx over HTTPS (Let's Encrypt / certbot). The web root is owned by the deploying user, so nothing needs root after the one-time setup:
 
 ```sh
 sudo install -d -o "$USER" -g "$USER" /var/www/nebulosa
 ```
 
-[`deploy.sh`](deploy.sh) pulls, builds, copies the result to `releases/<sha>` under the web
-root, and points the `current` symlink at it; the last three releases are kept. The web root
-is asked on first run and saved to `.deploy.local`.
+[`deploy.sh`](deploy.sh) pulls, builds, copies the result to `releases/<sha>` under the web root, and points the `current` symlink at it; the last three releases are kept. The web root is asked on first run and saved to `.deploy.local`.
 
 ```sh
 ./deploy.sh                          # pull, build, publish
@@ -46,12 +56,10 @@ is asked on first run and saved to `.deploy.local`.
 WEBROOT=/some/other/path ./deploy.sh # override the web root
 ```
 
-The orbital elements are not part of a release. A daily cron job fetches them into `data/`
-under the web root, which nginx serves at `/data/`; the first deploy fetches them once to get
-started and installs that job in the deploying user's crontab.
+The orbital elements are not part of a release. A daily cron job fetches them into `data/` under the web root, which nginx serves at `/data/`; the first deploy fetches them once to get started and installs that job in the deploying user's crontab.
 
 [`nginx.conf.example`](nginx.conf.example) is the server block it's served from.
 
 ## License
 
-MIT. Orbital data from [CelesTrak](https://celestrak.org/).
+MIT. Orbital data from [CelesTrak](https://celestrak.org/). Map tiles from [OpenFreeMap](https://openfreemap.org/), © OpenStreetMap contributors.
