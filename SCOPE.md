@@ -41,8 +41,9 @@ built to see through clouds. Owls see in the dark; so does SAR.
 Vite scaffold, CI pipeline green, site live at nebulosa.misaki.fi from day one (walking skeleton).
 
 ### M1 — MVP
-- All 8 satellites: current position + ground track (±1 orbit), color-coded by orbit family
+- All satellites: current position + ground track (±1 orbit), color-coded by orbit family
 - Element decode: name, NORAD ID, epoch age
+- Tap a satellite, its label or its track (on the map or in the list) to highlight it and dim the rest
 - Deployed, linkable, README with screenshot
 
 ### M2 — time
@@ -53,7 +54,7 @@ Vite scaffold, CI pipeline green, site live at nebulosa.misaki.fi from day one (
 ### M3 — detail
 - Per-satellite panel: inclination, period, altitude, eccentricity, epoch — decoded
   into human-readable form from the elements
-- Select/highlight a satellite; dim the rest
+- Selecting a satellite from the list also centers the map on its current position
 
 ### M4 — passes
 - Pick a location on the map (default: Tokyo) → upcoming passes per satellite

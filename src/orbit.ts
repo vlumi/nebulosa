@@ -34,22 +34,13 @@ export function positionAt(sat: Satellite, date: Date): GeoPoint | null {
   return { lon: degreesLong(geo.longitude), lat: degreesLat(geo.latitude), altKm: geo.height }
 }
 
-/** One orbit before to one orbit after `center`, split where the path crosses the antimeridian. */
-export function groundTrack(sat: Satellite, center: Date, stepSeconds = 30): LonLat[][] {
+/** One orbit before to one orbit after `center`; longitudes stay in [-180, 180], the renderer wraps. */
+export function groundTrack(sat: Satellite, center: Date, stepSeconds = 30): LonLat[] {
   const halfSpanMs = sat.periodMinutes * 60_000
-  const segments: LonLat[][] = []
-  let current: LonLat[] = []
-  let previousLon: number | null = null
+  const path: LonLat[] = []
   for (let t = center.getTime() - halfSpanMs; t <= center.getTime() + halfSpanMs; t += stepSeconds * 1000) {
     const p = positionAt(sat, new Date(t))
-    if (!p) continue
-    if (previousLon !== null && Math.abs(p.lon - previousLon) > 180) {
-      segments.push(current)
-      current = []
-    }
-    current.push([p.lon, p.lat])
-    previousLon = p.lon
+    if (p) path.push([p.lon, p.lat])
   }
-  if (current.length) segments.push(current)
-  return segments
+  return path
 }

@@ -71,11 +71,29 @@ main > .map {
   margin: 0 0 0.5rem;
 }
 
-.panel li {
+.panel li.dimmed {
+  opacity: 0.45;
+}
+
+.panel button {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  width: 100%;
+  padding: 0.1rem 0.4rem;
+  margin: 0 -0.4rem;
+  border: 0;
+  border-radius: 0.25rem;
+  background: none;
+  color: inherit;
+  font: inherit;
   white-space: nowrap;
+  cursor: pointer;
+}
+
+.panel button:hover,
+.panel button[aria-pressed='true'] {
+  background: rgb(255 255 255 / 0.08);
 }
 
 .swatch {

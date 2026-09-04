@@ -3,7 +3,7 @@ import { Map as MapLibre, NavigationControl, setWorkerUrl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useEffect, useRef } from 'react'
-import { buildLayers } from './layers'
+import { buildLayers, type SatelliteDatum } from './layers'
 import type { Satellite } from './orbit'
 
 const BASEMAP = 'https://tiles.openfreemap.org/styles/dark'
@@ -11,9 +11,20 @@ const BASEMAP = 'https://tiles.openfreemap.org/styles/dark'
 // MapLibre 6 resolves its worker relative to its own script URL, which a bundled app does not provide.
 setWorkerUrl(maplibreWorkerUrl)
 
-export function MapView({ satellites, now }: { satellites: Satellite[]; now: Date }) {
+interface Props {
+  satellites: Satellite[]
+  now: Date
+  selected: number | null
+  onSelect: (noradId: number | null) => void
+}
+
+export function MapView({ satellites, now, selected, onSelect }: Props) {
   const container = useRef<HTMLDivElement>(null)
   const overlay = useRef<MapboxOverlay>(null)
+  const select = useRef(onSelect)
+  useEffect(() => {
+    select.current = onSelect
+  }, [onSelect])
 
   useEffect(() => {
     const map = new MapLibre({
@@ -23,7 +34,12 @@ export function MapView({ satellites, now }: { satellites: Satellite[]; now: Dat
       zoom: 1.5,
     })
     map.addControl(new NavigationControl({ showCompass: false }), 'top-right')
-    overlay.current = new MapboxOverlay({ interleaved: false, layers: [] })
+    overlay.current = new MapboxOverlay({
+      interleaved: false,
+      layers: [],
+      onClick: (info) => select.current((info.object as SatelliteDatum | undefined)?.noradId ?? null),
+      getCursor: ({ isHovering, isDragging }) => (isDragging ? 'grabbing' : isHovering ? 'pointer' : 'grab'),
+    })
     map.addControl(overlay.current)
     return () => {
       overlay.current = null
@@ -32,8 +48,8 @@ export function MapView({ satellites, now }: { satellites: Satellite[]; now: Dat
   }, [])
 
   useEffect(() => {
-    overlay.current?.setProps({ layers: buildLayers(satellites, now) })
-  }, [satellites, now])
+    overlay.current?.setProps({ layers: buildLayers(satellites, now, selected) })
+  }, [satellites, now, selected])
 
   return <div ref={container} className="map" />
 }
