@@ -9,3 +9,4 @@ The README shows the latest; the rest stay here as a record of how the site grew
 | 2026-09-04 | [m2](2026-09-04-m2.png) | M2: time controls (live, play/pause, speed, ±12 h slider), day/night terminator, tracks fading behind each satellite, fiord basemap |
 | 2026-09-04 | [m3](2026-09-04-m3.png) | M3: a selected satellite with its details inline (launch, orbit, altitude, period, eccentricity, element epoch), the map centered on it, the rest dimmed |
 | 2026-09-04 | [m4](2026-09-04-m4.png) | M4: observer pin over Tokyo, the next 24 h of passes across the constellation, one pass picked with the clock paused at its peak and the map centered on the satellite |
+| 2026-09-04 | [m5-phone](2026-09-04-m5-phone.png) | M5 on a phone (390×844): the two panels docked as collapsible bars, passes opened and scrolling, the map still visible, the time bar wrapped across the bottom |

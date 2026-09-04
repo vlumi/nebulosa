@@ -13,6 +13,8 @@ See [SCOPE.md](SCOPE.md) for the plan. Live at [nebulosa.misaki.fi](https://nebu
 
 ![A pass of StriX-8 over Tokyo picked from the passes list: the clock paused at the pass peak, the satellite beside the observer pin, its orbit details in the panel](docs/screenshots/2026-09-04-m4.png)
 
+<img src="docs/screenshots/2026-09-04-m5-phone.png" alt="The same site on a phone: the satellite and pass panels docked as collapsible bars over the map" width="260">
+
 Earlier captures, one per milestone, are kept in [docs/screenshots](docs/screenshots/README.md).
 
 ## Develop
