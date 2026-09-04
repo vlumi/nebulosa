@@ -7,7 +7,8 @@ export const SHORTCUTS = [
   { keys: 'Space', does: 'play / pause' },
   { keys: 'L', does: 'live' },
   { keys: 'S P', does: 'panels' },
-  { keys: 'Esc', does: 'clear' },
+  { keys: 'O', does: 'only the selected satellite\u2019s passes' },
+  { keys: 'Esc', does: 'clear the pass, then the satellite' },
 ] as const
 
 const FORM_FIELDS = new Set(['INPUT', 'SELECT', 'TEXTAREA'])

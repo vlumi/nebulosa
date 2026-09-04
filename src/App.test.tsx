@@ -173,6 +173,14 @@ test('keyboard: arrows pick satellites, Shift-arrows pick passes, Enter goes the
   await userEvent.keyboard('s')
   expect(panel.getByRole('button', { name: /^Satellites/ })).toHaveAttribute('aria-expanded', 'true')
 
+  await userEvent.keyboard('o')
+  expect(passes.getByRole('checkbox', { name: /only STRIX-1/ })).not.toBeChecked()
+  await userEvent.keyboard('o')
+  expect(passes.getByRole('checkbox', { name: /only STRIX-1/ })).toBeChecked()
+
+  await userEvent.keyboard('{Escape}')
+  expect(passes.queryByRole('button', { current: true })).toBeNull()
+  expect(panel.getByRole('button', { name: /STRIX-1/ })).toHaveAttribute('aria-pressed', 'true')
   await userEvent.keyboard('{Escape}')
   expect(panel.queryAllByRole('button', { pressed: true })).toHaveLength(0)
 })

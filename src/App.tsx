@@ -110,11 +110,11 @@ function App() {
   }, [selection.probeMs, selectedSatellite])
 
   // The handler is registered once and reads the latest state through a ref.
-  const latest = useLatest({ satellites, passes, selection, clock, time, narrow, panelOpen, passesOpen })
+  const latest = useLatest({ satellites, passes, selection, clock, time, narrow, panelOpen, passesOpen, filters })
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (belongsToFocusedControl(e) || e.metaKey || e.ctrlKey || e.altKey) return
-      const { satellites, passes, selection, clock, time, narrow, panelOpen, passesOpen } = latest.current
+      const { satellites, passes, selection, clock, time, narrow, panelOpen, passesOpen, filters } = latest.current
       const realMs = Date.now()
       const satelliteIndex = satellites.findIndex((s) => s.omm.NORAD_CAT_ID === selection.noradId)
       const passIndex = passes.findIndex(
@@ -122,7 +122,12 @@ function App() {
       )
       switch (e.key) {
         case 'Escape':
-          setSelection(NOTHING)
+          // First the pass, ghost and probe; a second press clears the satellite too.
+          if (selection.activePass || selection.ghost || selection.probeMs !== null) {
+            setSelection({ ...NOTHING, noradId: selection.noradId })
+          } else {
+            setSelection(NOTHING)
+          }
           break
         case 'ArrowDown':
         case 'ArrowUp': {
@@ -160,6 +165,10 @@ function App() {
         case 'p':
         case 'P':
           togglePasses(!(passesOpen ?? !narrow))
+          break
+        case 'o':
+        case 'O':
+          if (selection.noradId !== null) setFilters({ ...filters, onlySelected: !filters.onlySelected })
           break
         default:
           return
