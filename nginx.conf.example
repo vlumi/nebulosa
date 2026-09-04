@@ -7,7 +7,7 @@
 # Layout under the web root (WEBROOT in deploy.sh, default /var/www/nebulosa), owned by
 # the deploying user:
 #   current -> releases/<sha>   flipped by deploy.sh
-#   data/tles.json              written daily by the host's cron job
+#   data/elements.json          written daily by the host's cron job
 
 server {
     listen 80;

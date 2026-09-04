@@ -10,7 +10,7 @@
     "lint": "oxlint",
     "test": "vitest run",
     "preview": "vite preview",
-    "tles": "node scripts/fetch-tles.mjs"
+    "elements": "node scripts/fetch-elements.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",
