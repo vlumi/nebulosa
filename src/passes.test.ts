@@ -34,3 +34,14 @@ test('upcoming passes across the constellation are sorted by start time', () => 
   expect(new Set(passes.map((p) => p.name))).toEqual(new Set(['STRIX-1', 'STRIX-9']))
   for (let i = 1; i < passes.length; i++) expect(passes[i].startMs).toBeGreaterThanOrEqual(passes[i - 1].startMs)
 })
+
+test('a pass already in progress keeps its true rise time', () => {
+  const sat = satelliteFrom(strix1)
+  const [first] = passesOver(sat, tokyo, epochOf(strix1), 24)
+  const midPass = new Date((first.startMs + first.endMs) / 2)
+  const [inProgress] = passesOver(sat, tokyo, midPass, 24)
+  expect(inProgress.startMs).toBeCloseTo(first.startMs, -3)
+  expect(Math.abs(inProgress.peakMs - first.peakMs)).toBeLessThan(2000)
+  expect(inProgress.endMs).toBeCloseTo(first.endMs, -3)
+  expect(passesOver(sat, tokyo, new Date(first.endMs + 60_000), 24)[0].startMs).toBeGreaterThan(first.endMs)
+})

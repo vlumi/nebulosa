@@ -48,6 +48,9 @@ function crossing(sat: Satellite, location: Location, lo: number, hi: number, th
   return (lo + hi) / 2
 }
 
+/** Longer than any low-Earth-orbit pass, so a pass in progress at `from` is found from its true rise. */
+const LOOKBACK_MS = 20 * 60_000
+
 export function passesOver(
   sat: Satellite,
   location: Location,
@@ -58,12 +61,13 @@ export function passesOver(
 ): Pass[] {
   const passes: Pass[] = []
   const stepMs = stepSeconds * 1000
+  const scanStartMs = from.getTime() - LOOKBACK_MS
   const endMs = from.getTime() + hours * 3_600_000
-  const initial = elevation(sat, location, from.getTime())
+  const initial = elevation(sat, location, scanStartMs)
   let current: { startMs: number; peakMs: number; peakElevation: number } | null =
-    initial > minElevationDeg ? { startMs: from.getTime(), peakMs: from.getTime(), peakElevation: initial } : null
+    initial > minElevationDeg ? { startMs: scanStartMs, peakMs: scanStartMs, peakElevation: initial } : null
 
-  for (let t = from.getTime() + stepMs; t <= endMs; t += stepMs) {
+  for (let t = scanStartMs + stepMs; t <= endMs; t += stepMs) {
     const el = elevation(sat, location, t)
     if (current === null && el > minElevationDeg) {
       current = { startMs: crossing(sat, location, t - stepMs, t, minElevationDeg, true), peakMs: t, peakElevation: el }
@@ -79,7 +83,7 @@ export function passesOver(
     }
   }
   if (current !== null) passes.push(finish(sat, location, current, endMs))
-  return passes
+  return passes.filter((pass) => pass.endMs > from.getTime())
 }
 
 function finish(
