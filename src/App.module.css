@@ -37,7 +37,7 @@
 }
 
 .passes[data-open] {
-  min-height: 11rem;
+  min-height: 14rem;
 }
 
 .satellites:not([data-open]),
