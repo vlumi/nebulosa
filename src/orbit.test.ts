@@ -1,6 +1,6 @@
 import { epochOf } from './elements'
 import { strix1, strix9 } from './test/fixtures'
-import { groundTrack, nearestSample, positionAt, satelliteFrom, trackSamples } from './orbit'
+import { nearestSample, positionAt, satelliteFrom, trackSamples } from './orbit'
 
 test('derives period and orbit family from the elements', () => {
   const s1 = satelliteFrom(strix1)
@@ -20,7 +20,7 @@ test('propagates to a low-Earth-orbit position at epoch', () => {
 
 test('ground track spans two orbits with longitudes kept in range', () => {
   const sat = satelliteFrom(strix9)
-  const path = groundTrack(sat, epochOf(strix9), 30)
+  const path = trackSamples(sat, epochOf(strix9), 30).map((s) => s.lonLat)
   expect(path.length).toBe(Math.floor((2 * sat.periodMinutes * 60) / 30) + 1)
   expect(path.some(([lon], i) => i > 0 && Math.abs(lon - path[i - 1][0]) > 180)).toBe(true)
   for (const [lon, lat] of path) {
@@ -35,7 +35,6 @@ test('track samples carry increasing timestamps 30 s apart around the center', (
   const samples = trackSamples(sat, center, 30)
   expect(samples[0].timeMs).toBe(center.getTime() - sat.periodMinutes * 60_000)
   for (let i = 1; i < samples.length; i++) expect(samples[i].timeMs - samples[i - 1].timeMs).toBe(30_000)
-  expect(samples.map((s) => s.lonLat)).toEqual(groundTrack(sat, center, 30))
 })
 
 test('nearest sample handles the antimeridian', () => {

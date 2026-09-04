@@ -48,25 +48,7 @@ export interface TrackSpan {
 export const DEFAULT_SPAN: TrackSpan = { pastOrbits: 1, futureOrbits: 1 }
 export const SPAN_CHOICES = [0.25, 0.5, 1, 2, 3] as const
 
-/** `span.pastOrbits` before to `span.futureOrbits` after `center`; longitudes stay in [-180, 180], the renderer wraps. */
-export function trackSamples(sat: Satellite, center: Date, stepSeconds = 30, span: TrackSpan = DEFAULT_SPAN): TrackSample[] {
-  const periodMs = sat.periodMinutes * 60_000
-  const samples: TrackSample[] = []
-  for (
-    let t = center.getTime() - span.pastOrbits * periodMs;
-    t <= center.getTime() + span.futureOrbits * periodMs;
-    t += stepSeconds * 1000
-  ) {
-    const p = positionAt(sat, new Date(t))
-    if (p) samples.push({ lonLat: [p.lon, p.lat], timeMs: t })
-  }
-  return samples
-}
-
-export function groundTrack(sat: Satellite, center: Date, stepSeconds = 30): LonLat[] {
-  return trackSamples(sat, center, stepSeconds).map((s) => s.lonLat)
-}
-
+/** Positions every `stepSeconds` from `fromMs` to `toMs`; longitudes stay in [-180, 180], the renderer wraps. */
 export function trackSamplesBetween(sat: Satellite, fromMs: number, toMs: number, stepSeconds = 30): TrackSample[] {
   const samples: TrackSample[] = []
   for (let t = fromMs; t <= toMs; t += stepSeconds * 1000) {
@@ -74,6 +56,12 @@ export function trackSamplesBetween(sat: Satellite, fromMs: number, toMs: number
     if (p) samples.push({ lonLat: [p.lon, p.lat], timeMs: t })
   }
   return samples
+}
+
+/** `span.pastOrbits` before to `span.futureOrbits` after `center`. */
+export function trackSamples(sat: Satellite, center: Date, stepSeconds = 30, span: TrackSpan = DEFAULT_SPAN): TrackSample[] {
+  const periodMs = sat.periodMinutes * 60_000
+  return trackSamplesBetween(sat, center.getTime() - span.pastOrbits * periodMs, center.getTime() + span.futureOrbits * periodMs, stepSeconds)
 }
 
 /** Index of the sample closest to `lonLat`, measured in degrees with longitude wrapped. */

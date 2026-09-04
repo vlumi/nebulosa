@@ -42,11 +42,11 @@ function elevation(sat: Satellite, location: Location, timeMs: number): number {
   return lookAt(sat, location, timeMs)?.elevationDeg ?? -90
 }
 
-/** Time in [lo, hi] where elevation crosses `threshold`, given it is below at `lo` and above at `hi` (or vice versa). */
-function crossing(sat: Satellite, location: Location, lo: number, hi: number, threshold: number, rising: boolean): number {
+/** Time in [lo, hi] where the satellite crosses the horizon, given it is below at one end and above at the other. */
+function crossing(sat: Satellite, location: Location, lo: number, hi: number, rising: boolean): number {
   for (let i = 0; i < 20 && hi - lo > 500; i++) {
     const mid = (lo + hi) / 2
-    const above = elevation(sat, location, mid) > threshold
+    const above = elevation(sat, location, mid) > 0
     if (above === rising) hi = mid
     else lo = mid
   }
@@ -56,33 +56,27 @@ function crossing(sat: Satellite, location: Location, lo: number, hi: number, th
 /** Longer than any low-Earth-orbit pass, so a pass in progress at `from` is found from its true rise. */
 const LOOKBACK_MS = 20 * 60_000
 
-export function passesOver(
-  sat: Satellite,
-  location: Location,
-  from: Date,
-  hours = 24,
-  minElevationDeg = 0,
-  stepSeconds = 30,
-): Pass[] {
+/** Every pass above the horizon between `from` and `from + hours`, scanned every `stepSeconds`. */
+export function passesOver(sat: Satellite, location: Location, from: Date, hours = 24, stepSeconds = 30): Pass[] {
   const passes: Pass[] = []
   const stepMs = stepSeconds * 1000
   const scanStartMs = from.getTime() - LOOKBACK_MS
   const endMs = from.getTime() + hours * 3_600_000
   const initial = elevation(sat, location, scanStartMs)
   let current: { startMs: number; peakMs: number; peakElevation: number } | null =
-    initial > minElevationDeg ? { startMs: scanStartMs, peakMs: scanStartMs, peakElevation: initial } : null
+    initial > 0 ? { startMs: scanStartMs, peakMs: scanStartMs, peakElevation: initial } : null
 
   for (let t = scanStartMs + stepMs; t <= endMs; t += stepMs) {
     const el = elevation(sat, location, t)
-    if (current === null && el > minElevationDeg) {
-      current = { startMs: crossing(sat, location, t - stepMs, t, minElevationDeg, true), peakMs: t, peakElevation: el }
+    if (current === null && el > 0) {
+      current = { startMs: crossing(sat, location, t - stepMs, t, true), peakMs: t, peakElevation: el }
     } else if (current !== null) {
       if (el > current.peakElevation) {
         current.peakMs = t
         current.peakElevation = el
       }
-      if (el <= minElevationDeg) {
-        passes.push(finish(sat, location, current, crossing(sat, location, t - stepMs, t, minElevationDeg, false)))
+      if (el <= 0) {
+        passes.push(finish(sat, location, current, crossing(sat, location, t - stepMs, t, false)))
         current = null
       }
     }
