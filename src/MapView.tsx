@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { buildLayers, hoverAt, trackData, type Ghost, type Hover, type SatelliteDatum, type TrackDatum } from './layers'
 import { DEFAULT_SPAN, positionAt, type Satellite, type TrackSpan } from './orbit'
 import type { Location } from './passes'
+import { useLatest } from './useLatest'
 import { useThrottled } from './useThrottled'
 
 const BASEMAP = 'https://tiles.openfreemap.org/styles/fiord'
@@ -49,17 +50,19 @@ export function MapView({
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<MapLibre>(null)
   const marker = useRef<Marker>(null)
-  const locationChange = useRef(onLocationChange)
-  useEffect(() => {
-    locationChange.current = onLocationChange
-  }, [onLocationChange])
   const overlay = useRef<MapboxOverlay>(null)
-  const select = useRef(onSelect)
-  useEffect(() => {
-    select.current = onSelect
-  }, [onSelect])
   const [hover, setHover] = useState<Hover | null>(null)
-  const currentTracks = useRef<TrackDatum[]>([])
+
+  // The map and overlay are created once; their callbacks read the latest props through these.
+  const locationChange = useLatest(onLocationChange)
+  const select = useLatest(onSelect)
+  const currentTime = useLatest(now)
+
+  // A track shifted by under a minute is indistinguishable, and while scrubbing or fast-forwarding
+  // a few tenths of a second of staleness is invisible; positions still move every frame.
+  const trackMinute = useThrottled(Math.floor(now.getTime() / 60_000), 150)
+  const tracks = useMemo(() => trackData(satellites, new Date(trackMinute * 60_000), span), [satellites, trackMinute, span])
+  const currentTracks = useLatest(tracks)
 
   useEffect(() => {
     map.current = new MapLibre({
@@ -107,11 +110,6 @@ export function MapView({
     marker.current?.setLngLat([location.lon, location.lat])
   }, [location])
 
-  const currentTime = useRef(now)
-  useEffect(() => {
-    currentTime.current = now
-  }, [now])
-
   useEffect(() => {
     if (!focus) return
     const sat = satellites.find((s) => s.omm.NORAD_CAT_ID === focus.noradId)
@@ -119,15 +117,6 @@ export function MapView({
     const p = sat && positionAt(sat, at)
     if (p) map.current?.easeTo({ center: [p.lon, p.lat], duration: 600 })
   }, [focus, satellites])
-
-  // A track shifted by under a minute is indistinguishable, and while scrubbing or fast-forwarding
-  // a few tenths of a second of staleness is invisible; positions still move every frame.
-  const trackMinute = useThrottled(Math.floor(now.getTime() / 60_000), 150)
-  const tracks = useMemo(() => trackData(satellites, new Date(trackMinute * 60_000), span), [satellites, trackMinute, span])
-
-  useEffect(() => {
-    currentTracks.current = tracks
-  }, [tracks])
 
   useEffect(() => {
     overlay.current?.setProps({ layers: buildLayers(satellites, tracks, now, selected, hover, ghost, span) })
