@@ -77,3 +77,17 @@ test('a ghost draws a hollow marker where the satellite will be at the given tim
   const { getText } = layers[5].props as unknown as { getText: () => string }
   expect(getText()).toBe(`STRIX-1 · ${new Date(later).toISOString().slice(11, 16)} UTC`)
 })
+
+test('a ghost beyond the drawn track gets a dashed continuation reaching it', () => {
+  const sats = [strix1].map(satelliteFrom)
+  const at = epochOf(strix1)
+  const farAhead = at.getTime() + 3 * 3_600_000
+  const layers = buildLayers(sats, trackData(sats, at), at, null, null, { noradId: strix1.NORAD_CAT_ID, timeMs: farAhead })
+  expect(layers.map((l) => l.id)).toEqual(['night', 'tracks', 'positions', 'labels', 'ghost-track', 'ghost', 'ghost-label'])
+  const path = (layers[4].props.data as [number, number][][])[0]
+  const spanMinutes = 3 * 60 + 5 - sats[0].periodMinutes
+  expect(Math.abs(path.length - spanMinutes * 2)).toBeLessThanOrEqual(2)
+  const ghostPosition = (layers[5].props.data as { lonLat: [number, number] }[])[0].lonLat
+  const nearest = path.reduce((best, p) => (Math.hypot(p[0] - ghostPosition[0], p[1] - ghostPosition[1]) < Math.hypot(best[0] - ghostPosition[0], best[1] - ghostPosition[1]) ? p : best))
+  expect(Math.hypot(nearest[0] - ghostPosition[0], nearest[1] - ghostPosition[1])).toBeLessThan(0.01)
+})
