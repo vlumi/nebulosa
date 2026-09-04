@@ -76,10 +76,16 @@ test('showing a pass selects the satellite without touching the clock; going to 
   await userEvent.click(firstRow.querySelector('button')!)
   expect(screen.getAllByRole('button', { pressed: true })).toHaveLength(1)
   expect(screen.getByRole('button', { name: 'Live' })).toBeDisabled()
+  expect(firstRow.querySelector('button')).toHaveAttribute('aria-current', 'true')
+  expect(firstRow).not.toHaveClass('dimmed')
+  expect(passes.getAllByRole('listitem')[1]).toHaveClass('dimmed')
 
   await userEvent.click(within(firstRow).getByRole('button', { name: /^Go to / }))
   expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Live' })).toBeEnabled()
+
+  await userEvent.keyboard('{Escape}')
+  expect(passes.queryByRole('button', { current: true })).toBeNull()
 })
 
 test('selecting a satellite narrows the pass list to it until the filter is turned off', async () => {

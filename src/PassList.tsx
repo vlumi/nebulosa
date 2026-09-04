@@ -17,6 +17,8 @@ interface Props {
   familyOf: (noradId: number) => OrbitFamily
   onShow: (pass: Pass) => void
   onGoTo: (pass: Pass) => void
+  /** The pass last shown or gone to, marked in the list. */
+  activePass?: Pass | null
   /** Reference for the day separators: a row is inserted where the UTC date changes from today's. */
   now: Date
 }
@@ -34,8 +36,10 @@ export function PassList({
   familyOf,
   onShow,
   onGoTo,
+  activePass = null,
   now,
 }: Props) {
+  const isActive = (pass: Pass) => activePass?.noradId === pass.noradId && activePass.peakMs === pass.peakMs
   return (
     <>
       <div className="pass-header">
@@ -80,12 +84,17 @@ export function PassList({
       </div>
       <ol>
         {passes.map((pass, i) => (
-          <li key={`${pass.noradId}-${pass.startMs}`}>
+          <li key={`${pass.noradId}-${pass.startMs}`} className={activePass && !isActive(pass) ? 'dimmed' : undefined}>
             {utcDayIndex(pass.startMs) !== utcDayIndex(i === 0 ? now.getTime() : passes[i - 1].startMs) && (
               <div className="day muted">{dayLabel(pass.startMs)} UTC</div>
             )}
             <div className="row">
-              <button type="button" onClick={() => onShow(pass)} title="Show where the satellite will be at the peak">
+              <button
+                type="button"
+                aria-current={isActive(pass) ? 'true' : undefined}
+                onClick={() => onShow(pass)}
+                title="Show where the satellite will be at the peak"
+              >
                 <span
                   className="swatch"
                   style={{ background: `rgb(${FAMILY_COLORS[familyOf(pass.noradId)].join(' ')})` }}
