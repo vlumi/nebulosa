@@ -49,7 +49,9 @@ export function hoverAt(track: TrackDatum, lonLat: LonLat): Hover {
   return { noradId: track.noradId, lonLat: sample.lonLat, timeMs: sample.timeMs }
 }
 
-const TAIL_CHUNKS = 12
+const TAIL_CHUNKS = 60
+/** Share of the flown half over which the tail fades from full to floor; flat beyond it. */
+const TAIL_FADE_SPAN = 0.12
 
 /**
  * The track split at `now`. The half ahead is one segment; the flown half is a run of chunks with
@@ -78,6 +80,12 @@ const ALPHA = {
   dimmed: { ahead: 50, oldest: 15 },
 }
 const WIDTH = { selected: 3, normal: 1.5, dimmed: 1.5 }
+
+/** Smoothstep from 0 at the satellite to 1 at TAIL_FADE_SPAN of the way back, then 1. */
+function tailFade(age: number): number {
+  const t = Math.min(1, age / TAIL_FADE_SPAN)
+  return t * t * (3 - 2 * t)
+}
 
 /** `selected` is a NORAD catalog number; everything else is dimmed while one is set. */
 export function buildLayers(
@@ -114,7 +122,7 @@ export function buildLayers(
       getPath: (d) => d.path,
       getColor: (d) => {
         const { ahead, oldest } = ALPHA[emphasis(d)]
-        return color(d, Math.round(ahead + (oldest - ahead) * d.age))
+        return color(d, Math.round(ahead + (oldest - ahead) * tailFade(d.age)))
       },
       getWidth: (d) => WIDTH[emphasis(d)],
       widthUnits: 'pixels',
