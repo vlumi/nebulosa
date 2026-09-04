@@ -4,7 +4,7 @@ import App from './App'
 import { strix1, strix9 } from './test/fixtures'
 
 vi.mock('maplibre-gl', () => ({
-  Map: vi.fn(function () { return { addControl: vi.fn(), remove: vi.fn() } }),
+  Map: vi.fn(function () { return { addControl: vi.fn(), remove: vi.fn(), easeTo: vi.fn() } }),
   NavigationControl: vi.fn(),
   setWorkerUrl: vi.fn(),
 }))
@@ -35,6 +35,11 @@ test('selecting a satellite in the panel highlights it and dims the rest', async
   await userEvent.click(strix9Button)
   expect(strix9Button).toHaveAttribute('aria-pressed', 'false')
   expect(strix1Button.closest('li')).not.toHaveClass('dimmed')
+
+  await userEvent.click(strix1Button)
+  expect(strix1Button).toHaveAttribute('aria-pressed', 'true')
+  await userEvent.keyboard('{Escape}')
+  expect(strix1Button).toHaveAttribute('aria-pressed', 'false')
 })
 
 test('reports a failed load', async () => {
