@@ -90,7 +90,7 @@ export function buildLayers(
       id: 'night',
       data: [nightPolygon(now)],
       getPolygon: (d) => d,
-      getFillColor: [0, 0, 0, 110],
+      getFillColor: [0, 4, 20, 90],
       pickable: false,
     }),
     new PathLayer<SegmentDatum>({

@@ -7,7 +7,7 @@ import { buildLayers, hoverAt, trackData, type Hover, type SatelliteDatum, type 
 import type { Satellite } from './orbit'
 import { useThrottled } from './useThrottled'
 
-const BASEMAP = 'https://tiles.openfreemap.org/styles/dark'
+const BASEMAP = 'https://tiles.openfreemap.org/styles/fiord'
 
 // MapLibre 6 resolves its worker relative to its own script URL, which a bundled app does not provide.
 setWorkerUrl(maplibreWorkerUrl)
