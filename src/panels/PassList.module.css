@@ -14,8 +14,10 @@
   white-space: nowrap;
 }
 
+/* Whatever the header grows to, at least two rows stay in view; the panel minimum alone could not promise that. */
 .list {
   margin-top: 0.5rem;
+  min-height: 3.8rem;
 }
 
 .day {
