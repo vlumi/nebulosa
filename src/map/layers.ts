@@ -1,7 +1,7 @@
 import type { Layer } from '@deck.gl/core'
 import { PathStyleExtension, type PathStyleExtensionProps } from '@deck.gl/extensions'
 import { PathLayer, ScatterplotLayer, SolidPolygonLayer, TextLayer } from '@deck.gl/layers'
-import { formatOffset, hhmm, hhmmss } from './format'
+import { formatOffset, hhmm, hhmmss } from '../shared/format'
 import {
   DEFAULT_SPAN,
   nearestSample,
@@ -13,16 +13,9 @@ import {
   type Satellite,
   type TrackSample,
   type TrackSpan,
-} from './orbit'
-import { nightPolygon } from './sun'
-
-export type Rgb = [number, number, number]
-export type Rgba = [number, number, number, number]
-
-export const FAMILY_COLORS: Record<OrbitFamily, Rgb> = {
-  'sun-synchronous': [238, 221, 102],
-  'mid-inclination': [102, 204, 238],
-}
+} from '../orbit/orbit'
+import { nightPolygon } from '../orbit/sun'
+import { FAMILY_COLORS, type Rgba } from '../shared/palette'
 
 export interface SatelliteDatum {
   noradId: number

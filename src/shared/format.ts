@@ -1,5 +1,3 @@
-import type { Location } from './passes'
-
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -47,7 +45,7 @@ export function formatOffset(simMs: number, realMs: number): string {
   return `${sign}${parts.join(' ')}`
 }
 
-export function formatLocation({ lat, lon }: Location): string {
+export function formatLocation({ lat, lon }: { lat: number; lon: number }): string {
   return `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'} ${Math.abs(lon).toFixed(2)}°${lon >= 0 ? 'E' : 'W'}`
 }
 

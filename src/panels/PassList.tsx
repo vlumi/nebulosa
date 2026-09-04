@@ -1,7 +1,7 @@
-import { FAMILY_COLORS } from './layers'
-import type { OrbitFamily } from './orbit'
-import { compassPoint, dayLabel, formatLocation, hhmm, utcDayIndex } from './format'
-import { HORIZONS_H, MIN_ELEVATIONS, type Location, type Pass } from './passes'
+import { familyCss } from '../shared/palette'
+import type { OrbitFamily } from '../orbit/orbit'
+import { compassPoint, dayLabel, formatLocation, hhmm, utcDayIndex } from '../shared/format'
+import { HORIZONS_H, MIN_ELEVATIONS, type Location, type Pass } from '../orbit/passes'
 
 interface Props {
   location: Location
@@ -95,10 +95,7 @@ export function PassList({
                 onClick={() => onShow(pass)}
                 title="Show where the satellite will be at the peak"
               >
-                <span
-                  className="swatch"
-                  style={{ background: `rgb(${FAMILY_COLORS[familyOf(pass.noradId)].join(' ')})` }}
-                />
+                <span className="swatch" style={{ background: familyCss(familyOf(pass.noradId)) }} />
                 <span className="time">
                   {hhmm(pass.startMs)}–{hhmm(pass.endMs)}
                 </span>

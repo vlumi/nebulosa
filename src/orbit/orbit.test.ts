@@ -1,5 +1,5 @@
 import { epochOf } from './elements'
-import { strix1, strix9 } from './test/fixtures'
+import { strix1, strix9 } from '../test/fixtures'
 import { nearestSample, positionAt, satelliteFrom, trackSamples } from './orbit'
 
 test('derives period and orbit family from the elements', () => {

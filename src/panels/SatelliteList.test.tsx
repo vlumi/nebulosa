@@ -1,8 +1,8 @@
 import { render, screen, within } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
-import { satelliteFrom } from './orbit'
+import { satelliteFrom } from '../orbit/orbit'
 import { SatelliteList } from './SatelliteList'
-import { strix1, strix9 } from './test/fixtures'
+import { strix1, strix9 } from '../test/fixtures'
 
 const sats = [strix1, strix9].map(satelliteFrom)
 const now = new Date('2026-09-04T04:41:00Z')

@@ -1,5 +1,5 @@
 import { describeOrbit, formatAltitude } from './describe'
-import { strix1, strix9 } from './test/fixtures'
+import { strix1, strix9 } from '../test/fixtures'
 
 test('derives period, altitude and launch year from the elements', () => {
   const d = describeOrbit(strix1)

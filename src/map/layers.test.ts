@@ -1,7 +1,8 @@
-import { epochOf } from './elements'
-import { strix1, strix9 } from './test/fixtures'
-import { buildLayers, FAMILY_COLORS, hoverAt, trackData } from './layers'
-import { satelliteFrom } from './orbit'
+import { epochOf } from '../orbit/elements'
+import { strix1, strix9 } from '../test/fixtures'
+import { FAMILY_COLORS } from '../shared/palette'
+import { buildLayers, hoverAt, trackData } from './layers'
+import { satelliteFrom } from '../orbit/orbit'
 
 test('builds tracks, positions and labels for every satellite, colored by family', () => {
   const sats = [strix1, strix9].map(satelliteFrom)
