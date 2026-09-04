@@ -11,7 +11,9 @@
     "test": "vitest run",
     "preview": "vite preview",
     "elements": "node scripts/fetch-elements.mjs",
-    "lint:md": "markdownlint-cli2"
+    "lint:md": "markdownlint-cli2",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@deck.gl/core": "^9.3.11",
@@ -35,6 +37,7 @@
     "jsdom": "^30.0.1",
     "markdownlint-cli2": "^0.23.2",
     "oxlint": "^1.81.0",
+    "prettier": "^3.9.6",
     "typescript": "~7.0.2",
     "vite": "^8.2.2",
     "vitest": "^5.0.0"

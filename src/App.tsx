@@ -72,10 +72,7 @@ function App() {
     if (noradId !== null) setFocus({ noradId, seq: (focus?.seq ?? 0) + 1, timeMs })
   }
 
-  const satellites = useMemo(
-    () => (loaded && 'elements' in loaded ? loaded.elements.map(satelliteFrom) : []),
-    [loaded],
-  )
+  const satellites = useMemo(() => (loaded && 'elements' in loaded ? loaded.elements.map(satelliteFrom) : []), [loaded])
   const byId = (noradId: number | null) => satellites.find((s) => s.omm.NORAD_CAT_ID === noradId)
 
   // Passes are listed from real time, so scrubbing the clock never changes the list under the reader.

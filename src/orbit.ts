@@ -59,9 +59,19 @@ export function trackSamplesBetween(sat: Satellite, fromMs: number, toMs: number
 }
 
 /** `span.pastOrbits` before to `span.futureOrbits` after `center`. */
-export function trackSamples(sat: Satellite, center: Date, stepSeconds = 30, span: TrackSpan = DEFAULT_SPAN): TrackSample[] {
+export function trackSamples(
+  sat: Satellite,
+  center: Date,
+  stepSeconds = 30,
+  span: TrackSpan = DEFAULT_SPAN,
+): TrackSample[] {
   const periodMs = sat.periodMinutes * 60_000
-  return trackSamplesBetween(sat, center.getTime() - span.pastOrbits * periodMs, center.getTime() + span.futureOrbits * periodMs, stepSeconds)
+  return trackSamplesBetween(
+    sat,
+    center.getTime() - span.pastOrbits * periodMs,
+    center.getTime() + span.futureOrbits * periodMs,
+    stepSeconds,
+  )
 }
 
 /** Index of the sample closest to `lonLat`, measured in degrees with longitude wrapped. */

@@ -4,16 +4,27 @@ import App from './App'
 import { strix1, strix9 } from './test/fixtures'
 
 vi.mock('maplibre-gl', () => ({
-  Map: vi.fn(function () { return { addControl: vi.fn(), remove: vi.fn(), easeTo: vi.fn() } }),
+  Map: vi.fn(function () {
+    return { addControl: vi.fn(), remove: vi.fn(), easeTo: vi.fn() }
+  }),
   Marker: vi.fn(function () {
-    const marker = { setLngLat: () => marker, addTo: () => marker, on: () => marker, getLngLat: () => ({ lng: 0, lat: 0 }) }
+    const marker = {
+      setLngLat: () => marker,
+      addTo: () => marker,
+      on: () => marker,
+      getLngLat: () => ({ lng: 0, lat: 0 }),
+    }
     return marker
   }),
   NavigationControl: vi.fn(),
   setWorkerUrl: vi.fn(),
 }))
 vi.mock('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url', () => ({ default: '/worker.js' }))
-vi.mock('@deck.gl/mapbox', () => ({ MapboxOverlay: vi.fn(function () { return { setProps: vi.fn() } }) }))
+vi.mock('@deck.gl/mapbox', () => ({
+  MapboxOverlay: vi.fn(function () {
+    return { setProps: vi.fn() }
+  }),
+}))
 afterEach(() => vi.unstubAllGlobals())
 
 test('lists the constellation from /data/elements.json with the epoch age', async () => {

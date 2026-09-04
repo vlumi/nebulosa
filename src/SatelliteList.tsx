@@ -40,14 +40,22 @@ export function SatelliteList({ satellites, now, selected, onSelect, span, onSpa
       </ul>
       <div className="span-controls muted">
         Track{' '}
-        <select aria-label="Track behind" value={span.pastOrbits} onChange={(e) => onSpanChange({ ...span, pastOrbits: Number(e.target.value) })}>
+        <select
+          aria-label="Track behind"
+          value={span.pastOrbits}
+          onChange={(e) => onSpanChange({ ...span, pastOrbits: Number(e.target.value) })}
+        >
           {SPAN_CHOICES.map((n) => (
             <option key={n} value={n}>
               −{orbits(n)}
             </option>
           ))}
         </select>{' '}
-        <select aria-label="Track ahead" value={span.futureOrbits} onChange={(e) => onSpanChange({ ...span, futureOrbits: Number(e.target.value) })}>
+        <select
+          aria-label="Track ahead"
+          value={span.futureOrbits}
+          onChange={(e) => onSpanChange({ ...span, futureOrbits: Number(e.target.value) })}
+        >
           {SPAN_CHOICES.map((n) => (
             <option key={n} value={n}>
               +{orbits(n)}

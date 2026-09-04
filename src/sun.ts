@@ -14,7 +14,7 @@ export interface SubsolarPoint {
 /** Where the Sun is straight overhead. */
 export function subsolarPoint(date: Date): SubsolarPoint {
   const { rtasc, decl } = sunPos(jday(date))
-  const lon = ((rtasc - gstime(date)) * DEG + 540) % 360 - 180
+  const lon = (((rtasc - gstime(date)) * DEG + 540) % 360) - 180
   return { lon, lat: decl * DEG }
 }
 
