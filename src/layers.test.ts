@@ -7,9 +7,9 @@ test('builds tracks, positions and labels for every satellite, colored by family
   const sats = [strix1, strix9].map(satelliteFrom)
   const at = epochOf(strix1)
   const layers = buildLayers(sats, trackData(sats, at), at)
-  expect(layers.map((l) => l.id)).toEqual(['tracks', 'positions', 'labels'])
+  expect(layers.map((l) => l.id)).toEqual(['night', 'tracks', 'positions', 'labels'])
 
-  const [tracks, positions, labels] = layers
+  const [, tracks, positions, labels] = layers
   const trackRows = tracks.props.data as { family: string }[]
   expect(trackRows.length).toBe(2)
   expect(new Set(trackRows.map((d) => d.family))).toEqual(new Set(['sun-synchronous', 'mid-inclination']))
@@ -25,7 +25,7 @@ test('builds tracks, positions and labels for every satellite, colored by family
 test('dims everything but the selected satellite and makes layers pickable', () => {
   const sats = [strix1, strix9].map(satelliteFrom)
   const at = epochOf(strix1)
-  const [tracks, positions, labels] = buildLayers(sats, trackData(sats, at), at, strix9.NORAD_CAT_ID)
+  const [, tracks, positions, labels] = buildLayers(sats, trackData(sats, at), at, strix9.NORAD_CAT_ID)
   expect([tracks, positions, labels].every((l) => l.props.pickable)).toBe(true)
 
   const trackRows = tracks.props.data as { noradId: number }[]

@@ -1,6 +1,7 @@
 import type { Layer } from '@deck.gl/core'
-import { PathLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers'
+import { PathLayer, ScatterplotLayer, SolidPolygonLayer, TextLayer } from '@deck.gl/layers'
 import { groundTrack, positionAt, type LonLat, type OrbitFamily, type Satellite } from './orbit'
+import { nightPolygon } from './sun'
 
 export type Rgb = [number, number, number]
 export type Rgba = [number, number, number, number]
@@ -41,6 +42,13 @@ export function buildLayers(satellites: Satellite[], tracks: TrackDatum[], now: 
   const color = (d: SatelliteDatum): Rgba => [...FAMILY_COLORS[d.family], alpha[emphasis(d)]]
 
   return [
+    new SolidPolygonLayer<LonLat[]>({
+      id: 'night',
+      data: [nightPolygon(now)],
+      getPolygon: (d) => d,
+      getFillColor: [0, 0, 0, 110],
+      pickable: false,
+    }),
     new PathLayer<TrackDatum>({
       id: 'tracks',
       data: tracks,
