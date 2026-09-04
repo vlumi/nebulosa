@@ -36,9 +36,9 @@
   min-height: 10rem;
 }
 
-/* Its content sets the floor: the header, the controls and the two rows the list always keeps. */
+/* Header, controls and two rows; a content-derived minimum would count every row and defeat the scrolling. */
 .passes[data-open] {
-  min-height: auto;
+  min-height: 17.5rem;
 }
 
 .satellites:not([data-open]),
