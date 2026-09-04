@@ -4,14 +4,17 @@
 #   sudo certbot --nginx -d nebulosa.misaki.fi
 # adds the 443 block and the HTTP->HTTPS redirect.
 #
-# `root` is the web root deploy.sh publishes into (WEBROOT, default /var/www/nebulosa).
+# Layout under the web root (WEBROOT in deploy.sh, default /var/www/nebulosa), owned by
+# the deploying user:
+#   current -> releases/<sha>   flipped by deploy.sh
+#   data/tles.json              written daily by the host's cron job
 
 server {
     listen 80;
     listen [::]:80;
     server_name nebulosa.misaki.fi;
 
-    root /var/www/nebulosa;
+    root /var/www/nebulosa/current;
     index index.html;
 
     # Single-page app: every path falls back to index.html.
@@ -24,6 +27,12 @@ server {
     location /assets/ {
         expires 1y;
         add_header Cache-Control "public, immutable";
+    }
+
+    # Orbital elements live outside the releases so deploys never touch them.
+    location /data/ {
+        alias /var/www/nebulosa/data/;
+        add_header Cache-Control "no-cache";
     }
 
     location ~ /\. {

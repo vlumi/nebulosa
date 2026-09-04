@@ -15,9 +15,11 @@ built to see through clouds. Owls see in the dark; so does SAR.
 - **Constellation (as of 2026-09):** 8 satellites, two distinct orbit families:
   - StriX-1, -2, -3 — ~97.5° sun-synchronous (NORAD 53815, 62406, 59224)
   - StriX-4 … -8 — ~42–50° mid-inclination (NORAD 60352, 65971, 68291, 69177, 69701)
-- **Refresh strategy:** scheduled GitHub Action fetches TLEs daily into `data/tles.json`,
-  committed and deployed with the site. No backend, no runtime dependency on CelesTrak,
-  respectful of their rate limits. Optional in-browser "refresh now" live fetch as fallback.
+- **Refresh strategy:** a cron job on the host fetches TLEs daily into the web root as
+  `data/tles.json`, which the app loads at runtime from its own origin; the first deploy fetches
+  once to get started. Nothing is committed: CelesTrak is the single source. No backend, no
+  browser-side dependency on CelesTrak, respectful of their rate limits. Optional in-browser
+  "refresh now" live fetch as fallback.
 - TLE epoch age shown in the UI (stale elements = degraded accuracy; honesty in the UI).
 
 ## Tech
@@ -26,9 +28,9 @@ built to see through clouds. Owls see in the dark; so does SAR.
 - **Propagation:** satellite.js (SGP4)
 - **Rendering:** deck.gl over a MapLibre GL basemap (OpenFreeMap vector tiles — free, no API key)
 - **Testing:** Vitest + React Testing Library; UI smoke tests for the map wiring
-- **CI:** GitHub Actions — lint/test/build on push; scheduled daily TLE refresh workflow
-- **Hosting:** https://nebulosa.misaki.fi — owner-managed host (pm2, same pattern as
-  sibling projects); deploy picks up main, including TLE data refresh commits
+- **CI:** GitHub Actions — lint/test/build on push and pull requests
+- **Hosting:** https://nebulosa.misaki.fi — owner-managed host, nginx serving static files
+  (same pattern as sibling sites); `deploy.sh` builds and swaps the web root, cron refreshes the data
 - **License:** MIT
 
 ## Features
