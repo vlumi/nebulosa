@@ -1,6 +1,7 @@
 import { FAMILY_COLORS } from './layers'
 import type { OrbitFamily } from './orbit'
-import { formatLocation, HORIZONS_H, MIN_ELEVATIONS, type Location, type Pass } from './passes'
+import { compassPoint, dayLabel, formatLocation, hhmm, utcDayIndex } from './format'
+import { HORIZONS_H, MIN_ELEVATIONS, type Location, type Pass } from './passes'
 
 interface Props {
   location: Location
@@ -18,15 +19,6 @@ interface Props {
   onGoTo: (pass: Pass) => void
   /** Reference for the day separators: a row is inserted where the UTC date changes from today's. */
   now: Date
-}
-
-const hhmm = (ms: number) => new Date(ms).toISOString().slice(11, 16)
-const utcDay = (ms: number) => Math.floor(ms / 86_400_000)
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-const dayLabel = (ms: number) => {
-  const d = new Date(ms)
-  return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`
 }
 
 export function PassList({
@@ -84,7 +76,7 @@ export function PassList({
       <ol>
         {passes.map((pass, i) => (
           <li key={`${pass.noradId}-${pass.startMs}`}>
-            {utcDay(pass.startMs) !== utcDay(i === 0 ? now.getTime() : passes[i - 1].startMs) && (
+            {utcDayIndex(pass.startMs) !== utcDayIndex(i === 0 ? now.getTime() : passes[i - 1].startMs) && (
               <div className="day muted">{dayLabel(pass.startMs)} UTC</div>
             )}
             <div className="row">
@@ -94,7 +86,9 @@ export function PassList({
                 {hhmm(pass.startMs)}–{hhmm(pass.endMs)}
               </span>
               {pass.name}
-              <span className="muted">max {Math.round(pass.maxElevationDeg)}°</span>
+              <span className="muted">
+                max {Math.round(pass.maxElevationDeg)}° {compassPoint(pass.peakAzimuthDeg)}
+              </span>
             </button>
             <button type="button" className="goto" aria-label={`Go to ${pass.name} pass at ${hhmm(pass.peakMs)}`} onClick={() => onGoTo(pass)}>
               ⏱

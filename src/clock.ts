@@ -29,14 +29,3 @@ export function scrubbedTo(clock: Clock, simMs: number, realMs: number): Clock {
 export function isLive(clock: Clock, realMs: number): boolean {
   return clock.rate === 1 && Math.abs(simTime(clock, realMs) - realMs) < 1000
 }
-
-export function formatOffset(simMs: number, realMs: number): string {
-  const totalMinutes = Math.round((simMs - realMs) / 60_000)
-  if (totalMinutes === 0) return 'now'
-  const sign = totalMinutes < 0 ? '−' : '+'
-  const abs = Math.abs(totalMinutes)
-  const hours = Math.floor(abs / 60)
-  const minutes = abs % 60
-  const parts = [hours ? `${hours} h` : '', minutes ? `${minutes} min` : ''].filter(Boolean)
-  return `${sign}${parts.join(' ')}`
-}

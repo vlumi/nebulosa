@@ -32,10 +32,3 @@ export function epochOf(omm: Omm): Date {
 export function newestEpoch(elements: Omm[]): Date {
   return new Date(Math.max(...elements.map((e) => epochOf(e).getTime())))
 }
-
-export function formatAge(from: Date, to: Date): string {
-  const hours = Math.floor((to.getTime() - from.getTime()) / 3_600_000)
-  if (hours < 1) return 'under an hour'
-  if (hours < 48) return `${hours} h`
-  return `${Math.floor(hours / 24)} d`
-}

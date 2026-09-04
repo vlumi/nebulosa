@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { PassList } from './PassList'
-import { formatLocation, type Pass } from './passes'
+import type { Pass } from './passes'
 
 const t0 = Date.UTC(2026, 8, 4, 12, 0, 0)
 const pass = (name: string, noradId: number, startMin: number, maxEl: number): Pass => ({
@@ -12,11 +12,6 @@ const pass = (name: string, noradId: number, startMin: number, maxEl: number): P
   endMs: t0 + (startMin + 8) * 60_000,
   maxElevationDeg: maxEl,
   peakAzimuthDeg: 180,
-})
-
-test('formats a location with hemispheres', () => {
-  expect(formatLocation({ lat: 35.68, lon: 139.69 })).toBe('35.68°N 139.69°E')
-  expect(formatLocation({ lat: -33.87, lon: -70.65 })).toBe('33.87°S 70.65°W')
 })
 
 test('lists passes with times, duration and max elevation; show and go-to are separate actions', async () => {
@@ -41,8 +36,8 @@ test('lists passes with times, duration and max elevation; show and go-to are se
   )
   expect(screen.getByText(/over 35.68°N 139.69°E/)).toBeInTheDocument()
   const rows = screen.getAllByRole('listitem')
-  expect(rows[0]).toHaveTextContent('12:05–12:13STRIX-1max 47°')
-  expect(rows[1]).toHaveTextContent('13:30–13:38STRIX-9max 12°')
+  expect(rows[0]).toHaveTextContent('12:05–12:13STRIX-1max 47° S')
+  expect(rows[1]).toHaveTextContent('13:30–13:38STRIX-9max 12° S')
 
   await userEvent.click(rows[1].querySelector('button')!)
   expect(onShow).toHaveBeenCalledWith(passes[1])
