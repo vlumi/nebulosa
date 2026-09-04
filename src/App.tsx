@@ -4,7 +4,7 @@ import { Disclosure } from './Disclosure'
 import { type Ghost } from './layers'
 import { MapView, type Focus } from './MapView'
 import { DEFAULT_SPAN, satelliteFrom, type TrackSpan } from './orbit'
-import { Panel } from './Panel'
+import { SatelliteList } from './SatelliteList'
 import { PassList } from './PassList'
 import { loadElements, newestEpoch, type Omm } from './elements'
 import { formatAge, formatLocation } from './format'
@@ -76,6 +76,7 @@ function App() {
     () => (loaded && 'elements' in loaded ? loaded.elements.map(satelliteFrom) : []),
     [loaded],
   )
+  const byId = (noradId: number | null) => satellites.find((s) => s.omm.NORAD_CAT_ID === noradId)
 
   // Passes are listed from real time, so scrubbing the clock never changes the list under the reader.
   const passMinute = Math.floor(now.getTime() / 60_000)
@@ -83,11 +84,11 @@ function App() {
     () => upcomingPasses(satellites, location, new Date(passMinute * 60_000), horizonHours),
     [satellites, location, passMinute, horizonHours],
   )
-  const selectedSatellite = satellites.find((s) => s.omm.NORAD_CAT_ID === selected)
+  const selectedSatellite = byId(selected)
   const passes = allPasses.filter(
     (p) => p.maxElevationDeg >= minElevationDeg && (!selectedSatellite || !onlySelected || p.noradId === selected),
   )
-  const familyOf = (noradId: number) => satellites.find((s) => s.omm.NORAD_CAT_ID === noradId)?.family ?? 'mid-inclination'
+  const familyOf = (noradId: number) => byId(noradId)?.family ?? 'mid-inclination'
 
   const showPass = (pass: Pass) => {
     selectFromList(pass.noradId, pass.peakMs)
@@ -119,66 +120,66 @@ function App() {
           span={span}
         />
         <div className="dock">
-        <aside className="panel" aria-label="Constellation">
-          <Disclosure
-            open={panelOpen ?? !narrow}
-            onToggle={togglePanel}
-            summary={
-              <>
-                Satellites
-                {satellites.length > 0 && (
-                  <span className="muted">
-                    {' '}
-                    · {satellites.length} · elements {formatAge(newestEpoch(satellites.map((s) => s.omm)), now)} old
-                  </span>
-                )}
-              </>
-            }
-          >
-            {loaded === null && <p>Loading orbital elements…</p>}
-            {loaded && 'error' in loaded && <p role="alert">{loaded.error}</p>}
-            {satellites.length > 0 && (
-              <Panel
-                satellites={satellites}
-                now={now}
-                selected={selected}
-                onSelect={selectFromList}
-                span={span}
-                onSpanChange={setSpan}
-              />
-            )}
-          </Disclosure>
-        </aside>
-        {satellites.length > 0 && (
-          <aside className="passes" aria-label="Passes">
+          <aside className="satellites" aria-label="Constellation">
             <Disclosure
-              open={passesOpen ?? !narrow}
-              onToggle={togglePasses}
+              open={panelOpen ?? !narrow}
+              onToggle={togglePanel}
               summary={
                 <>
-                  Passes over {formatLocation(location)}
-                  <span className="muted"> · {passes.length}</span>
+                  Satellites
+                  {satellites.length > 0 && (
+                    <span className="muted">
+                      {' '}
+                      · {satellites.length} · elements {formatAge(newestEpoch(satellites.map((s) => s.omm)), now)} old
+                    </span>
+                  )}
                 </>
               }
             >
-              <PassList
-                location={location}
-                passes={passes}
-                horizonHours={horizonHours}
-                onHorizonChange={setHorizonHours}
-                minElevationDeg={minElevationDeg}
-                onMinElevationChange={setMinElevationDeg}
-                selectedName={selectedSatellite?.omm.OBJECT_NAME}
-                onlySelected={onlySelected}
-                onOnlySelectedChange={setOnlySelected}
-                familyOf={familyOf}
-                onShow={showPass}
-                onGoTo={goToPass}
-                now={now}
-              />
+              {loaded === null && <p>Loading orbital elements…</p>}
+              {loaded && 'error' in loaded && <p role="alert">{loaded.error}</p>}
+              {satellites.length > 0 && (
+                <SatelliteList
+                  satellites={satellites}
+                  now={now}
+                  selected={selected}
+                  onSelect={selectFromList}
+                  span={span}
+                  onSpanChange={setSpan}
+                />
+              )}
             </Disclosure>
           </aside>
-        )}
+          {satellites.length > 0 && (
+            <aside className="passes" aria-label="Passes">
+              <Disclosure
+                open={passesOpen ?? !narrow}
+                onToggle={togglePasses}
+                summary={
+                  <>
+                    Passes over {formatLocation(location)}
+                    <span className="muted"> · {passes.length}</span>
+                  </>
+                }
+              >
+                <PassList
+                  location={location}
+                  passes={passes}
+                  horizonHours={horizonHours}
+                  onHorizonChange={setHorizonHours}
+                  minElevationDeg={minElevationDeg}
+                  onMinElevationChange={setMinElevationDeg}
+                  selectedName={selectedSatellite?.omm.OBJECT_NAME}
+                  onlySelected={onlySelected}
+                  onOnlySelectedChange={setOnlySelected}
+                  familyOf={familyOf}
+                  onShow={showPass}
+                  onGoTo={goToPass}
+                  now={now}
+                />
+              </Disclosure>
+            </aside>
+          )}
         </div>
         <TimeBar clock={clock} now={now} onChange={setClock} />
       </main>

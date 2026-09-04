@@ -15,7 +15,7 @@ interface Props {
 
 const orbits = (n: number) => `${n} orbit${n === 1 ? '' : 's'}`
 
-export function Panel({ satellites, now, selected, onSelect, span, onSpanChange }: Props) {
+export function SatelliteList({ satellites, now, selected, onSelect, span, onSpanChange }: Props) {
   const epoch = newestEpoch(satellites.map((s) => s.omm))
   return (
     <>

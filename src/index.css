@@ -71,7 +71,7 @@ main > .map {
   pointer-events: auto;
 }
 
-.panel {
+.satellites {
   flex: 0 1 auto;
   min-height: 0;
   display: flex;
@@ -82,7 +82,7 @@ main > .map {
   font-size: 0.875rem;
 }
 
-.panel ul {
+.satellites ul {
   list-style: none;
   padding: 0;
   margin: 0 0 0.5rem;
@@ -91,16 +91,16 @@ main > .map {
   overflow: auto;
 }
 
-.panel > p,
+.satellites > p,
 .span-controls {
   flex: none;
 }
 
-.panel li.dimmed {
+.satellites li.dimmed {
   opacity: 0.45;
 }
 
-.panel button {
+.satellites button {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -116,8 +116,8 @@ main > .map {
   cursor: pointer;
 }
 
-.panel button:hover,
-.panel button[aria-pressed='true'] {
+.satellites button:hover,
+.satellites button[aria-pressed='true'] {
   background: rgb(255 255 255 / 0.08);
 }
 
@@ -354,12 +354,12 @@ main > .map {
     width: auto;
   }
 
-  .panel,
+  .satellites,
   .passes {
     padding: 0.5rem 0.75rem;
   }
 
-  .panel ul {
+  .satellites ul {
     max-height: 45vh;
   }
 

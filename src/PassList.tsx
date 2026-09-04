@@ -39,39 +39,38 @@ export function PassList({
   return (
     <>
       <div className="pass-header">
-      <p className="muted">
-        Line of sight above the horizon over {formatLocation(location)}. Drag the pin to move.
-      </p>
-      <div className="pass-controls">
-        <label>
-          Next{' '}
-          <select aria-label="Hours ahead" value={horizonHours} onChange={(e) => onHorizonChange(Number(e.target.value))}>
-            {HORIZONS_H.map((h) => (
-              <option key={h} value={h}>
-                {h} h
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Min{' '}
-          <select aria-label="Minimum elevation" value={minElevationDeg} onChange={(e) => onMinElevationChange(Number(e.target.value))}>
-            {MIN_ELEVATIONS.map((deg) => (
-              <option key={deg} value={deg}>
-                {deg}°
-              </option>
-            ))}
-          </select>
-        </label>
-        {selectedName && (
+        <p className="muted">
+          Line of sight above the horizon over {formatLocation(location)}. Drag the pin to move.
+        </p>
+        <div className="pass-controls">
           <label>
-            <input type="checkbox" checked={onlySelected} onChange={(e) => onOnlySelectedChange(e.target.checked)} />
-            {' '}
-            only {selectedName}
+            Next{' '}
+            <select aria-label="Hours ahead" value={horizonHours} onChange={(e) => onHorizonChange(Number(e.target.value))}>
+              {HORIZONS_H.map((h) => (
+                <option key={h} value={h}>
+                  {h} h
+                </option>
+              ))}
+            </select>
           </label>
-        )}
-      </div>
-      {passes.length === 0 && <p className="muted">None.</p>}
+          <label>
+            Min{' '}
+            <select aria-label="Minimum elevation" value={minElevationDeg} onChange={(e) => onMinElevationChange(Number(e.target.value))}>
+              {MIN_ELEVATIONS.map((deg) => (
+                <option key={deg} value={deg}>
+                  {deg}°
+                </option>
+              ))}
+            </select>
+          </label>
+          {selectedName && (
+            <label>
+              <input type="checkbox" checked={onlySelected} onChange={(e) => onOnlySelectedChange(e.target.checked)} />{' '}
+              only {selectedName}
+            </label>
+          )}
+        </div>
+        {passes.length === 0 && <p className="muted">None.</p>}
       </div>
       <ol>
         {passes.map((pass, i) => (
@@ -80,19 +79,19 @@ export function PassList({
               <div className="day muted">{dayLabel(pass.startMs)} UTC</div>
             )}
             <div className="row">
-            <button type="button" onClick={() => onShow(pass)} title="Show where the satellite will be at the peak">
-              <span className="swatch" style={{ background: `rgb(${FAMILY_COLORS[familyOf(pass.noradId)].join(' ')})` }} />
-              <span className="time">
-                {hhmm(pass.startMs)}–{hhmm(pass.endMs)}
-              </span>
-              {pass.name}
-              <span className="muted">
-                max {Math.round(pass.maxElevationDeg)}° {compassPoint(pass.peakAzimuthDeg)}
-              </span>
-            </button>
-            <button type="button" className="goto" aria-label={`Go to ${pass.name} pass at ${hhmm(pass.peakMs)}`} onClick={() => onGoTo(pass)}>
-              ⏱
-            </button>
+              <button type="button" onClick={() => onShow(pass)} title="Show where the satellite will be at the peak">
+                <span className="swatch" style={{ background: `rgb(${FAMILY_COLORS[familyOf(pass.noradId)].join(' ')})` }} />
+                <span className="time">
+                  {hhmm(pass.startMs)}–{hhmm(pass.endMs)}
+                </span>
+                {pass.name}
+                <span className="muted">
+                  max {Math.round(pass.maxElevationDeg)}° {compassPoint(pass.peakAzimuthDeg)}
+                </span>
+              </button>
+              <button type="button" className="goto" aria-label={`Go to ${pass.name} pass at ${hhmm(pass.peakMs)}`} onClick={() => onGoTo(pass)}>
+                ⏱
+              </button>
             </div>
           </li>
         ))}
