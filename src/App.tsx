@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { liveClock, scrubbedTo, withRate } from './time/clock'
 import { Disclosure } from './panels/Disclosure'
-import { type Ghost } from './map/layers'
-import { MapView, type Focus } from './map/MapView'
+import type { Ghost } from './map/layers'
+import type { Focus } from './map/MapView'
 import { DEFAULT_SPAN, satelliteFrom, type TrackSpan } from './orbit/orbit'
 import { SatelliteList } from './panels/SatelliteList'
 import { PassList } from './panels/PassList'
@@ -24,6 +24,9 @@ interface Selection {
 }
 
 const NOTHING: Selection = { noradId: null, ghost: null, activePass: null }
+
+// MapLibre and deck.gl are most of the bundle; the shell and the lists paint before they arrive.
+const MapView = lazy(() => import('./map/MapView').then((m) => ({ default: m.MapView })))
 
 function App() {
   const [loaded, setLoaded] = useState<Loaded>(null)
@@ -105,17 +108,19 @@ function App() {
         <p>Ground tracks of the StriX SAR constellation</p>
       </header>
       <main>
-        <MapView
-          satellites={satellites}
-          now={time}
-          selected={selection.noradId}
-          onSelect={select}
-          focus={focus}
-          location={location}
-          onLocationChange={setLocation}
-          ghost={selection.ghost}
-          span={span}
-        />
+        <Suspense fallback={<div className="map" />}>
+          <MapView
+            satellites={satellites}
+            now={time}
+            selected={selection.noradId}
+            onSelect={select}
+            focus={focus}
+            location={location}
+            onLocationChange={setLocation}
+            ghost={selection.ghost}
+            span={span}
+          />
+        </Suspense>
         <div className="dock">
           <aside className="satellites" aria-label="Constellation">
             <Disclosure
