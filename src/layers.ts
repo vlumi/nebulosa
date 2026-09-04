@@ -40,6 +40,12 @@ export interface Hover {
   timeMs: number
 }
 
+/** Where a satellite will be at some other moment than the displayed one, shown as a hollow marker. */
+export interface Ghost {
+  noradId: number
+  timeMs: number
+}
+
 export function trackData(satellites: Satellite[], time: Date): TrackDatum[] {
   return satellites.map((sat) => ({ samples: trackSamples(sat, time), noradId: sat.omm.NORAD_CAT_ID, family: sat.family }))
 }
@@ -94,6 +100,7 @@ export function buildLayers(
   now: Date,
   selected: number | null = null,
   hover: Hover | null = null,
+  ghost: Ghost | null = null,
 ): Layer[] {
   const nowMs = now.getTime()
   const segments = tracks.flatMap((track) => segmentsOf(track, nowMs))
@@ -154,6 +161,38 @@ export function buildLayers(
       updateTriggers: { getColor: selected },
     }),
   ]
+
+  const ghostSat = ghost && satellites.find((s) => s.omm.NORAD_CAT_ID === ghost.noradId)
+  const ghostPosition = ghostSat && positionAt(ghostSat, new Date(ghost.timeMs))
+  if (ghostSat && ghostPosition) {
+    const datum = { lonLat: [ghostPosition.lon, ghostPosition.lat] as LonLat, family: ghostSat.family }
+    layers.push(
+      new ScatterplotLayer<typeof datum>({
+        id: 'ghost',
+        data: [datum],
+        getPosition: (d) => d.lonLat,
+        getLineColor: (d) => FAMILY_COLORS[d.family],
+        filled: false,
+        stroked: true,
+        lineWidthMinPixels: 2,
+        getRadius: 7,
+        radiusUnits: 'pixels',
+      }),
+      new TextLayer<typeof datum>({
+        id: 'ghost-label',
+        data: [datum],
+        getPosition: (d) => d.lonLat,
+        getText: () => `${ghostSat.omm.OBJECT_NAME} · ${new Date(ghost.timeMs).toISOString().slice(11, 16)} UTC`,
+        getColor: [214, 217, 224],
+        getSize: 12,
+        getPixelOffset: [0, 18],
+        background: true,
+        getBackgroundColor: [11, 13, 20, 220],
+        backgroundPadding: [6, 3],
+        fontFamily: 'system-ui, sans-serif',
+      }),
+    )
+  }
 
   if (hover) {
     const name = satellites.find((s) => s.omm.NORAD_CAT_ID === hover.noradId)?.omm.OBJECT_NAME ?? ''

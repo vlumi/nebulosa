@@ -3,7 +3,7 @@ import { Map as MapLibre, Marker, NavigationControl, setWorkerUrl } from 'maplib
 import 'maplibre-gl/dist/maplibre-gl.css'
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { buildLayers, hoverAt, trackData, type Hover, type SatelliteDatum, type TrackDatum } from './layers'
+import { buildLayers, hoverAt, trackData, type Ghost, type Hover, type SatelliteDatum, type TrackDatum } from './layers'
 import { positionAt, type Satellite } from './orbit'
 import type { Location } from './passes'
 import { useThrottled } from './useThrottled'
@@ -31,9 +31,10 @@ interface Props {
   focus?: Focus | null
   location: Location
   onLocationChange: (location: Location) => void
+  ghost?: Ghost | null
 }
 
-export function MapView({ satellites, now, selected, onSelect, focus = null, location, onLocationChange }: Props) {
+export function MapView({ satellites, now, selected, onSelect, focus = null, location, onLocationChange, ghost = null }: Props) {
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<MapLibre>(null)
   const marker = useRef<Marker>(null)
@@ -112,8 +113,8 @@ export function MapView({ satellites, now, selected, onSelect, focus = null, loc
   }, [tracks])
 
   useEffect(() => {
-    overlay.current?.setProps({ layers: buildLayers(satellites, tracks, now, selected, hover) })
-  }, [satellites, tracks, now, selected, hover])
+    overlay.current?.setProps({ layers: buildLayers(satellites, tracks, now, selected, hover, ghost) })
+  }, [satellites, tracks, now, selected, hover, ghost])
 
   return <div ref={container} className="map" />
 }

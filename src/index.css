@@ -199,6 +199,11 @@ main > .map {
   margin: 0.5rem 0 0;
 }
 
+.passes li {
+  display: flex;
+  align-items: center;
+}
+
 .passes button {
   display: flex;
   align-items: center;
@@ -217,6 +222,14 @@ main > .map {
 
 .passes button:hover {
   background: rgb(255 255 255 / 0.08);
+}
+
+.passes button.goto {
+  width: auto;
+  flex: none;
+  margin: 0;
+  padding: 0.1rem 0.35rem;
+  color: var(--muted);
 }
 
 .passes .time {

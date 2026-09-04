@@ -54,16 +54,18 @@ test('reports a failed load', async () => {
   expect(await screen.findByRole('alert')).toHaveTextContent('503')
 })
 
-test('lists upcoming passes over Tokyo; picking one selects the satellite and pauses at its peak', async () => {
+test('showing a pass selects the satellite without touching the clock; going to it pauses at the peak', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
   render(<App />)
   const passes = within(await screen.findByRole('complementary', { name: 'Passes' }))
   expect(passes.getByRole('heading', { level: 2 })).toHaveTextContent('Passes over 35.68°N 139.69°E')
-  const passRows = passes.getAllByRole('button')
-  expect(passRows.length).toBeGreaterThan(0)
+  const firstRow = passes.getAllByRole('listitem')[0]
 
-  await userEvent.click(passRows[0])
+  await userEvent.click(firstRow.querySelector('button')!)
+  expect(screen.getAllByRole('button', { pressed: true })).toHaveLength(1)
+  expect(screen.getByRole('button', { name: 'Live' })).toBeDisabled()
+
+  await userEvent.click(within(firstRow).getByRole('button', { name: /^Go to / }))
   expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Live' })).toBeEnabled()
-  expect(screen.getAllByRole('button', { pressed: true })).toHaveLength(1)
 })
