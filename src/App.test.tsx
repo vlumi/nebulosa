@@ -116,7 +116,7 @@ test('the minimum-elevation filter drops low passes', async () => {
   await userEvent.click(passes.getByRole('radio', { name: '45°' }))
   const high = passes.queryAllByRole('listitem')
   expect(high.length).toBeLessThan(all)
-  expect(high.every((li) => Number(li.textContent!.match(/max (\d+)°/)![1]) >= 45)).toBe(true)
+  expect(high.every((li) => Number(li.textContent!.match(/(\d+)° [NESW]/)![1]) >= 45)).toBe(true)
 })
 
 test('on a phone, opening one panel closes the other', async () => {

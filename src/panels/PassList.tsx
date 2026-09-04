@@ -94,7 +94,7 @@ export function PassList({
                 </span>
                 {pass.name}
                 <span className={`${styles.detail} muted`}>
-                  max {Math.round(pass.maxElevationDeg)}° {compassPoint(pass.peakAzimuthDeg)}
+                  {Math.round(pass.maxElevationDeg)}° {compassPoint(pass.peakAzimuthDeg)}
                 </span>
               </button>
               <button
