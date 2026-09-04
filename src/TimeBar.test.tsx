@@ -47,3 +47,14 @@ test('picking a date moves the clock to that UTC date at the same time of day, p
   expect(clock.rate).toBe(0)
   expect(new Date(simTime(clock, t0.getTime())).toISOString()).toBe('2026-12-21T12:00:00.000Z')
 })
+
+test('play resumes a paused clock at real speed; an empty date is ignored', async () => {
+  const onChange = vi.fn()
+  const paused = withRate(liveClock(t0.getTime()), 0, t0.getTime())
+  render(<TimeBar clock={paused} now={t0} onChange={onChange} />)
+  await userEvent.click(screen.getByRole('button', { name: 'Play' }))
+  expect(onChange.mock.lastCall![0].rate).toBe(1)
+
+  fireEvent.change(screen.getByLabelText('Date (UTC)'), { target: { value: '' } })
+  expect(onChange).toHaveBeenCalledTimes(1)
+})

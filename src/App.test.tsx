@@ -110,3 +110,27 @@ test('the minimum-elevation filter drops low passes', async () => {
   expect(high.length).toBeLessThan(all)
   expect(high.every((li) => Number(li.textContent!.match(/max (\d+)°/)![1]) >= 45)).toBe(true)
 })
+
+test('on a phone, opening one panel closes the other', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
+  const listeners: Array<() => void> = []
+  vi.stubGlobal('matchMedia', () => ({
+    matches: true,
+    addEventListener: (_: string, fn: () => void) => listeners.push(fn),
+    removeEventListener: vi.fn(),
+  }))
+  render(<App />)
+  const satellites = within(screen.getByRole('complementary', { name: 'Constellation' }))
+  const satellitesToggle = satellites.getByRole('button', { name: /^Satellites/ })
+  expect(satellitesToggle).toHaveAttribute('aria-expanded', 'false')
+
+  await userEvent.click(satellitesToggle)
+  expect(satellitesToggle).toHaveAttribute('aria-expanded', 'true')
+  const passes = within(await screen.findByRole('complementary', { name: 'Passes' }))
+  const passesToggle = passes.getByRole('button', { name: /^Passes over/ })
+  expect(passesToggle).toHaveAttribute('aria-expanded', 'false')
+
+  await userEvent.click(passesToggle)
+  expect(passesToggle).toHaveAttribute('aria-expanded', 'true')
+  expect(satellitesToggle).toHaveAttribute('aria-expanded', 'false')
+})

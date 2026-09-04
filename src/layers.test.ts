@@ -116,3 +116,39 @@ test('a ghost beyond the drawn track gets a dashed continuation reaching it', ()
   )
   expect(Math.hypot(nearest[0] - ghostPosition[0], nearest[1] - ghostPosition[1])).toBeLessThan(0.01)
 })
+
+test('selection emphasis reaches dots and labels: bigger and brighter when selected, faded when not', () => {
+  const sats = [strix1, strix9].map(satelliteFrom)
+  const at = epochOf(strix1)
+  const [, , positions, labels] = buildLayers(sats, trackData(sats, at), at, strix9.NORAD_CAT_ID)
+  const dots = positions.props.data as { noradId: number }[]
+  const { getRadius, getFillColor } = positions.props as unknown as {
+    getRadius: (d: unknown) => number
+    getFillColor: (d: unknown) => number[]
+  }
+  const selected = dots.find((d) => d.noradId === strix9.NORAD_CAT_ID)!
+  const other = dots.find((d) => d.noradId === strix1.NORAD_CAT_ID)!
+  expect(getRadius(selected)).toBeGreaterThan(getRadius(other))
+  expect(getFillColor(selected)[3]).toBe(255)
+  expect(getFillColor(other)[3]).toBe(50)
+  const { getColor } = labels.props as unknown as { getColor: (d: unknown) => number[] }
+  expect(getColor(selected)[3]).toBe(255)
+  expect(getColor(other)[3]).toBe(90)
+})
+
+test('ghost layers draw in the family colour and the dashed path follows the samples', () => {
+  const sats = [strix9].map(satelliteFrom)
+  const at = epochOf(strix9)
+  const farAhead = at.getTime() + 3 * 3_600_000
+  const layers = buildLayers(sats, trackData(sats, at), at, null, null, {
+    noradId: strix9.NORAD_CAT_ID,
+    timeMs: farAhead,
+  })
+  const ghostTrack = layers.find((l) => l.id === 'ghost-track')!
+  const ghost = layers.find((l) => l.id === 'ghost')!
+  const { getPath } = ghostTrack.props as unknown as { getPath: (d: { samples: unknown[] }) => unknown[] }
+  const continuation = (ghostTrack.props.data as { samples: unknown[] }[])[0]
+  expect(getPath(continuation)).toHaveLength(continuation.samples.length)
+  const { getLineColor } = ghost.props as unknown as { getLineColor: (d: unknown) => number[] }
+  expect(getLineColor((ghost.props.data as unknown[])[0])).toEqual(FAMILY_COLORS['mid-inclination'])
+})
