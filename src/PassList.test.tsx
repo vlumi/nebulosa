@@ -29,6 +29,8 @@ test('lists passes with times, duration and max elevation; show and go-to are se
       passes={passes}
       horizonHours={24}
       onHorizonChange={vi.fn()}
+      minElevationDeg={0}
+      onMinElevationChange={vi.fn()}
       onlySelected={false}
       onOnlySelectedChange={vi.fn()}
       familyOf={() => 'sun-synchronous'}
@@ -60,6 +62,8 @@ test('shows every pass; the horizon and the selected-only filter are controls', 
       passes={many}
       horizonHours={24}
       onHorizonChange={onHorizonChange}
+      minElevationDeg={0}
+      onMinElevationChange={vi.fn()}
       selectedName="STRIX-1"
       onlySelected={true}
       onOnlySelectedChange={onOnlySelectedChange}
@@ -86,6 +90,8 @@ test('a separator row marks where the list crosses into a later UTC day', () => 
       passes={passes}
       horizonHours={48}
       onHorizonChange={vi.fn()}
+      minElevationDeg={0}
+      onMinElevationChange={vi.fn()}
       onlySelected={false}
       onOnlySelectedChange={vi.fn()}
       familyOf={() => 'sun-synchronous'}

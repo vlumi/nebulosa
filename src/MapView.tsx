@@ -4,7 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { buildLayers, hoverAt, trackData, type Ghost, type Hover, type SatelliteDatum, type TrackDatum } from './layers'
-import { positionAt, type Satellite } from './orbit'
+import { DEFAULT_SPAN, positionAt, type Satellite, type TrackSpan } from './orbit'
 import type { Location } from './passes'
 import { useThrottled } from './useThrottled'
 
@@ -32,9 +32,20 @@ interface Props {
   location: Location
   onLocationChange: (location: Location) => void
   ghost?: Ghost | null
+  span?: TrackSpan
 }
 
-export function MapView({ satellites, now, selected, onSelect, focus = null, location, onLocationChange, ghost = null }: Props) {
+export function MapView({
+  satellites,
+  now,
+  selected,
+  onSelect,
+  focus = null,
+  location,
+  onLocationChange,
+  ghost = null,
+  span = DEFAULT_SPAN,
+}: Props) {
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<MapLibre>(null)
   const marker = useRef<Marker>(null)
@@ -112,15 +123,15 @@ export function MapView({ satellites, now, selected, onSelect, focus = null, loc
   // A track shifted by under a minute is indistinguishable, and while scrubbing or fast-forwarding
   // a few tenths of a second of staleness is invisible; positions still move every frame.
   const trackMinute = useThrottled(Math.floor(now.getTime() / 60_000), 150)
-  const tracks = useMemo(() => trackData(satellites, new Date(trackMinute * 60_000)), [satellites, trackMinute])
+  const tracks = useMemo(() => trackData(satellites, new Date(trackMinute * 60_000), span), [satellites, trackMinute, span])
 
   useEffect(() => {
     currentTracks.current = tracks
   }, [tracks])
 
   useEffect(() => {
-    overlay.current?.setProps({ layers: buildLayers(satellites, tracks, now, selected, hover, ghost) })
-  }, [satellites, tracks, now, selected, hover, ghost])
+    overlay.current?.setProps({ layers: buildLayers(satellites, tracks, now, selected, hover, ghost, span) })
+  }, [satellites, tracks, now, selected, hover, ghost, span])
 
   return <div ref={container} className="map" />
 }

@@ -47,6 +47,17 @@ export function TimeBar({ clock, now, onChange }: Props) {
         value={offset}
         onChange={(e) => onChange(scrubbedTo(clock, realMs + Number(e.target.value), realMs))}
       />
+      <input
+        type="date"
+        aria-label="Date (UTC)"
+        value={new Date(simMs).toISOString().slice(0, 10)}
+        onChange={(e) => {
+          if (!e.target.value) return
+          const dayMs = Date.parse(`${e.target.value}T00:00:00Z`)
+          const timeOfDayMs = simMs - Date.parse(`${new Date(simMs).toISOString().slice(0, 10)}T00:00:00Z`)
+          onChange(withRate(scrubbedTo(clock, dayMs + timeOfDayMs, realMs), 0, realMs))
+        }}
+      />
       <output>
         {new Date(simMs).toISOString().slice(0, 19).replace('T', ' ')} UTC
         <span className="muted"> · {formatOffset(simMs, realMs)}</span>

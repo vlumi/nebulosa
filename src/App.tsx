@@ -3,7 +3,7 @@ import { liveClock, scrubbedTo, simTime, withRate } from './clock'
 import { Disclosure } from './Disclosure'
 import { type Ghost } from './layers'
 import { MapView, type Focus } from './MapView'
-import { satelliteFrom } from './orbit'
+import { DEFAULT_SPAN, satelliteFrom, type TrackSpan } from './orbit'
 import { Panel } from './Panel'
 import { PassList } from './PassList'
 import { formatAge, loadElements, newestEpoch, type Omm } from './elements'
@@ -24,13 +24,24 @@ function App() {
   const [location, setLocation] = useState<Location>(TOKYO)
   const [ghost, setGhost] = useState<Ghost | null>(null)
   const [horizonHours, setHorizonHours] = useState(24)
+  const [minElevationDeg, setMinElevationDeg] = useState(0)
   const [onlySelected, setOnlySelected] = useState(true)
+  const [span, setSpan] = useState<TrackSpan>(DEFAULT_SPAN)
   const [clock, setClock] = useState(() => liveClock(Date.now()))
   const now = useNow()
   const narrow = useNarrow()
   // Open by default on desktop, closed on phones, until the reader toggles a panel.
+  // On a phone only one panel is open at a time, so the column fits the screen.
   const [panelOpen, setPanelOpen] = useState<boolean | null>(null)
   const [passesOpen, setPassesOpen] = useState<boolean | null>(null)
+  const togglePanel = (open: boolean) => {
+    setPanelOpen(open)
+    if (open && narrow) setPassesOpen(false)
+  }
+  const togglePasses = (open: boolean) => {
+    setPassesOpen(open)
+    if (open && narrow) setPanelOpen(false)
+  }
   const time = useSmoothedTime(simTime(clock, now.getTime()))
 
   useEffect(() => {
@@ -72,7 +83,9 @@ function App() {
     [satellites, location, passMinute, horizonHours],
   )
   const selectedSatellite = satellites.find((s) => s.omm.NORAD_CAT_ID === selected)
-  const passes = selectedSatellite && onlySelected ? allPasses.filter((p) => p.noradId === selected) : allPasses
+  const passes = allPasses.filter(
+    (p) => p.maxElevationDeg >= minElevationDeg && (!selectedSatellite || !onlySelected || p.noradId === selected),
+  )
   const familyOf = (noradId: number) => satellites.find((s) => s.omm.NORAD_CAT_ID === noradId)?.family ?? 'mid-inclination'
 
   const showPass = (pass: Pass) => {
@@ -102,12 +115,13 @@ function App() {
           location={location}
           onLocationChange={setLocation}
           ghost={ghost}
+          span={span}
         />
         <div className="dock">
         <aside className="panel" aria-label="Constellation">
           <Disclosure
             open={panelOpen ?? !narrow}
-            onToggle={setPanelOpen}
+            onToggle={togglePanel}
             summary={
               <>
                 Satellites
@@ -123,7 +137,14 @@ function App() {
             {loaded === null && <p>Loading orbital elements…</p>}
             {loaded && 'error' in loaded && <p role="alert">{loaded.error}</p>}
             {satellites.length > 0 && (
-              <Panel satellites={satellites} now={now} selected={selected} onSelect={selectFromList} />
+              <Panel
+                satellites={satellites}
+                now={now}
+                selected={selected}
+                onSelect={selectFromList}
+                span={span}
+                onSpanChange={setSpan}
+              />
             )}
           </Disclosure>
         </aside>
@@ -131,7 +152,7 @@ function App() {
           <aside className="passes" aria-label="Passes">
             <Disclosure
               open={passesOpen ?? !narrow}
-              onToggle={setPassesOpen}
+              onToggle={togglePasses}
               summary={
                 <>
                   Passes over {formatLocation(location)}
@@ -144,6 +165,8 @@ function App() {
                 passes={passes}
                 horizonHours={horizonHours}
                 onHorizonChange={setHorizonHours}
+                minElevationDeg={minElevationDeg}
+                onMinElevationChange={setMinElevationDeg}
                 selectedName={selectedSatellite?.omm.OBJECT_NAME}
                 onlySelected={onlySelected}
                 onOnlySelectedChange={setOnlySelected}

@@ -1,16 +1,20 @@
 import { describeOrbit, formatAltitude } from './describe'
 import { formatAge, newestEpoch } from './elements'
 import { FAMILY_COLORS } from './layers'
-import type { Satellite } from './orbit'
+import { SPAN_CHOICES, type Satellite, type TrackSpan } from './orbit'
 
 interface Props {
   satellites: Satellite[]
   now: Date
   selected: number | null
   onSelect: (noradId: number | null) => void
+  span: TrackSpan
+  onSpanChange: (span: TrackSpan) => void
 }
 
-export function Panel({ satellites, now, selected, onSelect }: Props) {
+const orbits = (n: number) => `${n} orbit${n === 1 ? '' : 's'}`
+
+export function Panel({ satellites, now, selected, onSelect, span, onSpanChange }: Props) {
   const epoch = newestEpoch(satellites.map((s) => s.omm))
   return (
     <>
@@ -33,6 +37,23 @@ export function Panel({ satellites, now, selected, onSelect }: Props) {
           )
         })}
       </ul>
+      <div className="span-controls muted">
+        Track{' '}
+        <select aria-label="Track behind" value={span.pastOrbits} onChange={(e) => onSpanChange({ ...span, pastOrbits: Number(e.target.value) })}>
+          {SPAN_CHOICES.map((n) => (
+            <option key={n} value={n}>
+              −{orbits(n)}
+            </option>
+          ))}
+        </select>{' '}
+        <select aria-label="Track ahead" value={span.futureOrbits} onChange={(e) => onSpanChange({ ...span, futureOrbits: Number(e.target.value) })}>
+          {SPAN_CHOICES.map((n) => (
+            <option key={n} value={n}>
+              +{orbits(n)}
+            </option>
+          ))}
+        </select>
+      </div>
       <p className="muted">
         Elements from {epoch.toISOString().slice(0, 16).replace('T', ' ')} UTC · {formatAge(epoch, now)} old
       </p>

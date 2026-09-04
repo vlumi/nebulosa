@@ -47,3 +47,13 @@ test('nearest sample handles the antimeridian', () => {
   expect(nearestSample(samples, [179.5, 0.2])).toBe(1)
   expect(nearestSample(samples, [160, 0])).toBe(0)
 })
+
+test('the track span is configurable in orbits behind and ahead', () => {
+  const sat = satelliteFrom(strix9)
+  const center = epochOf(strix9)
+  const samples = trackSamples(sat, center, 30, { pastOrbits: 0.5, futureOrbits: 2 })
+  const periodMs = sat.periodMinutes * 60_000
+  expect(samples[0].timeMs).toBe(center.getTime() - 0.5 * periodMs)
+  expect(samples[samples.length - 1].timeMs).toBeGreaterThan(center.getTime() + 2 * periodMs - 30_000)
+  expect(samples[samples.length - 1].timeMs).toBeLessThanOrEqual(center.getTime() + 2 * periodMs)
+})

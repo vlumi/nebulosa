@@ -6,6 +6,8 @@ const DEG = 180 / Math.PI
 
 /** Choices for how far ahead the pass list looks. */
 export const HORIZONS_H = [6, 12, 24, 48] as const
+/** Choices for the least peak elevation a listed pass must reach. */
+export const MIN_ELEVATIONS = [0, 10, 30, 45, 60] as const
 
 export interface Location {
   lat: number
