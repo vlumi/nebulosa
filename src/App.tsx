@@ -37,9 +37,9 @@ function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  const selectFromList = (noradId: number | null) => {
+  const selectFromList = (noradId: number | null, timeMs?: number) => {
     setSelected(noradId)
-    if (noradId !== null) setFocus({ noradId, seq: (focus?.seq ?? 0) + 1 })
+    if (noradId !== null) setFocus({ noradId, seq: (focus?.seq ?? 0) + 1, timeMs })
   }
 
   const satellites = useMemo(
@@ -58,7 +58,7 @@ function App() {
   const showPass = (pass: Pass) => {
     const realMs = Date.now()
     setClock(withRate(scrubbedTo(clock, pass.peakMs, realMs), 0, realMs))
-    selectFromList(pass.noradId)
+    selectFromList(pass.noradId, pass.peakMs)
   }
 
   return (

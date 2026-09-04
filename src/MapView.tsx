@@ -13,10 +13,14 @@ const BASEMAP = 'https://tiles.openfreemap.org/styles/fiord'
 // MapLibre 6 resolves its worker relative to its own script URL, which a bundled app does not provide.
 setWorkerUrl(maplibreWorkerUrl)
 
-/** A request to bring a satellite into view; `seq` makes repeated requests for the same one distinct. */
+/**
+ * A request to bring a satellite into view at `timeMs` (default: the displayed time);
+ * `seq` makes repeated requests for the same one distinct.
+ */
 export interface Focus {
   noradId: number
   seq: number
+  timeMs?: number
 }
 
 interface Props {
@@ -93,7 +97,8 @@ export function MapView({ satellites, now, selected, onSelect, focus = null, loc
   useEffect(() => {
     if (!focus) return
     const sat = satellites.find((s) => s.omm.NORAD_CAT_ID === focus.noradId)
-    const p = sat && positionAt(sat, currentTime.current)
+    const at = focus.timeMs === undefined ? currentTime.current : new Date(focus.timeMs)
+    const p = sat && positionAt(sat, at)
     if (p) map.current?.easeTo({ center: [p.lon, p.lat], duration: 600 })
   }, [focus, satellites])
 

@@ -99,3 +99,16 @@ test('the observer pin starts at the location and reports where it is dragged', 
   markerInstance.handlers.dragend()
   expect(onLocationChange).toHaveBeenCalledWith({ lat: 60.17, lon: 24.94 })
 })
+
+test('a focus request with a time centers on the position at that time, not the displayed one', () => {
+  const sats = [strix1].map(satelliteFrom)
+  const displayed = epochOf(strix1)
+  const later = displayed.getTime() + 20 * 60_000
+  render(
+    <MapView satellites={sats} now={displayed} selected={strix1.NORAD_CAT_ID} onSelect={vi.fn()} focus={{ noradId: strix1.NORAD_CAT_ID, seq: 1, timeMs: later }} location={tokyo} onLocationChange={vi.fn()} />,
+  )
+  const expected = positionAt(sats[0], new Date(later))!
+  const { center } = mapInstance.easeTo.mock.lastCall![0]
+  expect(center[0]).toBeCloseTo(expected.lon, 6)
+  expect(center[1]).toBeCloseTo(expected.lat, 6)
+})
