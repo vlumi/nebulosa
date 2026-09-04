@@ -10,12 +10,16 @@ test('builds tracks, positions and labels for every satellite, colored by family
   expect(layers.map((l) => l.id)).toEqual(['night', 'tracks', 'positions', 'labels'])
 
   const [, tracks, positions, labels] = layers
-  const trackRows = tracks.props.data as { family: string; half: string; path: unknown[] }[]
-  expect(trackRows.length).toBe(4)
+  const trackRows = tracks.props.data as { noradId: number; family: string; half: string; age: number; path: unknown[] }[]
   expect(new Set(trackRows.map((d) => d.family))).toEqual(new Set(['sun-synchronous', 'mid-inclination']))
-  expect(trackRows.map((d) => d.half)).toEqual(['past', 'future', 'past', 'future'])
-  const strix1Samples = trackData(sats, at)[0].samples.length
-  expect(trackRows[0].path.length + trackRows[1].path.length).toBe(strix1Samples + 2)
+  const strix1Rows = trackRows.filter((d) => d.noradId === strix1.NORAD_CAT_ID)
+  expect(strix1Rows.filter((d) => d.half === 'future')).toHaveLength(1)
+  expect(strix1Rows.filter((d) => d.half === 'past').length).toBeGreaterThan(5)
+  const ages = strix1Rows.filter((d) => d.half === 'past').map((d) => d.age)
+  expect(ages[0]).toBeGreaterThan(ages[ages.length - 1])
+  expect(ages[ages.length - 1]).toBe(0)
+  const { getColor } = tracks.props as unknown as { getColor: (d: unknown) => number[] }
+  expect(getColor(strix1Rows[0])[3]).toBeLessThan(getColor(strix1Rows[strix1Rows.length - 1])[3])
 
   const positionData = positions.props.data as { name: string; family: string }[]
   expect(positionData.map((d) => d.name)).toEqual(['STRIX-1', 'STRIX-9'])
@@ -37,11 +41,12 @@ test('dims everything but the selected satellite and makes layers pickable', () 
     getWidth: (d: unknown) => number
   }
   const future = (id: number) => trackRows.find((d) => d.noradId === id && d.half === 'future')!
-  const past = (id: number) => trackRows.find((d) => d.noradId === id && d.half === 'past')!
+  const oldest = (id: number) => trackRows.find((d) => d.noradId === id && d.half === 'past')!
   expect(getColor(future(strix9.NORAD_CAT_ID))[3]).toBe(255)
-  expect(getColor(past(strix9.NORAD_CAT_ID))[3]).toBeLessThan(255)
+  expect(getColor(oldest(strix9.NORAD_CAT_ID))[3]).toBeLessThan(255)
   expect(getColor(future(strix1.NORAD_CAT_ID))[3]).toBe(50)
   expect(getWidth(future(strix9.NORAD_CAT_ID))).toBeGreaterThan(getWidth(future(strix1.NORAD_CAT_ID)))
+  expect(getWidth(oldest(strix9.NORAD_CAT_ID))).toBe(getWidth(future(strix9.NORAD_CAT_ID)))
 })
 
 test('hovering a track adds a marker and a label with the time at that point', () => {

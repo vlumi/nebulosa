@@ -24,6 +24,8 @@ export interface TrackDatum extends SatelliteDatum {
 interface SegmentDatum extends SatelliteDatum {
   path: LonLat[]
   half: 'past' | 'future'
+  /** 0 at the satellite, 1 at the oldest point of the flown half. */
+  age: number
 }
 
 interface PositionDatum extends SatelliteDatum {
@@ -47,24 +49,35 @@ export function hoverAt(track: TrackDatum, lonLat: LonLat): Hover {
   return { noradId: track.noradId, lonLat: sample.lonLat, timeMs: sample.timeMs }
 }
 
-/** The track split at `now`: the flown half and the half still ahead, sharing the boundary point. */
-function halves(track: TrackDatum, nowMs: number): SegmentDatum[] {
+const TAIL_CHUNKS = 12
+
+/**
+ * The track split at `now`. The half ahead is one segment; the flown half is a run of chunks with
+ * increasing `age`, so it can fade out behind the satellite. Neighbours share a boundary point.
+ */
+function segmentsOf(track: TrackDatum, nowMs: number): SegmentDatum[] {
   const i = track.samples.findIndex((s) => s.timeMs > nowMs)
   const split = i === -1 ? track.samples.length : i
   const path = track.samples.map((s) => s.lonLat)
-  const past: SegmentDatum = { ...track, half: 'past', path: path.slice(0, split + 1) }
-  const future: SegmentDatum = { ...track, half: 'future', path: path.slice(Math.max(0, split - 1)) }
-  return [past, future].filter((segment) => segment.path.length > 1)
+  const past = path.slice(0, split + 1)
+  const segments: SegmentDatum[] = []
+  const chunkSize = Math.max(2, Math.ceil(past.length / TAIL_CHUNKS))
+  for (let start = 0; start < past.length - 1; start += chunkSize - 1) {
+    const chunk = past.slice(start, start + chunkSize)
+    const age = 1 - (start + chunk.length - 1) / (past.length - 1)
+    segments.push({ ...track, half: 'past', age, path: chunk })
+  }
+  const future = path.slice(Math.max(0, split - 1))
+  if (future.length > 1) segments.push({ ...track, half: 'future', age: 0, path: future })
+  return segments
 }
 
 const ALPHA = {
-  past: { selected: 140, normal: 90, dimmed: 25 },
-  future: { selected: 255, normal: 200, dimmed: 50 },
+  selected: { ahead: 255, oldest: 60 },
+  normal: { ahead: 200, oldest: 40 },
+  dimmed: { ahead: 50, oldest: 15 },
 }
-const WIDTH = {
-  past: { selected: 2, normal: 1, dimmed: 1 },
-  future: { selected: 3, normal: 1.5, dimmed: 1.5 },
-}
+const WIDTH = { selected: 3, normal: 1.5, dimmed: 1.5 }
 
 /** `selected` is a NORAD catalog number; everything else is dimmed while one is set. */
 export function buildLayers(
@@ -75,7 +88,7 @@ export function buildLayers(
   hover: Hover | null = null,
 ): Layer[] {
   const nowMs = now.getTime()
-  const segments = tracks.flatMap((track) => halves(track, nowMs))
+  const segments = tracks.flatMap((track) => segmentsOf(track, nowMs))
   const positions: PositionDatum[] = satellites.flatMap((sat) => {
     const p = positionAt(sat, now)
     if (!p) return []
@@ -99,8 +112,11 @@ export function buildLayers(
       pickable: true,
       wrapLongitude: true,
       getPath: (d) => d.path,
-      getColor: (d) => color(d, ALPHA[d.half][emphasis(d)]),
-      getWidth: (d) => WIDTH[d.half][emphasis(d)],
+      getColor: (d) => {
+        const { ahead, oldest } = ALPHA[emphasis(d)]
+        return color(d, Math.round(ahead + (oldest - ahead) * d.age))
+      },
+      getWidth: (d) => WIDTH[emphasis(d)],
       widthUnits: 'pixels',
       updateTriggers: { getColor: selected, getWidth: selected },
     }),
