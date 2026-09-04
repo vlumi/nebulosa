@@ -9,6 +9,16 @@ export const HORIZONS_H = [6, 12, 24, 48] as const
 /** Choices for the least peak elevation a listed pass must reach. */
 export const MIN_ELEVATIONS = [0, 10, 30, 45, 60] as const
 
+/** How the pass list is narrowed. */
+export interface PassFilters {
+  horizonHours: number
+  minElevationDeg: number
+  /** Only the selected satellite's passes while one is selected. */
+  onlySelected: boolean
+}
+
+export const DEFAULT_FILTERS: PassFilters = { horizonHours: 24, minElevationDeg: 0, onlySelected: true }
+
 export interface Location {
   lat: number
   lon: number

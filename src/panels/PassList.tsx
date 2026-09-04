@@ -1,19 +1,15 @@
 import { familyCss } from '../shared/palette'
 import type { OrbitFamily } from '../orbit/orbit'
 import { compassPoint, dayLabel, formatLocation, hhmm, utcDayIndex } from '../shared/format'
-import { HORIZONS_H, MIN_ELEVATIONS, type Location, type Pass } from '../orbit/passes'
+import { HORIZONS_H, MIN_ELEVATIONS, type Location, type Pass, type PassFilters } from '../orbit/passes'
 
 interface Props {
   location: Location
   passes: Pass[]
-  horizonHours: number
-  onHorizonChange: (hours: number) => void
-  minElevationDeg: number
-  onMinElevationChange: (deg: number) => void
+  filters: PassFilters
+  onFiltersChange: (filters: PassFilters) => void
   /** Name of the selected satellite when the list can be narrowed to it. */
   selectedName?: string
-  onlySelected: boolean
-  onOnlySelectedChange: (only: boolean) => void
   familyOf: (noradId: number) => OrbitFamily
   onShow: (pass: Pass) => void
   onGoTo: (pass: Pass) => void
@@ -26,13 +22,9 @@ interface Props {
 export function PassList({
   location,
   passes,
-  horizonHours,
-  onHorizonChange,
-  minElevationDeg,
-  onMinElevationChange,
+  filters,
+  onFiltersChange,
   selectedName,
-  onlySelected,
-  onOnlySelectedChange,
   familyOf,
   onShow,
   onGoTo,
@@ -40,6 +32,7 @@ export function PassList({
   now,
 }: Props) {
   const isActive = (pass: Pass) => activePass?.noradId === pass.noradId && activePass.peakMs === pass.peakMs
+  const set = (change: Partial<PassFilters>) => onFiltersChange({ ...filters, ...change })
   return (
     <>
       <div className="pass-header">
@@ -49,8 +42,8 @@ export function PassList({
             Next{' '}
             <select
               aria-label="Hours ahead"
-              value={horizonHours}
-              onChange={(e) => onHorizonChange(Number(e.target.value))}
+              value={filters.horizonHours}
+              onChange={(e) => set({ horizonHours: Number(e.target.value) })}
             >
               {HORIZONS_H.map((h) => (
                 <option key={h} value={h}>
@@ -63,8 +56,8 @@ export function PassList({
             Min{' '}
             <select
               aria-label="Minimum elevation"
-              value={minElevationDeg}
-              onChange={(e) => onMinElevationChange(Number(e.target.value))}
+              value={filters.minElevationDeg}
+              onChange={(e) => set({ minElevationDeg: Number(e.target.value) })}
             >
               {MIN_ELEVATIONS.map((deg) => (
                 <option key={deg} value={deg}>
@@ -75,7 +68,11 @@ export function PassList({
           </label>
           {selectedName && (
             <label>
-              <input type="checkbox" checked={onlySelected} onChange={(e) => onOnlySelectedChange(e.target.checked)} />{' '}
+              <input
+                type="checkbox"
+                checked={filters.onlySelected}
+                onChange={(e) => set({ onlySelected: e.target.checked })}
+              />{' '}
               only {selectedName}
             </label>
           )}
