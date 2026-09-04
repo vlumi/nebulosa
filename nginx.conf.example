@@ -1,0 +1,32 @@
+# nginx server block for nebulosa.misaki.fi.
+#
+# Start HTTP-only so certbot can complete the ACME challenge, then
+#   sudo certbot --nginx -d nebulosa.misaki.fi
+# adds the 443 block and the HTTP->HTTPS redirect.
+#
+# `root` is the web root deploy.sh publishes into (WEBROOT, default /var/www/nebulosa).
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name nebulosa.misaki.fi;
+
+    root /var/www/nebulosa;
+    index index.html;
+
+    # Single-page app: every path falls back to index.html.
+    location / {
+        try_files $uri /index.html;
+        add_header Cache-Control "no-cache";
+    }
+
+    # Vite fingerprints everything under /assets/, so cache hard.
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    location ~ /\. {
+        deny all;
+    }
+}
