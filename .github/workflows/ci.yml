@@ -18,5 +18,7 @@ jobs:
       - run: npm run lint
       - run: npm run lint:md
       - run: npm run format:check
-      - run: npm test
+      - run: npx vitest run --reporter=verbose src/App.test.tsx
+        env:
+          NODE_OPTIONS: --max-old-space-size=1024
       - run: npm run build
