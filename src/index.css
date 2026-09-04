@@ -1,5 +1,6 @@
 :root {
   --bg: #0b0d14;
+  --panel: rgb(11 13 20 / 0.85);
   --text: #d6d9e0;
   --muted: #8a90a0;
   --accent: #eedd66;
@@ -15,19 +16,22 @@ body {
 }
 
 #root {
-  min-height: 100svh;
+  height: 100svh;
   display: flex;
   flex-direction: column;
 }
 
 header,
 footer {
-  padding: 1rem 1.5rem;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
 }
 
 header h1 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: var(--accent);
 }
@@ -36,23 +40,55 @@ header p,
 footer {
   margin: 0;
   color: var(--muted);
-  font-size: 0.875rem;
+  font-size: 0.8rem;
 }
 
 main {
   flex: 1;
-  display: grid;
-  place-items: center;
+  position: relative;
+  min-height: 0;
 }
 
-main ul {
+.map {
+  position: absolute;
+  inset: 0;
+}
+
+.panel {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  max-width: 18rem;
+  padding: 0.75rem 1rem;
+  background: var(--panel);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.panel ul {
   list-style: none;
   padding: 0;
-  margin: 0 0 1rem;
-  columns: 2;
-  column-gap: 2rem;
+  margin: 0 0 0.5rem;
+}
+
+.panel li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.swatch {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  flex: none;
 }
 
 .muted {
   color: var(--muted);
+}
+
+.maplibregl-ctrl-attrib {
+  font-size: 0.7rem;
 }
