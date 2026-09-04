@@ -77,6 +77,8 @@ test('showing a pass selects the satellite without touching the clock; going to 
   expect(screen.getAllByRole('button', { pressed: true })).toHaveLength(1)
   expect(screen.getByRole('button', { name: 'Live' })).toBeDisabled()
   expect(firstRow.querySelector('button')).toHaveAttribute('aria-current', 'true')
+  expect(firstRow).not.toHaveClass('dimmed')
+  expect(passes.getAllByRole('listitem')[1]).toHaveClass('dimmed')
 
   await userEvent.click(within(firstRow).getByRole('button', { name: /^Go to / }))
   expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument()

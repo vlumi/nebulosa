@@ -84,7 +84,7 @@ export function PassList({
       </div>
       <ol>
         {passes.map((pass, i) => (
-          <li key={`${pass.noradId}-${pass.startMs}`}>
+          <li key={`${pass.noradId}-${pass.startMs}`} className={activePass && !isActive(pass) ? 'dimmed' : undefined}>
             {utcDayIndex(pass.startMs) !== utcDayIndex(i === 0 ? now.getTime() : passes[i - 1].startMs) && (
               <div className="day muted">{dayLabel(pass.startMs)} UTC</div>
             )}

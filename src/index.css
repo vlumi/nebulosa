@@ -100,7 +100,8 @@ main > .map {
   flex: none;
 }
 
-.satellites li.dimmed {
+.satellites li.dimmed,
+.passes li.dimmed {
   opacity: 0.45;
 }
 
