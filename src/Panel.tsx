@@ -1,0 +1,36 @@
+import { formatAge, newestEpoch } from './elements'
+import { FAMILY_COLORS } from './layers'
+import type { Satellite } from './orbit'
+
+interface Props {
+  satellites: Satellite[]
+  now: Date
+  selected: number | null
+  onSelect: (noradId: number | null) => void
+}
+
+export function Panel({ satellites, now, selected, onSelect }: Props) {
+  const epoch = newestEpoch(satellites.map((s) => s.omm))
+  return (
+    <>
+      <ul>
+        {satellites.map((s) => {
+          const id = s.omm.NORAD_CAT_ID
+          const isSelected = id === selected
+          return (
+            <li key={id} className={selected !== null && !isSelected ? 'dimmed' : undefined}>
+              <button type="button" aria-pressed={isSelected} onClick={() => onSelect(isSelected ? null : id)}>
+                <span className="swatch" style={{ background: `rgb(${FAMILY_COLORS[s.family].join(' ')})` }} />
+                {s.omm.OBJECT_NAME} <span className="muted">#{id} · {s.omm.INCLINATION.toFixed(1)}°</span>
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+      <p className="muted">
+        {satellites.length} satellites · elements from {epoch.toISOString().slice(0, 16).replace('T', ' ')} UTC ·{' '}
+        {formatAge(epoch, now)} old
+      </p>
+    </>
+  )
+}
