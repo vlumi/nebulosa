@@ -1,5 +1,5 @@
 import { epochOf, newestEpoch } from './elements'
-import { strix1, strix9 } from './test/fixtures'
+import { strix1, strix9 } from '../test/fixtures'
 
 test('reads the epoch as UTC, with or without a trailing Z', () => {
   expect(epochOf(strix1).toISOString()).toBe('2026-09-03T20:40:50.042Z')

@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { PassList } from './PassList'
-import type { Pass } from './passes'
+import type { Pass } from '../orbit/passes'
 
 const t0 = Date.UTC(2026, 8, 4, 12, 0, 0)
 const pass = (name: string, noradId: number, startMin: number, maxEl: number): Pass => ({

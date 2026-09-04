@@ -1,12 +1,12 @@
 import { act, render } from '@testing-library/react'
 import { MapboxOverlay } from '@deck.gl/mapbox'
 import { Map as MapLibre } from 'maplibre-gl'
-import { epochOf } from './elements'
-import { strix1, strix9 } from './test/fixtures'
+import { epochOf } from '../orbit/elements'
+import { strix1, strix9 } from '../test/fixtures'
 
 const tokyo = { lat: 35.68, lon: 139.69 }
 import { MapView } from './MapView'
-import { positionAt, satelliteFrom } from './orbit'
+import { positionAt, satelliteFrom } from '../orbit/orbit'
 
 const { mapInstance, overlayInstance, markerInstance } = vi.hoisted(() => {
   const markerInstance = {

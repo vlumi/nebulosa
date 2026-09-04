@@ -1,8 +1,8 @@
-import { describeOrbit, formatAltitude } from './describe'
-import { newestEpoch } from './elements'
-import { formatAge, utcMinute } from './format'
-import { FAMILY_COLORS } from './layers'
-import { SPAN_CHOICES, type Satellite, type TrackSpan } from './orbit'
+import { describeOrbit, formatAltitude } from '../orbit/describe'
+import { newestEpoch } from '../orbit/elements'
+import { formatAge, utcMinute } from '../shared/format'
+import { familyCss } from '../shared/palette'
+import { SPAN_CHOICES, type Satellite, type TrackSpan } from '../orbit/orbit'
 
 interface Props {
   satellites: Satellite[]
@@ -26,7 +26,7 @@ export function SatelliteList({ satellites, now, selected, onSelect, span, onSpa
           return (
             <li key={id} className={selected !== null && !isSelected ? 'dimmed' : undefined}>
               <button type="button" aria-pressed={isSelected} onClick={() => onSelect(isSelected ? null : id)}>
-                <span className="swatch" style={{ background: `rgb(${FAMILY_COLORS[s.family].join(' ')})` }} />
+                <span className="swatch" style={{ background: familyCss(s.family) }} />
                 {s.omm.OBJECT_NAME}{' '}
                 <span className="muted">
                   <span title="NORAD catalog number">#{id}</span> ·{' '}

@@ -1,7 +1,7 @@
 import { epochOf } from './elements'
 import { satelliteFrom } from './orbit'
 import { lookAt, passesOver, upcomingPasses } from './passes'
-import { strix1, strix9 } from './test/fixtures'
+import { strix1, strix9 } from '../test/fixtures'
 
 const tokyo = { lat: 35.68, lon: 139.69 }
 const tromso = { lat: 69.65, lon: 18.96 }

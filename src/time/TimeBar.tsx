@@ -1,5 +1,5 @@
 import { isLive, liveClock, RATES, scrubbedTo, simTime, withRate, type Clock } from './clock'
-import { formatOffset, utcDate, utcSecond } from './format'
+import { formatOffset, utcDate, utcSecond } from '../shared/format'
 
 const RANGE_MS = 12 * 3_600_000
 const STEP_MS = 60_000

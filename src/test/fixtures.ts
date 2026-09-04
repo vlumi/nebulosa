@@ -1,4 +1,4 @@
-import type { Omm } from '../elements'
+import type { Omm } from '../orbit/elements'
 
 export const strix1: Omm = {
   OBJECT_NAME: 'STRIX-1',
