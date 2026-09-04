@@ -17,6 +17,7 @@ function useNow(intervalMs: number): Date {
 
 function App() {
   const [loaded, setLoaded] = useState<Loaded>(null)
+  const [selected, setSelected] = useState<number | null>(null)
   const now = useNow(1000)
 
   useEffect(() => {
@@ -37,11 +38,13 @@ function App() {
         <p>Ground tracks of the StriX SAR constellation</p>
       </header>
       <main>
-        <MapView satellites={satellites} now={now} />
+        <MapView satellites={satellites} now={now} selected={selected} onSelect={setSelected} />
         <aside className="panel">
           {loaded === null && <p>Loading orbital elements…</p>}
           {loaded && 'error' in loaded && <p role="alert">{loaded.error}</p>}
-          {satellites.length > 0 && <Constellation satellites={satellites} now={now} />}
+          {satellites.length > 0 && (
+            <Constellation satellites={satellites} now={now} selected={selected} onSelect={setSelected} />
+          )}
         </aside>
       </main>
       <footer>
@@ -51,17 +54,30 @@ function App() {
   )
 }
 
-function Constellation({ satellites, now }: { satellites: Satellite[]; now: Date }) {
+interface ConstellationProps {
+  satellites: Satellite[]
+  now: Date
+  selected: number | null
+  onSelect: (noradId: number | null) => void
+}
+
+function Constellation({ satellites, now, selected, onSelect }: ConstellationProps) {
   const epoch = newestEpoch(satellites.map((s) => s.omm))
   return (
     <>
       <ul>
-        {satellites.map((s) => (
-          <li key={s.omm.NORAD_CAT_ID}>
-            <span className="swatch" style={{ background: `rgb(${FAMILY_COLORS[s.family].join(' ')})` }} />
-            {s.omm.OBJECT_NAME} <span className="muted">#{s.omm.NORAD_CAT_ID} · {s.omm.INCLINATION.toFixed(1)}°</span>
-          </li>
-        ))}
+        {satellites.map((s) => {
+          const id = s.omm.NORAD_CAT_ID
+          const isSelected = id === selected
+          return (
+            <li key={id} className={selected !== null && !isSelected ? 'dimmed' : undefined}>
+              <button type="button" aria-pressed={isSelected} onClick={() => onSelect(isSelected ? null : id)}>
+                <span className="swatch" style={{ background: `rgb(${FAMILY_COLORS[s.family].join(' ')})` }} />
+                {s.omm.OBJECT_NAME} <span className="muted">#{id} · {s.omm.INCLINATION.toFixed(1)}°</span>
+              </button>
+            </li>
+          )
+        })}
       </ul>
       <p className="muted">
         {satellites.length} satellites · elements from {epoch.toISOString().slice(0, 16).replace('T', ' ')} UTC ·{' '}
