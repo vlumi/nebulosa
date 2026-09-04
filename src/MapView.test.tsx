@@ -3,15 +3,35 @@ import { MapboxOverlay } from '@deck.gl/mapbox'
 import { Map as MapLibre } from 'maplibre-gl'
 import { epochOf } from './elements'
 import { strix1, strix9 } from './test/fixtures'
+
+const tokyo = { lat: 35.68, lon: 139.69 }
 import { MapView } from './MapView'
 import { positionAt, satelliteFrom } from './orbit'
 
-const { mapInstance, overlayInstance } = vi.hoisted(() => ({
-  mapInstance: { addControl: vi.fn(), remove: vi.fn(), easeTo: vi.fn() },
-  overlayInstance: { setProps: vi.fn() },
-}))
+const { mapInstance, overlayInstance, markerInstance } = vi.hoisted(() => {
+  const markerInstance = {
+    handlers: {} as Record<string, () => void>,
+    lngLat: { lng: 0, lat: 0 },
+    setLngLat: vi.fn(function (this: unknown, [lng, lat]: [number, number]) {
+      markerInstance.lngLat = { lng, lat }
+      return markerInstance
+    }),
+    addTo: vi.fn(() => markerInstance),
+    on: vi.fn((event: string, handler: () => void) => {
+      markerInstance.handlers[event] = handler
+      return markerInstance
+    }),
+    getLngLat: vi.fn(() => markerInstance.lngLat),
+  }
+  return {
+    mapInstance: { addControl: vi.fn(), remove: vi.fn(), easeTo: vi.fn() },
+    overlayInstance: { setProps: vi.fn() },
+    markerInstance,
+  }
+})
 vi.mock('maplibre-gl', () => ({
   Map: vi.fn(function () { return mapInstance }),
+  Marker: vi.fn(function () { return markerInstance }),
   NavigationControl: vi.fn(),
   setWorkerUrl: vi.fn(),
 }))
@@ -22,7 +42,7 @@ test('mounts a MapLibre map with a deck.gl overlay and feeds it the layers', () 
   const sats = [strix1, strix9].map(satelliteFrom)
   const onSelect = vi.fn()
   const { container, unmount } = render(
-    <MapView satellites={sats} now={epochOf(strix1)} selected={null} onSelect={onSelect} />,
+    <MapView satellites={sats} now={epochOf(strix1)} selected={null} onSelect={onSelect} location={tokyo} onLocationChange={vi.fn()} />,
   )
 
   expect(MapLibre).toHaveBeenCalledWith(
@@ -55,11 +75,39 @@ test('mounts a MapLibre map with a deck.gl overlay and feeds it the layers', () 
 test('a focus request eases the map to the satellite\'s current position', () => {
   const sats = [strix1, strix9].map(satelliteFrom)
   const at = epochOf(strix9)
-  const { rerender } = render(<MapView satellites={sats} now={at} selected={null} onSelect={vi.fn()} focus={null} />)
+  const { rerender } = render(
+    <MapView satellites={sats} now={at} selected={null} onSelect={vi.fn()} focus={null} location={tokyo} onLocationChange={vi.fn()} />,
+  )
   expect(mapInstance.easeTo).not.toHaveBeenCalled()
 
-  rerender(<MapView satellites={sats} now={at} selected={strix9.NORAD_CAT_ID} onSelect={vi.fn()} focus={{ noradId: strix9.NORAD_CAT_ID, seq: 1 }} />)
+  rerender(
+    <MapView satellites={sats} now={at} selected={strix9.NORAD_CAT_ID} onSelect={vi.fn()} focus={{ noradId: strix9.NORAD_CAT_ID, seq: 1 }} location={tokyo} onLocationChange={vi.fn()} />,
+  )
   const expected = positionAt(sats[1], at)!
+  const { center } = mapInstance.easeTo.mock.lastCall![0]
+  expect(center[0]).toBeCloseTo(expected.lon, 6)
+  expect(center[1]).toBeCloseTo(expected.lat, 6)
+})
+
+test('the observer pin starts at the location and reports where it is dragged', () => {
+  const onLocationChange = vi.fn()
+  render(<MapView satellites={[]} now={epochOf(strix1)} selected={null} onSelect={vi.fn()} location={tokyo} onLocationChange={onLocationChange} />)
+  expect(markerInstance.setLngLat).toHaveBeenCalledWith([tokyo.lon, tokyo.lat])
+  expect(markerInstance.addTo).toHaveBeenCalledWith(mapInstance)
+
+  markerInstance.lngLat = { lng: 24.94, lat: 60.17 }
+  markerInstance.handlers.dragend()
+  expect(onLocationChange).toHaveBeenCalledWith({ lat: 60.17, lon: 24.94 })
+})
+
+test('a focus request with a time centers on the position at that time, not the displayed one', () => {
+  const sats = [strix1].map(satelliteFrom)
+  const displayed = epochOf(strix1)
+  const later = displayed.getTime() + 20 * 60_000
+  render(
+    <MapView satellites={sats} now={displayed} selected={strix1.NORAD_CAT_ID} onSelect={vi.fn()} focus={{ noradId: strix1.NORAD_CAT_ID, seq: 1, timeMs: later }} location={tokyo} onLocationChange={vi.fn()} />,
+  )
+  const expected = positionAt(sats[0], new Date(later))!
   const { center } = mapInstance.easeTo.mock.lastCall![0]
   expect(center[0]).toBeCloseTo(expected.lon, 6)
   expect(center[1]).toBeCloseTo(expected.lat, 6)

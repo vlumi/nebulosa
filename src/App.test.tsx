@@ -1,10 +1,14 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import App from './App'
 import { strix1, strix9 } from './test/fixtures'
 
 vi.mock('maplibre-gl', () => ({
   Map: vi.fn(function () { return { addControl: vi.fn(), remove: vi.fn(), easeTo: vi.fn() } }),
+  Marker: vi.fn(function () {
+    const marker = { setLngLat: () => marker, addTo: () => marker, on: () => marker, getLngLat: () => ({ lng: 0, lat: 0 }) }
+    return marker
+  }),
   NavigationControl: vi.fn(),
   setWorkerUrl: vi.fn(),
 }))
@@ -16,17 +20,19 @@ test('lists the constellation from /data/elements.json with the epoch age', asyn
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
   render(<App />)
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('nebulosa')
-  expect(await screen.findByText('STRIX-1')).toBeInTheDocument()
-  expect(screen.getByText('STRIX-9')).toBeInTheDocument()
-  expect(screen.getByText(/2 satellites · elements from 2026-09-03 20:40 UTC/)).toBeInTheDocument()
+  const panel = within(screen.getByRole('complementary', { name: 'Constellation' }))
+  expect(await panel.findByText('STRIX-1')).toBeInTheDocument()
+  expect(panel.getByText('STRIX-9')).toBeInTheDocument()
+  expect(panel.getByText(/2 satellites · elements from 2026-09-03 20:40 UTC/)).toBeInTheDocument()
   expect(fetch).toHaveBeenCalledWith('/data/elements.json')
 })
 
 test('selecting a satellite in the panel highlights it and dims the rest', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
   render(<App />)
-  const strix9Button = await screen.findByRole('button', { name: /STRIX-9/ })
-  const strix1Button = screen.getByRole('button', { name: /STRIX-1/ })
+  const panel = within(screen.getByRole('complementary', { name: 'Constellation' }))
+  const strix9Button = await panel.findByRole('button', { name: /STRIX-9/ })
+  const strix1Button = panel.getByRole('button', { name: /STRIX-1/ })
 
   await userEvent.click(strix9Button)
   expect(strix9Button).toHaveAttribute('aria-pressed', 'true')
@@ -46,4 +52,18 @@ test('reports a failed load', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 503 })))
   render(<App />)
   expect(await screen.findByRole('alert')).toHaveTextContent('503')
+})
+
+test('lists upcoming passes over Tokyo; picking one selects the satellite and pauses at its peak', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
+  render(<App />)
+  const passes = within(await screen.findByRole('complementary', { name: 'Passes' }))
+  expect(passes.getByRole('heading', { level: 2 })).toHaveTextContent('Passes over 35.68°N 139.69°E')
+  const passRows = passes.getAllByRole('button')
+  expect(passRows.length).toBeGreaterThan(0)
+
+  await userEvent.click(passRows[0])
+  expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Live' })).toBeEnabled()
+  expect(screen.getAllByRole('button', { pressed: true })).toHaveLength(1)
 })
