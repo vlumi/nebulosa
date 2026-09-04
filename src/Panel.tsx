@@ -22,7 +22,11 @@ export function Panel({ satellites, now, selected, onSelect }: Props) {
             <li key={id} className={selected !== null && !isSelected ? 'dimmed' : undefined}>
               <button type="button" aria-pressed={isSelected} onClick={() => onSelect(isSelected ? null : id)}>
                 <span className="swatch" style={{ background: `rgb(${FAMILY_COLORS[s.family].join(' ')})` }} />
-                {s.omm.OBJECT_NAME} <span className="muted">#{id} · {s.omm.INCLINATION.toFixed(1)}°</span>
+                {s.omm.OBJECT_NAME}{' '}
+                <span className="muted">
+                  <span title="NORAD catalog number">#{id}</span> ·{' '}
+                  <span title="Inclination">{s.omm.INCLINATION.toFixed(1)}°</span>
+                </span>
               </button>
               {isSelected && <Detail satellite={s} now={now} />}
             </li>
