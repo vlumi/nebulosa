@@ -1,11 +1,15 @@
 import { MapboxOverlay } from '@deck.gl/mapbox'
-import { Map as MapLibre, NavigationControl } from 'maplibre-gl'
+import { Map as MapLibre, NavigationControl, setWorkerUrl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useEffect, useRef } from 'react'
 import { buildLayers } from './layers'
 import type { Satellite } from './orbit'
 
 const BASEMAP = 'https://tiles.openfreemap.org/styles/dark'
+
+// MapLibre 6 resolves its worker relative to its own script URL, which a bundled app does not provide.
+setWorkerUrl(maplibreWorkerUrl)
 
 export function MapView({ satellites, now }: { satellites: Satellite[]; now: Date }) {
   const container = useRef<HTMLDivElement>(null)

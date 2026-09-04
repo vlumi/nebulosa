@@ -9,7 +9,12 @@ const { mapInstance, overlayInstance } = vi.hoisted(() => ({
   mapInstance: { addControl: vi.fn(), remove: vi.fn() },
   overlayInstance: { setProps: vi.fn() },
 }))
-vi.mock('maplibre-gl', () => ({ Map: vi.fn(function () { return mapInstance }), NavigationControl: vi.fn() }))
+vi.mock('maplibre-gl', () => ({
+  Map: vi.fn(function () { return mapInstance }),
+  NavigationControl: vi.fn(),
+  setWorkerUrl: vi.fn(),
+}))
+vi.mock('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url', () => ({ default: '/worker.js' }))
 vi.mock('@deck.gl/mapbox', () => ({ MapboxOverlay: vi.fn(function () { return overlayInstance }) }))
 
 test('mounts a MapLibre map with a deck.gl overlay and feeds it the layers', () => {

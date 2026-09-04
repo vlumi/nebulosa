@@ -5,7 +5,9 @@ import { strix1, strix9 } from './fixtures'
 vi.mock('maplibre-gl', () => ({
   Map: vi.fn(function () { return { addControl: vi.fn(), remove: vi.fn() } }),
   NavigationControl: vi.fn(),
+  setWorkerUrl: vi.fn(),
 }))
+vi.mock('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url', () => ({ default: '/worker.js' }))
 vi.mock('@deck.gl/mapbox', () => ({ MapboxOverlay: vi.fn(function () { return { setProps: vi.fn() } }) }))
 afterEach(() => vi.unstubAllGlobals())
 
