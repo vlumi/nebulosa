@@ -60,7 +60,7 @@ test('shows every pass; the horizon and the selected-only filter are controls', 
     />,
   )
   expect(screen.getAllByRole('listitem')).toHaveLength(13)
-  await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Hours ahead' }), '48')
+  await userEvent.click(screen.getByRole('radio', { name: '48 h' }))
   expect(onFiltersChange).toHaveBeenCalledWith({ ...DEFAULT_FILTERS, horizonHours: 48 })
   const only = screen.getByRole('checkbox', { name: /only STRIX-1/ })
   expect(only).toBeChecked()

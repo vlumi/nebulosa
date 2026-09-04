@@ -1,5 +1,6 @@
 import { isLive, liveClock, RATES, scrubbedTo, simTime, withRate, type Clock } from './clock'
 import { formatOffset, utcDate, utcSecond } from '../shared/format'
+import { Segmented } from '../shared/Segmented'
 import styles from './TimeBar.module.css'
 
 const RANGE_MS = 12 * 3_600_000
@@ -29,17 +30,13 @@ export function TimeBar({ clock, now, onChange }: Props) {
       >
         {playing ? '❚❚' : '▶'}
       </button>
-      <select
-        aria-label="Speed"
+      <Segmented
+        label="Speed"
+        options={RATES}
         value={playing ? clock.rate : 1}
-        onChange={(e) => onChange(withRate(clock, Number(e.target.value), realMs))}
-      >
-        {RATES.map((rate) => (
-          <option key={rate} value={rate}>
-            {rate}×
-          </option>
-        ))}
-      </select>
+        onChange={(rate) => onChange(withRate(clock, rate, realMs))}
+        format={(rate) => `${rate}×`}
+      />
       <input
         type="range"
         aria-label="Time offset"

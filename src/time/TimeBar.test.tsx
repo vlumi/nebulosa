@@ -19,7 +19,7 @@ test('pause, speed and scrub produce the corresponding clocks', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Pause' }))
   expect(onChange.mock.lastCall![0].rate).toBe(0)
 
-  await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Speed' }), '60')
+  await userEvent.click(screen.getByRole('radio', { name: '60×' }))
   expect(onChange.mock.lastCall![0].rate).toBe(60)
 
   fireEvent.change(screen.getByRole('slider', { name: 'Time offset' }), { target: { value: String(2 * hour) } })

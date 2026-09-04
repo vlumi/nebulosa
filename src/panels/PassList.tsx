@@ -1,5 +1,6 @@
 import { familyCss } from '../shared/palette'
 import panel from './panel.module.css'
+import { Segmented } from '../shared/Segmented'
 import styles from './PassList.module.css'
 import type { OrbitFamily } from '../orbit/orbit'
 import { compassPoint, dayLabel, formatLocation, hhmm, utcDayIndex } from '../shared/format'
@@ -42,33 +43,23 @@ export function PassList({
         <div className={styles.controls}>
           <label>
             Next{' '}
-            <select
-              className={panel.control}
-              aria-label="Hours ahead"
+            <Segmented
+              label="Hours ahead"
+              options={HORIZONS_H}
               value={filters.horizonHours}
-              onChange={(e) => set({ horizonHours: Number(e.target.value) })}
-            >
-              {HORIZONS_H.map((h) => (
-                <option key={h} value={h}>
-                  {h} h
-                </option>
-              ))}
-            </select>
+              onChange={(horizonHours) => set({ horizonHours })}
+              format={(h) => `${h} h`}
+            />
           </label>
           <label>
             Min{' '}
-            <select
-              className={panel.control}
-              aria-label="Minimum elevation"
+            <Segmented
+              label="Minimum elevation"
+              options={MIN_ELEVATIONS}
               value={filters.minElevationDeg}
-              onChange={(e) => set({ minElevationDeg: Number(e.target.value) })}
-            >
-              {MIN_ELEVATIONS.map((deg) => (
-                <option key={deg} value={deg}>
-                  {deg}°
-                </option>
-              ))}
-            </select>
+              onChange={(minElevationDeg) => set({ minElevationDeg })}
+              format={(deg) => `${deg}°`}
+            />
           </label>
           {selectedName && (
             <label>
