@@ -49,6 +49,9 @@ Vite scaffold, CI pipeline green, site live at nebulosa.misaki.fi from day one (
 ### M2 — time
 - Time slider: scrub past/future positions and tracks
 - Play/pause animation at selectable speed
+- Time along the track: hovering a track shows when the satellite is at that point, with a
+  marker on the path; past and future halves told apart (gradient or tick marks), which also
+  makes the direction of travel readable at a glance instead of by watching the dot move
 - Day/night terminator overlay (SAR context: imaging works on both sides of it)
 
 ### M3 — detail
