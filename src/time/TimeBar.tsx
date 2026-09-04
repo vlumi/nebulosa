@@ -1,5 +1,6 @@
 import { isLive, liveClock, RATES, scrubbedTo, simTime, withRate, type Clock } from './clock'
 import { formatOffset, utcDate, utcSecond } from '../shared/format'
+import styles from './TimeBar.module.css'
 
 const RANGE_MS = 12 * 3_600_000
 const STEP_MS = 60_000
@@ -17,7 +18,7 @@ export function TimeBar({ clock, now, onChange }: Props) {
   const playing = clock.rate > 0
 
   return (
-    <div className="timebar">
+    <div className={styles.bar}>
       <button type="button" onClick={() => onChange(liveClock(realMs))} disabled={isLive(clock, realMs)}>
         Live
       </button>

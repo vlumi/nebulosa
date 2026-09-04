@@ -1,0 +1,29 @@
+.summary {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  flex: none;
+}
+
+.summary[aria-expanded='true'] {
+  margin-bottom: 0.35rem;
+}
+
+.summary::before {
+  content: '▸';
+  display: inline-block;
+  width: 1rem;
+  color: var(--muted);
+  transition: transform 0.15s;
+}
+
+.summary[aria-expanded='true']::before {
+  transform: rotate(90deg);
+}

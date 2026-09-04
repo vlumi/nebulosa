@@ -3,7 +3,7 @@
 //   node scripts/screenshot.mjs docs/screenshots/2026-09-04-m2.png            # deployed site
 //   node scripts/screenshot.mjs out.png http://localhost:4173/                # local preview
 //   CHROME=/usr/bin/google-chrome WAIT_MS=30000 node scripts/screenshot.mjs out.png
-//   EVAL="document.querySelector('.satellites button').click()" node scripts/screenshot.mjs out.png  # act first
+//   EVAL="document.querySelector('[aria-label=Constellation] li button').click()" node scripts/screenshot.mjs out.png  # act first
 //   HOVER=1 node scripts/screenshot.mjs out.png    # sweep the pointer across the map first (surfaces hover errors)
 //   WIDTH=390 HEIGHT=844 node scripts/screenshot.mjs phone.png   # phone-sized viewport
 import { spawn } from 'node:child_process'

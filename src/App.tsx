@@ -11,6 +11,8 @@ import { SatelliteList } from './panels/SatelliteList'
 import { useNarrow } from './panels/useNarrow'
 import { formatAge, formatLocation } from './shared/format'
 import { belongsToFocusedControl, releaseFocusAfterPointerClick, stepIndex } from './shortcuts'
+import styles from './App.module.css'
+import panel from './panels/panel.module.css'
 import { useApp } from './store'
 import { startFrameLoop, useFrame, useMinute } from './time/frame'
 import { TimeBar } from './time/TimeBar'
@@ -133,8 +135,12 @@ function App() {
         <Suspense fallback={<div className="map" />}>
           <LiveMap satellites={satellites} selectedSatellite={selectedSatellite} />
         </Suspense>
-        <div className="dock">
-          <aside className="satellites" aria-label="Constellation">
+        <div className={styles.dock}>
+          <aside
+            className={`${panel.panel} ${styles.satellites}`}
+            data-open={(app.satellitesOpen ?? !narrow) ? '' : undefined}
+            aria-label="Constellation"
+          >
             <Disclosure
               open={app.satellitesOpen ?? !narrow}
               onToggle={(open) => app.toggleSatellites(open, narrow)}
@@ -165,7 +171,11 @@ function App() {
             </Disclosure>
           </aside>
           {satellites.length > 0 && (
-            <aside className="passes" aria-label="Passes">
+            <aside
+              className={`${panel.panel} ${styles.passes}`}
+              data-open={(app.passesOpen ?? !narrow) ? '' : undefined}
+              aria-label="Passes"
+            >
               <Disclosure
                 open={app.passesOpen ?? !narrow}
                 onToggle={(open) => app.togglePasses(open, narrow)}

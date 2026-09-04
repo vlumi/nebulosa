@@ -50,11 +50,11 @@ test('selecting a satellite in the panel highlights it and dims the rest', async
 
   await userEvent.click(strix9Button)
   expect(strix9Button).toHaveAttribute('aria-pressed', 'true')
-  expect(strix1Button.closest('li')).toHaveClass('dimmed')
+  expect(strix1Button.closest('li')).toHaveAttribute('data-dimmed')
 
   await userEvent.click(strix9Button)
   expect(strix9Button).toHaveAttribute('aria-pressed', 'false')
-  expect(strix1Button.closest('li')).not.toHaveClass('dimmed')
+  expect(strix1Button.closest('li')).not.toHaveAttribute('data-dimmed')
 
   await userEvent.click(strix1Button)
   expect(strix1Button).toHaveAttribute('aria-pressed', 'true')
@@ -79,8 +79,8 @@ test('showing a pass selects the satellite without touching the clock; going to 
   expect(screen.getAllByRole('button', { pressed: true })).toHaveLength(1)
   expect(screen.getByRole('button', { name: 'Live' })).toBeDisabled()
   expect(firstRow.querySelector('button')).toHaveAttribute('aria-current', 'true')
-  expect(firstRow).not.toHaveClass('dimmed')
-  expect(passes.getAllByRole('listitem')[1]).toHaveClass('dimmed')
+  expect(firstRow).not.toHaveAttribute('data-dimmed')
+  expect(passes.getAllByRole('listitem')[1]).toHaveAttribute('data-dimmed')
 
   await userEvent.click(within(firstRow).getByRole('button', { name: /^Go to / }))
   expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument()
