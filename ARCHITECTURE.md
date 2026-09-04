@@ -58,6 +58,8 @@ A pass is a period of line-of-sight visibility above the horizon from the pin's 
 
 MapLibre GL draws the basemap from OpenFreeMap vector tiles; deck.gl draws everything else in an overlay canvas added to the map as a control. Two things about that arrangement are easy to get wrong. MapLibre 6 loads its web worker from a file next to its own script, which a bundled app does not have, so the worker is bundled explicitly and registered at startup. And MapLibre's control layer, where the overlay canvas lives, has a z-index of 2; the HTML panels must sit above it or the night shading and the tracks paint over their text.
 
+The map view is loaded lazily, and MapLibre and deck.gl are built into chunks of their own so a deploy that touches only app code leaves them cached. satellite.js also ships an optional WASM propagator whose Emscripten glue targets Node; the app never loads it, and the build aliases its two entry points away so they stay out of the module graph.
+
 Layer order is night, tracks, positions, labels, then the ghost's dashed track, marker and label, then the hover marker and label. Tracks, positions, labels and the dashed continuation are pickable, with an eight-pixel picking radius so a 1.5-pixel line can be tapped; a picked layer may arrive without an object, and the hover handler must tolerate that or it takes the whole render loop down with it.
 
 ## Layout
