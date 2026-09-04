@@ -201,7 +201,8 @@ main > .map {
 }
 
 .passes {
-  flex: 0 1 auto;
+  /* Gives way long before the satellite list does; the list has priority for the column's height. */
+  flex: 0 1000 auto;
   min-height: 9rem;
   display: flex;
   flex-direction: column;
