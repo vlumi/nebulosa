@@ -31,8 +31,17 @@ function App() {
   const now = useNow()
   const narrow = useNarrow()
   // Open by default on desktop, closed on phones, until the reader toggles a panel.
+  // On a phone only one panel is open at a time, so the column fits the screen.
   const [panelOpen, setPanelOpen] = useState<boolean | null>(null)
   const [passesOpen, setPassesOpen] = useState<boolean | null>(null)
+  const togglePanel = (open: boolean) => {
+    setPanelOpen(open)
+    if (open && narrow) setPassesOpen(false)
+  }
+  const togglePasses = (open: boolean) => {
+    setPassesOpen(open)
+    if (open && narrow) setPanelOpen(false)
+  }
   const time = useSmoothedTime(simTime(clock, now.getTime()))
 
   useEffect(() => {
@@ -112,7 +121,7 @@ function App() {
         <aside className="panel" aria-label="Constellation">
           <Disclosure
             open={panelOpen ?? !narrow}
-            onToggle={setPanelOpen}
+            onToggle={togglePanel}
             summary={
               <>
                 Satellites
@@ -143,7 +152,7 @@ function App() {
           <aside className="passes" aria-label="Passes">
             <Disclosure
               open={passesOpen ?? !narrow}
-              onToggle={setPassesOpen}
+              onToggle={togglePasses}
               summary={
                 <>
                   Passes over {formatLocation(location)}
