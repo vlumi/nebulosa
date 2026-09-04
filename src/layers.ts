@@ -21,9 +21,7 @@ interface PositionDatum {
 }
 
 export function buildLayers(satellites: Satellite[], now: Date): Layer[] {
-  const tracks: TrackDatum[] = satellites.flatMap((sat) =>
-    groundTrack(sat, now).map((path) => ({ path, family: sat.family })),
-  )
+  const tracks: TrackDatum[] = satellites.map((sat) => ({ path: groundTrack(sat, now), family: sat.family }))
   const positions: PositionDatum[] = satellites.flatMap((sat) => {
     const p = positionAt(sat, now)
     return p ? [{ name: sat.omm.OBJECT_NAME, lonLat: [p.lon, p.lat] as LonLat, family: sat.family }] : []
@@ -33,6 +31,7 @@ export function buildLayers(satellites: Satellite[], now: Date): Layer[] {
     new PathLayer<TrackDatum>({
       id: 'tracks',
       data: tracks,
+      wrapLongitude: true,
       getPath: (d) => d.path,
       getColor: (d) => [...FAMILY_COLORS[d.family], 160],
       getWidth: 1.5,

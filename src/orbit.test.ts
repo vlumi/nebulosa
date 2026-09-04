@@ -18,16 +18,13 @@ test('propagates to a low-Earth-orbit position at epoch', () => {
   expect(Math.abs(p!.lon)).toBeLessThanOrEqual(180)
 })
 
-test('ground track spans two orbits and never jumps across the antimeridian', () => {
+test('ground track spans two orbits with longitudes kept in range', () => {
   const sat = satelliteFrom(strix9)
-  const segments = groundTrack(sat, epochOf(strix9), 30)
-  const points = segments.flat()
-  expect(points.length).toBe(Math.floor((2 * sat.periodMinutes * 60) / 30) + 1)
-  expect(segments.length).toBeGreaterThan(1)
-  for (const segment of segments) {
-    for (let i = 1; i < segment.length; i++) {
-      expect(Math.abs(segment[i][0] - segment[i - 1][0])).toBeLessThan(180)
-    }
+  const path = groundTrack(sat, epochOf(strix9), 30)
+  expect(path.length).toBe(Math.floor((2 * sat.periodMinutes * 60) / 30) + 1)
+  expect(path.some(([lon], i) => i > 0 && Math.abs(lon - path[i - 1][0]) > 180)).toBe(true)
+  for (const [lon, lat] of path) {
+    expect(Math.abs(lon)).toBeLessThanOrEqual(180)
+    expect(Math.abs(lat)).toBeLessThanOrEqual(strix9.INCLINATION + 0.5)
   }
-  for (const [, lat] of points) expect(Math.abs(lat)).toBeLessThanOrEqual(strix9.INCLINATION + 0.5)
 })

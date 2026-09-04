@@ -10,7 +10,7 @@ test('builds tracks, positions and labels for every satellite, colored by family
 
   const [tracks, positions, labels] = layers
   const trackData = tracks.props.data as { family: string }[]
-  expect(trackData.length).toBeGreaterThanOrEqual(2)
+  expect(trackData.length).toBe(2)
   expect(new Set(trackData.map((d) => d.family))).toEqual(new Set(['sun-synchronous', 'mid-inclination']))
 
   const positionData = positions.props.data as { name: string; family: string }[]
