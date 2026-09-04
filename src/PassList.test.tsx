@@ -39,8 +39,8 @@ test('lists passes with times, duration and max elevation; show and go-to are se
   )
   expect(screen.getByText(/over 35.68°N 139.69°E/)).toBeInTheDocument()
   const rows = screen.getAllByRole('listitem')
-  expect(rows[0]).toHaveTextContent('12:05–12:13STRIX-18 min · max 47°')
-  expect(rows[1]).toHaveTextContent('13:30–13:38STRIX-98 min · max 12°')
+  expect(rows[0]).toHaveTextContent('12:05–12:13STRIX-1max 47°')
+  expect(rows[1]).toHaveTextContent('13:30–13:38STRIX-9max 12°')
 
   await userEvent.click(rows[1].querySelector('button')!)
   expect(onShow).toHaveBeenCalledWith(passes[1])

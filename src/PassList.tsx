@@ -78,9 +78,7 @@ export function PassList({
                 {hhmm(pass.startMs)}–{hhmm(pass.endMs)}
               </span>
               {pass.name}
-              <span className="muted">
-                {Math.round((pass.endMs - pass.startMs) / 60_000)} min · max {Math.round(pass.maxElevationDeg)}°
-              </span>
+              <span className="muted">max {Math.round(pass.maxElevationDeg)}°</span>
             </button>
             <button type="button" className="goto" aria-label={`Go to ${pass.name} pass at ${hhmm(pass.peakMs)}`} onClick={() => onGoTo(pass)}>
               ⏱
