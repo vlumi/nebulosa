@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react'
 
-export function useNow(intervalMs: number): Date {
+/** Real wall-clock time, re-read every animation frame. */
+export function useNow(): Date {
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), intervalMs)
-    return () => clearInterval(id)
-  }, [intervalMs])
+    let frame = requestAnimationFrame(function tick() {
+      setNow(new Date())
+      frame = requestAnimationFrame(tick)
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [])
   return now
 }

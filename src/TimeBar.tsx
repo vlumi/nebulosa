@@ -1,0 +1,56 @@
+import { formatOffset, isLive, liveClock, RATES, scrubbedTo, simTime, withRate, type Clock } from './clock'
+
+const RANGE_MS = 12 * 3_600_000
+const STEP_MS = 60_000
+
+interface Props {
+  clock: Clock
+  now: Date
+  onChange: (clock: Clock) => void
+}
+
+export function TimeBar({ clock, now, onChange }: Props) {
+  const realMs = now.getTime()
+  const simMs = simTime(clock, realMs)
+  const offset = Math.max(-RANGE_MS, Math.min(RANGE_MS, simMs - realMs))
+  const playing = clock.rate > 0
+
+  return (
+    <div className="timebar">
+      <button type="button" onClick={() => onChange(liveClock(realMs))} disabled={isLive(clock, realMs)}>
+        Live
+      </button>
+      <button
+        type="button"
+        aria-label={playing ? 'Pause' : 'Play'}
+        onClick={() => onChange(withRate(clock, playing ? 0 : 1, realMs))}
+      >
+        {playing ? '❚❚' : '▶'}
+      </button>
+      <select
+        aria-label="Speed"
+        value={playing ? clock.rate : 1}
+        onChange={(e) => onChange(withRate(clock, Number(e.target.value), realMs))}
+      >
+        {RATES.map((rate) => (
+          <option key={rate} value={rate}>
+            {rate}×
+          </option>
+        ))}
+      </select>
+      <input
+        type="range"
+        aria-label="Time offset"
+        min={-RANGE_MS}
+        max={RANGE_MS}
+        step={STEP_MS}
+        value={offset}
+        onChange={(e) => onChange(scrubbedTo(clock, realMs + Number(e.target.value), realMs))}
+      />
+      <output>
+        {new Date(simMs).toISOString().slice(0, 19).replace('T', ' ')} UTC
+        <span className="muted"> · {formatOffset(simMs, realMs)}</span>
+      </output>
+    </div>
+  )
+}
