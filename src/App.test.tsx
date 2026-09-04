@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import App from './App'
+import { resetApp } from './store'
 import { strix1, strix9 } from './test/fixtures'
 
 vi.mock('maplibre-gl', () => ({
@@ -26,6 +27,7 @@ vi.mock('@deck.gl/mapbox', () => ({
   }),
 }))
 afterEach(() => vi.unstubAllGlobals())
+beforeEach(resetApp)
 
 test('lists the constellation from /data/elements.json with the epoch age', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
