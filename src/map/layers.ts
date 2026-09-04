@@ -15,6 +15,7 @@ import {
   type TrackSpan,
 } from '../orbit/orbit'
 import { nightPolygon } from '../orbit/sun'
+import { reachRibbons } from '../orbit/swath'
 import { FAMILY_COLORS, type Rgba } from '../shared/palette'
 
 export interface SatelliteDatum {
@@ -126,6 +127,7 @@ export function buildLayers(
   hover: Hover | null = null,
   ghost: Ghost | null = null,
   span: TrackSpan = DEFAULT_SPAN,
+  reach = false,
 ): Layer[] {
   const nowMs = now.getTime()
   const segments = tracks.flatMap((track) => segmentsOf(track, nowMs))
@@ -193,6 +195,22 @@ export function buildLayers(
       updateTriggers: { getColor: selected },
     }),
   ]
+
+  const reachTrack = reach && selected !== null ? tracks.find((t) => t.noradId === selected) : undefined
+  if (reachTrack) {
+    layers.splice(
+      1,
+      0,
+      new SolidPolygonLayer<LonLat[]>({
+        id: 'reach',
+        data: reachRibbons(reachTrack.samples),
+        getPolygon: (d) => d,
+        getFillColor: color(reachTrack, 45),
+        wrapLongitude: true,
+        pickable: false,
+      }),
+    )
+  }
 
   const ghostSat = ghost && satellites.find((s) => s.omm.NORAD_CAT_ID === ghost.noradId)
   const ghostPosition = ghostSat && positionAt(ghostSat, new Date(ghost.timeMs))

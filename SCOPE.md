@@ -70,5 +70,5 @@ Vite scaffold, CI pipeline green, site live at nebulosa.misaki.fi from day one (
 ## Non-goals
 
 - No backend, no accounts, no persistence beyond the fetched element set
-- No imaging/tasking simulation (SAR swath modeling is out; real antenna parameters aren't public)
+- No imaging/tasking simulation: the reach layer uses the one published figure, the 15° to 45° steering range; the look side, swath choice and tasking aren't public
 - No claim of operational accuracy: this is a visualization, not flight dynamics software

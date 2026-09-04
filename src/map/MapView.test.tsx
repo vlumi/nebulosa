@@ -96,8 +96,8 @@ test('mounts a MapLibre map with a deck.gl overlay and feeds it the layers', () 
     noradId: strix9.NORAD_CAT_ID,
     family: 'mid-inclination',
     samples: [
-      { lonLat: [10, 10], timeMs: 1 },
-      { lonLat: [20, 20], timeMs: 2 },
+      { lonLat: [10, 10], timeMs: 1, altKm: 500 },
+      { lonLat: [20, 20], timeMs: 2, altKm: 500 },
     ],
   }
   act(() => overlayProps.onHover({ layer: { id: 'ghost-track' }, object: continuation, coordinate: [19, 19] }))

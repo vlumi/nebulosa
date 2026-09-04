@@ -5,6 +5,7 @@ import styles from './PassList.module.css'
 import type { OrbitFamily } from '../orbit/orbit'
 import { compassPoint, dayLabel, formatLocation, hhmm, utcDayIndex } from '../shared/format'
 import { HORIZONS_H, MIN_ELEVATIONS, type Location, type Pass, type PassFilters } from '../orbit/passes'
+import { inReach, STEERING } from '../orbit/swath'
 
 interface Props {
   location: Location
@@ -39,7 +40,11 @@ export function PassList({
   return (
     <>
       <div className={styles.header}>
-        <p className="muted">Line of sight above the horizon over {formatLocation(location)}. Drag the pin to move.</p>
+        <p className="muted">
+          Line of sight above the horizon over {formatLocation(location)}. Drag the pin to move. A peak in the accent
+          colour is within the radar's {STEERING.minDeg}–{STEERING.maxDeg}° steering range; overhead is too close to
+          image.
+        </p>
         <div className={styles.controls}>
           <label>
             Next{' '}
@@ -60,6 +65,14 @@ export function PassList({
               onChange={(minElevationDeg) => set({ minElevationDeg })}
               format={(deg) => `${deg}°`}
             />
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={filters.inReachOnly}
+              onChange={(e) => set({ inReachOnly: e.target.checked })}
+            />{' '}
+            in SAR reach
           </label>
           {selectedName && (
             <label>
@@ -93,7 +106,11 @@ export function PassList({
                   {hhmm(pass.startMs)}–{hhmm(pass.endMs)}
                 </span>
                 {pass.name}
-                <span className={`${styles.detail} muted`}>
+                <span
+                  className={`${styles.detail} muted`}
+                  data-reach={inReach(pass.offNadirDeg) ? '' : undefined}
+                  title={`${Math.round(pass.offNadirDeg)}° off nadir at the peak${inReach(pass.offNadirDeg) ? ', within SAR reach' : ''}`}
+                >
                   {Math.round(pass.maxElevationDeg)}° {compassPoint(pass.peakAzimuthDeg)}
                 </span>
               </button>

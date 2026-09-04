@@ -12,6 +12,7 @@ const pass = (name: string, noradId: number, startMin: number, maxEl: number): P
   endMs: t0 + (startMin + 8) * 60_000,
   maxElevationDeg: maxEl,
   peakAzimuthDeg: 180,
+  offNadirDeg: maxEl >= 40 ? 30 : 60,
 })
 
 test('lists passes with times, duration and max elevation; show and go-to are separate actions', async () => {
@@ -85,4 +86,24 @@ test('a separator row marks where the list crosses into a later UTC day', () => 
   const rows = screen.getAllByRole('listitem')
   expect(rows[0]).not.toHaveTextContent('UTC')
   expect(rows[1]).toHaveTextContent('Sat 5 Sep UTC13:00–13:08')
+})
+
+test('a peak inside the steering range is marked and titled with its look angle; the reach filter is a control', async () => {
+  const onFiltersChange = vi.fn()
+  render(
+    <PassList
+      location={{ lat: 35.68, lon: 139.69 }}
+      passes={[pass('STRIX-1', 53815, 5, 60), pass('STRIX-9', 100561, 90, 20)]}
+      filters={DEFAULT_FILTERS}
+      onFiltersChange={onFiltersChange}
+      familyOf={() => 'sun-synchronous'}
+      onShow={vi.fn()}
+      onGoTo={vi.fn()}
+      now={new Date(t0)}
+    />,
+  )
+  expect(screen.getByTitle('30° off nadir at the peak, within SAR reach')).toHaveAttribute('data-reach')
+  expect(screen.getByTitle('60° off nadir at the peak')).not.toHaveAttribute('data-reach')
+  await userEvent.click(screen.getByRole('checkbox', { name: 'in SAR reach' }))
+  expect(onFiltersChange).toHaveBeenCalledWith({ ...DEFAULT_FILTERS, inReachOnly: true })
 })

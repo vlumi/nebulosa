@@ -3,10 +3,12 @@ import type { Hover } from './map/layers'
 import { loadElements, newestEpoch, type Omm } from './orbit/elements'
 import { positionAt, satelliteFrom } from './orbit/orbit'
 import { type Pass } from './orbit/passes'
+import { inReach } from './orbit/swath'
 import { usePasses } from './orbit/usePasses'
 import { Disclosure } from './panels/Disclosure'
 import { Help } from './panels/Help'
 import { PassList } from './panels/PassList'
+import { ReachToggle } from './panels/ReachToggle'
 import { SatelliteList } from './panels/SatelliteList'
 import { useNarrow } from './panels/useNarrow'
 import { formatAge, formatLocation } from './shared/format'
@@ -50,6 +52,7 @@ function App() {
   const passes = allPasses.filter(
     (p) =>
       p.maxElevationDeg >= app.filters.minElevationDeg &&
+      (!app.filters.inReachOnly || inReach(p.offNadirDeg)) &&
       (!selectedSatellite || !app.filters.onlySelected || p.noradId === app.selection.noradId),
   )
   const familyOf = (noradId: number) => byId(noradId)?.family ?? 'mid-inclination'
@@ -111,6 +114,10 @@ function App() {
         case 'o':
         case 'O':
           if (s.selection.noradId !== null) s.toggleOnlySelected()
+          break
+        case 'r':
+        case 'R':
+          s.toggleReach()
           break
         default:
           return
@@ -203,7 +210,9 @@ function App() {
           )}
         </div>
         <LiveTimeBar />
-        <Help open={app.helpOpen} onToggle={app.setHelpOpen} />
+        <Help open={app.helpOpen} onToggle={app.setHelpOpen}>
+          <ReachToggle on={app.reachVisible} onToggle={app.toggleReach} />
+        </Help>
       </main>
       <footer>
         Unofficial demo, not affiliated with Synspective. Orbital data: CelesTrak. Map: OpenFreeMap, © OpenStreetMap.
@@ -222,7 +231,7 @@ function LiveMap({
 }) {
   const timeMs = useFrame((f) => f.timeMs)
   const time = useMemo(() => new Date(timeMs), [timeMs])
-  const { selection, focus, location, span, select, setLocation } = useApp()
+  const { selection, focus, location, span, reachVisible, select, setLocation } = useApp()
   const probe: Hover | null = useMemo(() => {
     if (selection.probeMs === null || !selectedSatellite) return null
     const p = positionAt(selectedSatellite, new Date(selection.probeMs))
@@ -240,6 +249,7 @@ function LiveMap({
       ghost={selection.ghost}
       probe={probe}
       span={span}
+      reach={reachVisible}
     />
   )
 }

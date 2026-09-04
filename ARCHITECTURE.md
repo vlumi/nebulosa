@@ -48,9 +48,11 @@ The Sun's position from satellite.js gives right ascension and declination; subt
 
 ## Passes
 
-A pass is a period of line-of-sight visibility above the horizon from the pin's location, not an imaging opportunity: SAR swath geometry depends on antenna parameters that are not public, so nothing here claims to be one.
+A pass is a period of line-of-sight visibility above the horizon from the pin's location, not an imaging opportunity. Whether the radar could reach the pin during it is a separate question, answered below from the one public figure.
 
 **Look angles.** The satellite's inertial position is rotated into Earth-fixed coordinates with sidereal time, then converted to azimuth, elevation and range from the observer.
+
+**SAR reach.** A side-looking radar images a strip beside its track, not the ground under it, so a satellite straight overhead is useless to it. [Synspective's SAR data page](https://www.synspective.com/data/synspective-sar-data/) gives StriX an off-nadir steering range of 15° to 45° and a nominal Stripmap look of 30°; the look side, the swath chosen per acquisition and the tasking are not public. On a sphere, a look θ off nadir from altitude h meets the ground at a central angle `asin((R + h) / R · sin θ) − θ` from the sub-satellite point, about 134 km and 524 km at 500 km altitude for the two limits. The reach layer sweeps those two offsets perpendicular to the track heading on both sides, using each sample's own altitude, and cuts the ribbons into short polygons so the renderer can wrap them at the antimeridian. For a pass, the look angle at the peak follows from the peak elevation e as `asin(R / (R + h) · cos e)`. Peaks between roughly 40° and 74° elevation fall inside the steering range and are marked; the list can be narrowed to them.
 
 **Finding passes.** Elevation is sampled every 30 seconds over the horizon of 6 to 48 hours. Each interval above 0° is a pass; its rise and set are refined by bisection to under a second, and its peak by a one-second scan around the best sample. The scan starts 20 minutes before the requested start, longer than any low-Earth-orbit pass, so a pass already in progress is found from its true rise rather than from the scan boundary. Filtering by minimum elevation is applied afterwards on each pass's peak.
 

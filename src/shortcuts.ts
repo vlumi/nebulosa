@@ -8,6 +8,7 @@ export const SHORTCUTS = [
   { keys: 'L', does: 'live' },
   { keys: 'S P', does: 'panels' },
   { keys: 'O', does: 'only the selected satellite\u2019s passes' },
+  { keys: 'R', does: 'SAR reach beside the selected track' },
   { keys: 'Esc', does: 'clear the pass, then the satellite' },
   { keys: '?', does: 'this help' },
 ] as const

@@ -2,7 +2,7 @@ import { epochOf } from '../orbit/elements'
 import { strix1, strix9 } from '../test/fixtures'
 import { FAMILY_COLORS } from '../shared/palette'
 import { buildLayers, hoverAt, trackData } from './layers'
-import { satelliteFrom } from '../orbit/orbit'
+import { DEFAULT_SPAN, satelliteFrom } from '../orbit/orbit'
 
 test('builds tracks, positions and labels for every satellite, colored by family', () => {
   const sats = [strix1, strix9].map(satelliteFrom)
@@ -152,4 +152,23 @@ test('ghost layers draw in the family colour and the dashed path follows the sam
   expect(getPath(continuation)).toHaveLength(continuation.samples.length)
   const { getLineColor } = ghost.props as unknown as { getLineColor: (d: unknown) => number[] }
   expect(getLineColor((ghost.props.data as unknown[])[0])).toEqual(FAMILY_COLORS['mid-inclination'])
+})
+
+test('the reach ribbons draw under the tracks for the selected satellite, only when asked', () => {
+  const sats = [strix1, strix9].map(satelliteFrom)
+  const at = epochOf(strix1)
+  const tracks = trackData(sats, at)
+  const ids = (layers: { id: string }[]) => layers.map((l) => l.id)
+  expect(ids(buildLayers(sats, tracks, at, strix1.NORAD_CAT_ID, null, null, DEFAULT_SPAN, false))).not.toContain(
+    'reach',
+  )
+  expect(ids(buildLayers(sats, tracks, at, null, null, null, DEFAULT_SPAN, true))).not.toContain('reach')
+  const layers = buildLayers(sats, tracks, at, strix1.NORAD_CAT_ID, null, null, DEFAULT_SPAN, true)
+  expect(ids(layers).slice(0, 3)).toEqual(['night', 'reach', 'tracks'])
+  const reach = layers[1]
+  expect((reach.props.data as unknown[]).length).toBeGreaterThan(10)
+  expect((reach.props as unknown as { getFillColor: number[] }).getFillColor).toEqual([
+    ...FAMILY_COLORS['sun-synchronous'],
+    45,
+  ])
 })

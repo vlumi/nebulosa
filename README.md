@@ -20,9 +20,10 @@ Earlier captures, one per milestone, are kept in [docs/screenshots](docs/screens
 - A clock: live, paused, or playing at up to 600×, with a slider over ±12 hours and a date picker. Positions, tracks and the day/night terminator follow it.
 - Hover a track to see when the satellite is at that point. Tap a satellite, its label, its track, or its row in the list to select it; the list shows launch, orbit, altitude, period, eccentricity and element epoch, and the rest dims.
 - Passes over a location: drag the pin, and the panel lists every line-of-sight pass over the next 6 to 48 hours with rise, set and peak elevation, filterable by minimum elevation and to the selected satellite. Show a pass to see where the satellite will be at its peak, or jump the clock to it.
+- SAR reach: the band of ground 15° to 45° off nadir on either side of the selected satellite's track, and per pass, the look angle at the peak and whether it is inside that range. A satellite straight overhead cannot image the pin; one that peaks at 40° to 74° can.
 - The element epoch and its age are always visible, because stale elements mean degraded accuracy.
 
-Passes are geometric visibility above the horizon, not imaging opportunities; SAR swath modelling is out of scope, since the real antenna parameters aren't public.
+Passes are geometric visibility above the horizon, not imaging opportunities. What the radar could reach is drawn from the one public figure, Synspective's stated 15° to 45° off-nadir steering range: the `SAR reach` toggle (or `R`) shades that band on both sides of the selected satellite's track, and a pass whose peak falls inside it is marked in the list, with an `in SAR reach` filter. Which side the antenna looks, the swath actually chosen and the tasking are not public, so nothing here claims to be an imaging opportunity.
 
 ## Data
 
