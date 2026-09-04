@@ -191,7 +191,8 @@ main > .map {
 .passes {
   flex: 0 1 auto;
   min-height: 0;
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
   padding: 0.75rem 1rem;
   background: var(--panel);
   border-radius: 0.5rem;
@@ -204,10 +205,17 @@ main > .map {
   font-weight: 600;
 }
 
+.pass-header {
+  flex: none;
+}
+
 .passes ol {
   list-style: none;
   padding: 0;
   margin: 0.5rem 0 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
 }
 
 .pass-controls {
@@ -269,21 +277,25 @@ main > .map {
   color: var(--muted);
 }
 
-.panel summary,
-.passes summary {
-  cursor: pointer;
+.summary {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
   font-weight: 600;
-  list-style: none;
+  text-align: left;
+  cursor: pointer;
+  flex: none;
+}
+
+.summary[aria-expanded='true'] {
   margin-bottom: 0.35rem;
 }
 
-.panel summary::-webkit-details-marker,
-.passes summary::-webkit-details-marker {
-  display: none;
-}
-
-.panel summary::before,
-.passes summary::before {
+.summary::before {
   content: '▸';
   display: inline-block;
   width: 1rem;
@@ -291,8 +303,7 @@ main > .map {
   transition: transform 0.15s;
 }
 
-.panel details[open] > summary::before,
-.passes details[open] > summary::before {
+.summary[aria-expanded='true']::before {
   transform: rotate(90deg);
 }
 
@@ -316,20 +327,13 @@ main > .map {
     padding: 0.5rem 0.75rem;
   }
 
-  .panel details > :not(summary),
-  .passes details > :not(summary) {
+  .panel ul {
     max-height: 40vh;
     overflow: auto;
   }
 
-  .panel summary,
-  .passes summary {
-    margin-bottom: 0;
-  }
-
-  .panel details[open] > summary,
-  .passes details[open] > summary {
-    margin-bottom: 0.35rem;
+  .passes ol {
+    max-height: 40vh;
   }
 
   .timebar {

@@ -42,6 +42,7 @@ export function PassList({
 }: Props) {
   return (
     <>
+      <div className="pass-header">
       <p className="muted">
         Line of sight above the horizon over {formatLocation(location)}. Drag the pin to move.
       </p>
@@ -65,6 +66,7 @@ export function PassList({
         )}
       </div>
       {passes.length === 0 && <p className="muted">None.</p>}
+      </div>
       <ol>
         {passes.map((pass, i) => (
           <li key={`${pass.noradId}-${pass.startMs}`}>

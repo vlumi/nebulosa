@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { liveClock, scrubbedTo, simTime, withRate } from './clock'
+import { Disclosure } from './Disclosure'
 import { type Ghost } from './layers'
 import { MapView, type Focus } from './MapView'
 import { satelliteFrom } from './orbit'
@@ -27,6 +28,9 @@ function App() {
   const [clock, setClock] = useState(() => liveClock(Date.now()))
   const now = useNow()
   const narrow = useNarrow()
+  // Open by default on desktop, closed on phones, until the reader toggles a panel.
+  const [panelOpen, setPanelOpen] = useState<boolean | null>(null)
+  const [passesOpen, setPassesOpen] = useState<boolean | null>(null)
   const time = useSmoothedTime(simTime(clock, now.getTime()))
 
   useEffect(() => {
@@ -101,30 +105,40 @@ function App() {
         />
         <div className="dock">
         <aside className="panel" aria-label="Constellation">
-          <details open={!narrow}>
-            <summary>
-              Satellites
-              {satellites.length > 0 && (
-                <span className="muted">
-                  {' '}
-                  · {satellites.length} · elements {formatAge(newestEpoch(satellites.map((s) => s.omm)), now)} old
-                </span>
-              )}
-            </summary>
+          <Disclosure
+            open={panelOpen ?? !narrow}
+            onToggle={setPanelOpen}
+            summary={
+              <>
+                Satellites
+                {satellites.length > 0 && (
+                  <span className="muted">
+                    {' '}
+                    · {satellites.length} · elements {formatAge(newestEpoch(satellites.map((s) => s.omm)), now)} old
+                  </span>
+                )}
+              </>
+            }
+          >
             {loaded === null && <p>Loading orbital elements…</p>}
             {loaded && 'error' in loaded && <p role="alert">{loaded.error}</p>}
             {satellites.length > 0 && (
               <Panel satellites={satellites} now={now} selected={selected} onSelect={selectFromList} />
             )}
-          </details>
+          </Disclosure>
         </aside>
         {satellites.length > 0 && (
           <aside className="passes" aria-label="Passes">
-            <details open={!narrow}>
-              <summary>
-                Passes over {formatLocation(location)}
-                <span className="muted"> · {passes.length}</span>
-              </summary>
+            <Disclosure
+              open={passesOpen ?? !narrow}
+              onToggle={setPassesOpen}
+              summary={
+                <>
+                  Passes over {formatLocation(location)}
+                  <span className="muted"> · {passes.length}</span>
+                </>
+              }
+            >
               <PassList
                 location={location}
                 passes={passes}
@@ -138,7 +152,7 @@ function App() {
                 onGoTo={goToPass}
                 now={now}
               />
-            </details>
+            </Disclosure>
           </aside>
         )}
         </div>
