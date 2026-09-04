@@ -54,6 +54,10 @@ main > .map {
   inset: 0;
 }
 
+.dock {
+  display: contents;
+}
+
 .panel {
   position: absolute;
   z-index: 3;
@@ -235,4 +239,92 @@ main > .map {
 .passes .time {
   font-variant-numeric: tabular-nums;
   color: var(--muted);
+}
+
+.panel summary,
+.passes summary {
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+  margin-bottom: 0.35rem;
+}
+
+.panel summary::-webkit-details-marker,
+.passes summary::-webkit-details-marker {
+  display: none;
+}
+
+.panel summary::before,
+.passes summary::before {
+  content: '▸';
+  display: inline-block;
+  width: 1rem;
+  color: var(--muted);
+  transition: transform 0.15s;
+}
+
+.panel details[open] > summary::before,
+.passes details[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+@media (max-width: 720px) {
+  header p,
+  footer,
+  .maplibregl-ctrl-top-right {
+    display: none;
+  }
+
+  .dock {
+    position: absolute;
+    z-index: 3;
+    top: 0.5rem;
+    left: 0.5rem;
+    right: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .panel,
+  .passes {
+    position: static;
+    max-width: none;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .panel details > :not(summary),
+  .passes details > :not(summary) {
+    max-height: 40vh;
+    overflow: auto;
+  }
+
+  .panel summary,
+  .passes summary {
+    margin-bottom: 0;
+  }
+
+  .panel details[open] > summary,
+  .passes details[open] > summary {
+    margin-bottom: 0.35rem;
+  }
+
+  .timebar {
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .timebar input[type='range'] {
+    flex: 1 1 8rem;
+    width: auto;
+  }
+
+  .timebar output {
+    flex: 1 1 100%;
+    font-size: 0.8rem;
+  }
 }
