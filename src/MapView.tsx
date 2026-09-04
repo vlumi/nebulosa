@@ -64,8 +64,12 @@ export function MapView({ satellites, now, selected, onSelect, focus = null, loc
       pickingRadius: 8,
       onClick: (info) => select.current((info.object as SatelliteDatum | undefined)?.noradId ?? null),
       onHover: (info) => {
-        const over = info.layer?.id === 'tracks' ? (info.object as SatelliteDatum | undefined) : undefined
-        const track = over && currentTracks.current.find((t) => t.noradId === over.noradId)
+        const track =
+          info.layer?.id === 'ghost-track'
+            ? (info.object as TrackDatum | undefined)
+            : info.layer?.id === 'tracks'
+              ? currentTracks.current.find((t) => t.noradId === (info.object as SatelliteDatum).noradId)
+              : undefined
         setHover(track && info.coordinate ? hoverAt(track, info.coordinate as [number, number]) : null)
       },
       getCursor: ({ isHovering, isDragging }) => (isDragging ? 'grabbing' : isHovering ? 'pointer' : 'grab'),

@@ -3,10 +3,10 @@ import { PathStyleExtension, type PathStyleExtensionProps } from '@deck.gl/exten
 import { PathLayer, ScatterplotLayer, SolidPolygonLayer, TextLayer } from '@deck.gl/layers'
 import { formatOffset } from './clock'
 import {
-  groundTrackBetween,
   nearestSample,
   positionAt,
   trackSamples,
+  trackSamplesBetween,
   type LonLat,
   type OrbitFamily,
   type Satellite,
@@ -194,12 +194,18 @@ export function buildLayers(
       // Sample on a grid through the ghost time itself, so the dashes pass through the marker.
       const stepMs = 30_000
       const from = ghost.timeMs - Math.ceil((ghost.timeMs - reach[0]) / stepMs) * stepMs
+      const continuation: TrackDatum = {
+        noradId: ghostSat.omm.NORAD_CAT_ID,
+        family: ghostSat.family,
+        samples: trackSamplesBetween(ghostSat, from, reach[1]),
+      }
       layers.push(
-        new PathLayer<LonLat[], PathStyleExtensionProps<LonLat[]>>({
+        new PathLayer<TrackDatum, PathStyleExtensionProps<TrackDatum>>({
           id: 'ghost-track',
-          data: [groundTrackBetween(ghostSat, from, reach[1])],
+          data: [continuation],
+          pickable: true,
           wrapLongitude: true,
-          getPath: (d) => d,
+          getPath: (d) => d.samples.map((sample) => sample.lonLat),
           getColor: [...FAMILY_COLORS[ghostSat.family], 150],
           getWidth: 1.5,
           widthUnits: 'pixels',

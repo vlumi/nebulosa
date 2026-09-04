@@ -54,13 +54,13 @@ export function groundTrack(sat: Satellite, center: Date, stepSeconds = 30): Lon
   return trackSamples(sat, center, stepSeconds).map((s) => s.lonLat)
 }
 
-export function groundTrackBetween(sat: Satellite, fromMs: number, toMs: number, stepSeconds = 30): LonLat[] {
-  const path: LonLat[] = []
+export function trackSamplesBetween(sat: Satellite, fromMs: number, toMs: number, stepSeconds = 30): TrackSample[] {
+  const samples: TrackSample[] = []
   for (let t = fromMs; t <= toMs; t += stepSeconds * 1000) {
     const p = positionAt(sat, new Date(t))
-    if (p) path.push([p.lon, p.lat])
+    if (p) samples.push({ lonLat: [p.lon, p.lat], timeMs: t })
   }
-  return path
+  return samples
 }
 
 /** Index of the sample closest to `lonLat`, measured in degrees with longitude wrapped. */
