@@ -174,3 +174,52 @@ main > .map {
 .timebar output {
   font-variant-numeric: tabular-nums;
 }
+
+.passes {
+  position: absolute;
+  z-index: 3;
+  top: 5rem;
+  right: 0.75rem;
+  max-width: 22rem;
+  padding: 0.75rem 1rem;
+  background: var(--panel);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.passes h2 {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.passes ol {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+}
+
+.passes button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.1rem 0.4rem;
+  margin: 0 -0.4rem;
+  border: 0;
+  border-radius: 0.25rem;
+  background: none;
+  color: inherit;
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.passes button:hover {
+  background: rgb(255 255 255 / 0.08);
+}
+
+.passes .time {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}

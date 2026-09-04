@@ -1,10 +1,11 @@
 import { MapboxOverlay } from '@deck.gl/mapbox'
-import { Map as MapLibre, NavigationControl, setWorkerUrl } from 'maplibre-gl'
+import { Map as MapLibre, Marker, NavigationControl, setWorkerUrl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { buildLayers, hoverAt, trackData, type Hover, type SatelliteDatum, type TrackDatum } from './layers'
 import { positionAt, type Satellite } from './orbit'
+import type { Location } from './passes'
 import { useThrottled } from './useThrottled'
 
 const BASEMAP = 'https://tiles.openfreemap.org/styles/fiord'
@@ -24,11 +25,18 @@ interface Props {
   selected: number | null
   onSelect: (noradId: number | null) => void
   focus?: Focus | null
+  location: Location
+  onLocationChange: (location: Location) => void
 }
 
-export function MapView({ satellites, now, selected, onSelect, focus = null }: Props) {
+export function MapView({ satellites, now, selected, onSelect, focus = null, location, onLocationChange }: Props) {
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<MapLibre>(null)
+  const marker = useRef<Marker>(null)
+  const locationChange = useRef(onLocationChange)
+  useEffect(() => {
+    locationChange.current = onLocationChange
+  }, [onLocationChange])
   const overlay = useRef<MapboxOverlay>(null)
   const select = useRef(onSelect)
   useEffect(() => {
@@ -58,12 +66,24 @@ export function MapView({ satellites, now, selected, onSelect, focus = null }: P
       getCursor: ({ isHovering, isDragging }) => (isDragging ? 'grabbing' : isHovering ? 'pointer' : 'grab'),
     })
     map.current.addControl(overlay.current)
+    marker.current = new Marker({ draggable: true, color: '#eedd66' }).setLngLat([location.lon, location.lat]).addTo(map.current)
+    marker.current.on('dragend', () => {
+      const { lng, lat } = marker.current!.getLngLat()
+      locationChange.current({ lat, lon: lng })
+    })
     return () => {
       overlay.current = null
+      marker.current = null
       map.current?.remove()
       map.current = null
     }
+    // The marker takes its initial position from props; later moves come through the effect below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    marker.current?.setLngLat([location.lon, location.lat])
+  }, [location])
 
   const currentTime = useRef(now)
   useEffect(() => {
