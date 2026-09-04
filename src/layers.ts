@@ -75,9 +75,9 @@ function segmentsOf(track: TrackDatum, nowMs: number): SegmentDatum[] {
 }
 
 const ALPHA = {
-  selected: { ahead: 255, oldest: 60 },
+  selected: { ahead: 255, oldest: 130 },
   normal: { ahead: 200, oldest: 40 },
-  dimmed: { ahead: 50, oldest: 15 },
+  dimmed: { ahead: 40, oldest: 12 },
 }
 const WIDTH = { selected: 3, normal: 1.5, dimmed: 1.5 }
 
