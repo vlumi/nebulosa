@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { PassList } from './PassList'
-import type { Pass } from '../orbit/passes'
+import { DEFAULT_FILTERS, type Pass } from '../orbit/passes'
 
 const t0 = Date.UTC(2026, 8, 4, 12, 0, 0)
 const pass = (name: string, noradId: number, startMin: number, maxEl: number): Pass => ({
@@ -22,12 +22,8 @@ test('lists passes with times, duration and max elevation; show and go-to are se
     <PassList
       location={{ lat: 35.68, lon: 139.69 }}
       passes={passes}
-      horizonHours={24}
-      onHorizonChange={vi.fn()}
-      minElevationDeg={0}
-      onMinElevationChange={vi.fn()}
-      onlySelected={false}
-      onOnlySelectedChange={vi.fn()}
+      filters={{ ...DEFAULT_FILTERS, onlySelected: false }}
+      onFiltersChange={vi.fn()}
       familyOf={() => 'sun-synchronous'}
       onShow={onShow}
       onGoTo={onGoTo}
@@ -49,19 +45,14 @@ test('lists passes with times, duration and max elevation; show and go-to are se
 
 test('shows every pass; the horizon and the selected-only filter are controls', async () => {
   const many = Array.from({ length: 13 }, (_, i) => pass('STRIX-1', 53815, i * 100, 30))
-  const onHorizonChange = vi.fn()
-  const onOnlySelectedChange = vi.fn()
+  const onFiltersChange = vi.fn()
   render(
     <PassList
       location={{ lat: 0, lon: 0 }}
       passes={many}
-      horizonHours={24}
-      onHorizonChange={onHorizonChange}
-      minElevationDeg={0}
-      onMinElevationChange={vi.fn()}
+      filters={DEFAULT_FILTERS}
+      onFiltersChange={onFiltersChange}
       selectedName="STRIX-1"
-      onlySelected={true}
-      onOnlySelectedChange={onOnlySelectedChange}
       familyOf={() => 'sun-synchronous'}
       onShow={vi.fn()}
       onGoTo={vi.fn()}
@@ -70,11 +61,11 @@ test('shows every pass; the horizon and the selected-only filter are controls', 
   )
   expect(screen.getAllByRole('listitem')).toHaveLength(13)
   await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Hours ahead' }), '48')
-  expect(onHorizonChange).toHaveBeenCalledWith(48)
+  expect(onFiltersChange).toHaveBeenCalledWith({ ...DEFAULT_FILTERS, horizonHours: 48 })
   const only = screen.getByRole('checkbox', { name: /only STRIX-1/ })
   expect(only).toBeChecked()
   await userEvent.click(only)
-  expect(onOnlySelectedChange).toHaveBeenCalledWith(false)
+  expect(onFiltersChange).toHaveBeenCalledWith({ ...DEFAULT_FILTERS, onlySelected: false })
 })
 
 test('a separator row marks where the list crosses into a later UTC day', () => {
@@ -83,12 +74,8 @@ test('a separator row marks where the list crosses into a later UTC day', () => 
     <PassList
       location={{ lat: 0, lon: 0 }}
       passes={passes}
-      horizonHours={48}
-      onHorizonChange={vi.fn()}
-      minElevationDeg={0}
-      onMinElevationChange={vi.fn()}
-      onlySelected={false}
-      onOnlySelectedChange={vi.fn()}
+      filters={{ ...DEFAULT_FILTERS, horizonHours: 48, onlySelected: false }}
+      onFiltersChange={vi.fn()}
       familyOf={() => 'sun-synchronous'}
       onShow={vi.fn()}
       onGoTo={vi.fn()}
