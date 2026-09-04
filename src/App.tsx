@@ -123,7 +123,7 @@ function App() {
             <details open={!narrow}>
               <summary>
                 Passes over {formatLocation(location)}
-                <span className="muted"> · {passes.length} in {horizonHours} h</span>
+                <span className="muted"> · {passes.length}</span>
               </summary>
               <PassList
                 location={location}

@@ -55,15 +55,24 @@ main > .map {
 }
 
 .dock {
-  display: contents;
-}
-
-.panel {
   position: absolute;
   z-index: 3;
   top: 0.75rem;
   left: 0.75rem;
-  max-width: 18rem;
+  bottom: 4.5rem;
+  width: 20rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+.dock > * {
+  pointer-events: auto;
+}
+
+.panel {
+  flex: none;
   padding: 0.75rem 1rem;
   background: var(--panel);
   border-radius: 0.5rem;
@@ -180,11 +189,9 @@ main > .map {
 }
 
 .passes {
-  position: absolute;
-  z-index: 3;
-  top: 5rem;
-  right: 0.75rem;
-  max-width: 22rem;
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow: auto;
   padding: 0.75rem 1rem;
   background: var(--panel);
   border-radius: 0.5rem;
@@ -201,8 +208,6 @@ main > .map {
   list-style: none;
   padding: 0;
   margin: 0.5rem 0 0;
-  max-height: 50vh;
-  overflow: auto;
 }
 
 .pass-controls {
@@ -299,20 +304,15 @@ main > .map {
   }
 
   .dock {
-    position: absolute;
-    z-index: 3;
     top: 0.5rem;
     left: 0.5rem;
     right: 0.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    bottom: auto;
+    width: auto;
   }
 
   .panel,
   .passes {
-    position: static;
-    max-width: none;
     padding: 0.5rem 0.75rem;
   }
 
