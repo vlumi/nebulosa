@@ -35,3 +35,7 @@ WEBROOT=/some/other/path ./deploy.sh # override the publish dir
 ```
 
 [`nginx.conf.example`](nginx.conf.example) is the server block it's served from.
+
+## License
+
+MIT. Orbital data from [CelesTrak](https://celestrak.org/).
