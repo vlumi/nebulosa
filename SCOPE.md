@@ -71,7 +71,10 @@ Vite scaffold, CI pipeline green, site live at nebulosa.misaki.fi from day one (
 
 ### M6 — settings
 - Track length, past and future separately (one orbit each way today)
-- Pass filters: minimum elevation, per satellite
+- Pass list horizon: a choice of hours ahead instead of a fixed 24 h
+- The whole pass list, scrolling, instead of ten rows and "and N more"
+- Pass filters: minimum elevation, per satellite (selecting a satellite could filter the list,
+  with a way to see all again)
 - A date picker for the clock, to look at solstices or a launch day
 
 ## Non-goals
