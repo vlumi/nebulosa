@@ -64,7 +64,7 @@ main > .map {
   top: 0.75rem;
   left: 0.75rem;
   bottom: 4.5rem;
-  width: 20rem;
+  width: 21rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -223,13 +223,17 @@ main > .map {
 .passes {
   /* Gives way long before the satellite list does; the list has priority for the column's height. */
   flex: 0 1000 auto;
-  min-height: 13rem;
   display: flex;
   flex-direction: column;
   padding: 0.75rem 1rem;
   background: var(--panel);
   border-radius: 0.5rem;
   font-size: 0.875rem;
+}
+
+/* Open, it keeps room for its header, controls and a few rows; collapsed, it is just its header. */
+.passes:has(.summary[aria-expanded='true']) {
+  min-height: 13rem;
 }
 
 .pass-header {
@@ -271,6 +275,15 @@ main > .map {
   flex: 1 1 auto;
   width: auto;
   min-width: 0;
+  overflow: hidden;
+}
+
+.passes .row > button:first-child > .muted {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
 }
 
 .passes .day {
@@ -344,7 +357,7 @@ main > .map {
     max-height: 45vh;
   }
 
-  .passes {
+  .passes:has(.summary[aria-expanded='true']) {
     min-height: 0;
   }
 
