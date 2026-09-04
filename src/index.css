@@ -101,6 +101,64 @@ main > .map {
   flex: none;
 }
 
+.help {
+  position: absolute;
+  z-index: 3;
+  right: 0.75rem;
+  bottom: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.help-toggle {
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 1px solid rgb(255 255 255 / 0.15);
+  border-radius: 50%;
+  background: var(--panel);
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.help-toggle:hover,
+.help-toggle[aria-expanded='true'] {
+  color: var(--text);
+  border-color: rgb(255 255 255 / 0.4);
+}
+
+.help-panel {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background: var(--panel);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 1rem;
+}
+
+.help-panel div {
+  display: contents;
+}
+
+.help-panel dt {
+  text-align: right;
+}
+
+.help-panel kbd {
+  font: inherit;
+  color: var(--text);
+}
+
+.help-panel dd {
+  margin: 0;
+  color: var(--muted);
+}
+
 .satellites li.dimmed,
 .passes li.dimmed {
   opacity: 0.45;
@@ -365,6 +423,10 @@ main > .map {
 
   .satellites ul {
     max-height: 45vh;
+  }
+
+  .help {
+    display: none;
   }
 
   .satellites:has(.summary[aria-expanded='true']),

@@ -1,10 +1,13 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { liveClock, scrubbedTo, withRate } from './time/clock'
 import { Disclosure } from './panels/Disclosure'
-import type { Ghost } from './map/layers'
+import type { Ghost, Hover } from './map/layers'
 import type { Focus } from './map/MapView'
-import { DEFAULT_SPAN, satelliteFrom, type TrackSpan } from './orbit/orbit'
+import { DEFAULT_SPAN, positionAt, satelliteFrom, type TrackSpan } from './orbit/orbit'
+import { Help } from './panels/Help'
 import { SatelliteList } from './panels/SatelliteList'
+import { belongsToFocusedControl, releaseFocusAfterPointerClick, stepIndex } from './shortcuts'
+import { useLatest } from './shared/useLatest'
 import { PassList } from './panels/PassList'
 import { loadElements, newestEpoch, type Omm } from './orbit/elements'
 import { formatAge, formatLocation } from './shared/format'
@@ -22,9 +25,13 @@ interface Selection {
   noradId: number | null
   ghost: Ghost | null
   activePass: Pass | null
+  /** A moment along the selected satellite's track being inspected from the keyboard. */
+  probeMs: number | null
 }
 
-const NOTHING: Selection = { noradId: null, ghost: null, activePass: null }
+const NOTHING: Selection = { noradId: null, ghost: null, activePass: null, probeMs: null }
+const PROBE_STEP_MS = 30_000
+const PROBE_BIG_STEP_MS = 5 * 60_000
 
 // MapLibre and deck.gl are most of the bundle; the shell and the lists paint before they arrive.
 const MapView = lazy(() => import('./map/MapView').then((m) => ({ default: m.MapView })))
@@ -44,6 +51,7 @@ function App() {
   // On a phone only one panel is open at a time, so the column fits the screen.
   const [panelOpen, setPanelOpen] = useState<boolean | null>(null)
   const [passesOpen, setPassesOpen] = useState<boolean | null>(null)
+  const [helpOpen, setHelpOpen] = useState(false)
   const togglePanel = (open: boolean) => {
     setPanelOpen(open)
     if (open && narrow) setPassesOpen(false)
@@ -56,14 +64,6 @@ function App() {
     loadElements()
       .then((elements) => setLoaded({ elements }))
       .catch((e: unknown) => setLoaded({ error: e instanceof Error ? e.message : String(e) }))
-  }, [])
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setSelection(NOTHING)
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
   }, [])
 
   const select = (noradId: number | null) => setSelection({ ...NOTHING, noradId })
@@ -90,15 +90,120 @@ function App() {
 
   const showPass = (pass: Pass) => {
     selectFromList(pass.noradId, pass.peakMs)
-    setSelection({ noradId: pass.noradId, ghost: { noradId: pass.noradId, timeMs: pass.peakMs }, activePass: pass })
+    setSelection({
+      noradId: pass.noradId,
+      ghost: { noradId: pass.noradId, timeMs: pass.peakMs },
+      activePass: pass,
+      probeMs: null,
+    })
   }
 
   const goToPass = (pass: Pass) => {
     const realMs = Date.now()
     setClock(withRate(scrubbedTo(clock, pass.peakMs, realMs), 0, realMs))
     selectFromList(pass.noradId, pass.peakMs)
-    setSelection({ noradId: pass.noradId, ghost: null, activePass: pass })
+    setSelection({ noradId: pass.noradId, ghost: null, activePass: pass, probeMs: null })
   }
+
+  const probe: Hover | null = useMemo(() => {
+    if (selection.probeMs === null || !selectedSatellite) return null
+    const p = positionAt(selectedSatellite, new Date(selection.probeMs))
+    return p && { noradId: selectedSatellite.omm.NORAD_CAT_ID, lonLat: [p.lon, p.lat], timeMs: selection.probeMs }
+  }, [selection.probeMs, selectedSatellite])
+
+  // The handler is registered once and reads the latest state through a ref.
+  const latest = useLatest({
+    satellites,
+    passes,
+    selection,
+    clock,
+    time,
+    narrow,
+    panelOpen,
+    passesOpen,
+    filters,
+    helpOpen,
+  })
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (belongsToFocusedControl(e) || e.metaKey || e.ctrlKey || e.altKey) return
+      const { satellites, passes, selection, clock, time, narrow, panelOpen, passesOpen, filters, helpOpen } =
+        latest.current
+      const realMs = Date.now()
+      const satelliteIndex = satellites.findIndex((s) => s.omm.NORAD_CAT_ID === selection.noradId)
+      const passIndex = passes.findIndex(
+        (p) => p.noradId === selection.activePass?.noradId && p.peakMs === selection.activePass?.peakMs,
+      )
+      switch (e.key) {
+        case '?':
+        case '/':
+          setHelpOpen(!helpOpen)
+          break
+        case 'Escape':
+          // Help first, then the pass, ghost and probe; a further press clears the satellite too.
+          if (helpOpen) {
+            setHelpOpen(false)
+          } else if (selection.activePass || selection.ghost || selection.probeMs !== null) {
+            setSelection({ ...NOTHING, noradId: selection.noradId })
+          } else {
+            setSelection(NOTHING)
+          }
+          break
+        case 'ArrowDown':
+        case 'ArrowUp': {
+          const delta = e.key === 'ArrowDown' ? 1 : -1
+          if (e.shiftKey) {
+            const i = stepIndex(passIndex, delta, passes.length)
+            if (i >= 0) showPass(passes[i])
+          } else {
+            const i = stepIndex(satelliteIndex, delta, satellites.length)
+            if (i >= 0) selectFromList(satellites[i].omm.NORAD_CAT_ID)
+          }
+          break
+        }
+        case 'ArrowRight':
+        case 'ArrowLeft': {
+          if (selection.noradId === null) return
+          const step = (e.shiftKey ? PROBE_BIG_STEP_MS : PROBE_STEP_MS) * (e.key === 'ArrowRight' ? 1 : -1)
+          setSelection({ ...selection, probeMs: (selection.probeMs ?? time.getTime()) + step })
+          break
+        }
+        case 'Enter':
+          if (selection.activePass) goToPass(selection.activePass)
+          break
+        case ' ':
+          setClock(withRate(clock, clock.rate > 0 ? 0 : 1, realMs))
+          break
+        case 'l':
+        case 'L':
+          setClock(liveClock(realMs))
+          break
+        case 's':
+        case 'S':
+          togglePanel(!(panelOpen ?? !narrow))
+          break
+        case 'p':
+        case 'P':
+          togglePasses(!(passesOpen ?? !narrow))
+          break
+        case 'o':
+        case 'O':
+          if (selection.noradId !== null) setFilters({ ...filters, onlySelected: !filters.onlySelected })
+          break
+        default:
+          return
+      }
+      e.preventDefault()
+    }
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('click', releaseFocusAfterPointerClick)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('click', releaseFocusAfterPointerClick)
+    }
+    // Handlers are stable in behaviour; state is read through `latest`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <>
@@ -117,6 +222,7 @@ function App() {
             location={location}
             onLocationChange={setLocation}
             ghost={selection.ghost}
+            probe={probe}
             span={span}
           />
         </Suspense>
@@ -180,6 +286,7 @@ function App() {
           )}
         </div>
         <TimeBar clock={clock} now={now} onChange={setClock} />
+        <Help open={helpOpen} onToggle={setHelpOpen} />
       </main>
       <footer>
         Unofficial demo, not affiliated with Synspective. Orbital data: CelesTrak. Map: OpenFreeMap, © OpenStreetMap.

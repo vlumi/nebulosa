@@ -33,6 +33,8 @@ interface Props {
   location: Location
   onLocationChange: (location: Location) => void
   ghost?: Ghost | null
+  /** A point to show as if hovered, driven from the keyboard; the pointer wins while it is over a track. */
+  probe?: Hover | null
   span?: TrackSpan
 }
 
@@ -45,6 +47,7 @@ export function MapView({
   location,
   onLocationChange,
   ghost = null,
+  probe = null,
   span = DEFAULT_SPAN,
 }: Props) {
   const container = useRef<HTMLDivElement>(null)
@@ -124,8 +127,8 @@ export function MapView({
   }, [focus, satellites, currentTime])
 
   useEffect(() => {
-    overlay.current?.setProps({ layers: buildLayers(satellites, tracks, now, selected, hover, ghost, span) })
-  }, [satellites, tracks, now, selected, hover, ghost, span])
+    overlay.current?.setProps({ layers: buildLayers(satellites, tracks, now, selected, hover ?? probe, ghost, span) })
+  }, [satellites, tracks, now, selected, hover, probe, ghost, span])
 
   return <div ref={container} className="map" />
 }
