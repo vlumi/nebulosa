@@ -4,6 +4,7 @@ import { Disclosure } from './panels/Disclosure'
 import type { Ghost, Hover } from './map/layers'
 import type { Focus } from './map/MapView'
 import { DEFAULT_SPAN, positionAt, satelliteFrom, type TrackSpan } from './orbit/orbit'
+import { Help } from './panels/Help'
 import { SatelliteList } from './panels/SatelliteList'
 import { belongsToFocusedControl, stepIndex } from './shortcuts'
 import { useLatest } from './shared/useLatest'
@@ -50,6 +51,7 @@ function App() {
   // On a phone only one panel is open at a time, so the column fits the screen.
   const [panelOpen, setPanelOpen] = useState<boolean | null>(null)
   const [passesOpen, setPassesOpen] = useState<boolean | null>(null)
+  const [helpOpen, setHelpOpen] = useState(false)
   const togglePanel = (open: boolean) => {
     setPanelOpen(open)
     if (open && narrow) setPassesOpen(false)
@@ -110,20 +112,38 @@ function App() {
   }, [selection.probeMs, selectedSatellite])
 
   // The handler is registered once and reads the latest state through a ref.
-  const latest = useLatest({ satellites, passes, selection, clock, time, narrow, panelOpen, passesOpen, filters })
+  const latest = useLatest({
+    satellites,
+    passes,
+    selection,
+    clock,
+    time,
+    narrow,
+    panelOpen,
+    passesOpen,
+    filters,
+    helpOpen,
+  })
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (belongsToFocusedControl(e) || e.metaKey || e.ctrlKey || e.altKey) return
-      const { satellites, passes, selection, clock, time, narrow, panelOpen, passesOpen, filters } = latest.current
+      const { satellites, passes, selection, clock, time, narrow, panelOpen, passesOpen, filters, helpOpen } =
+        latest.current
       const realMs = Date.now()
       const satelliteIndex = satellites.findIndex((s) => s.omm.NORAD_CAT_ID === selection.noradId)
       const passIndex = passes.findIndex(
         (p) => p.noradId === selection.activePass?.noradId && p.peakMs === selection.activePass?.peakMs,
       )
       switch (e.key) {
+        case '?':
+        case '/':
+          setHelpOpen(!helpOpen)
+          break
         case 'Escape':
-          // First the pass, ghost and probe; a second press clears the satellite too.
-          if (selection.activePass || selection.ghost || selection.probeMs !== null) {
+          // Help first, then the pass, ghost and probe; a further press clears the satellite too.
+          if (helpOpen) {
+            setHelpOpen(false)
+          } else if (selection.activePass || selection.ghost || selection.probeMs !== null) {
             setSelection({ ...NOTHING, noradId: selection.noradId })
           } else {
             setSelection(NOTHING)
@@ -262,6 +282,7 @@ function App() {
           )}
         </div>
         <TimeBar clock={clock} now={now} onChange={setClock} />
+        <Help open={helpOpen} onToggle={setHelpOpen} />
       </main>
       <footer>
         Unofficial demo, not affiliated with Synspective. Orbital data: CelesTrak. Map: OpenFreeMap, © OpenStreetMap.

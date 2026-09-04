@@ -9,6 +9,7 @@ export const SHORTCUTS = [
   { keys: 'S P', does: 'panels' },
   { keys: 'O', does: 'only the selected satellite\u2019s passes' },
   { keys: 'Esc', does: 'clear the pass, then the satellite' },
+  { keys: '?', does: 'this help' },
 ] as const
 
 const FORM_FIELDS = new Set(['INPUT', 'SELECT', 'TEXTAREA'])

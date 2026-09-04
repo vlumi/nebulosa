@@ -178,6 +178,11 @@ test('keyboard: arrows pick satellites, Shift-arrows pick passes, Enter goes the
   await userEvent.keyboard('o')
   expect(passes.getByRole('checkbox', { name: /only STRIX-1/ })).toBeChecked()
 
+  await userEvent.keyboard('?')
+  expect(screen.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBeInTheDocument()
+  await userEvent.keyboard('{Escape}')
+  expect(screen.queryByRole('dialog')).toBeNull()
+
   await userEvent.keyboard('{Escape}')
   expect(passes.queryByRole('button', { current: true })).toBeNull()
   expect(panel.getByRole('button', { name: /STRIX-1/ })).toHaveAttribute('aria-pressed', 'true')

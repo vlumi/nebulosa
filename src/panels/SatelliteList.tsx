@@ -3,7 +3,6 @@ import { newestEpoch } from '../orbit/elements'
 import { formatAge, utcMinute } from '../shared/format'
 import { familyCss } from '../shared/palette'
 import { SPAN_CHOICES, type Satellite, type TrackSpan } from '../orbit/orbit'
-import { SHORTCUTS } from '../shortcuts'
 
 interface Props {
   satellites: Satellite[]
@@ -66,13 +65,6 @@ export function SatelliteList({ satellites, now, selected, onSelect, span, onSpa
       </div>
       <p className="muted">
         Elements from {utcMinute(epoch)} UTC · {formatAge(epoch, now)} old
-      </p>
-      <p className="muted keys">
-        {SHORTCUTS.map(({ keys, does }) => (
-          <span key={keys}>
-            <kbd>{keys}</kbd> {does}
-          </span>
-        ))}
       </p>
     </>
   )
