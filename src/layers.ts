@@ -139,7 +139,14 @@ export function buildLayers(
   const positions: PositionDatum[] = satellites.flatMap((sat) => {
     const p = positionAt(sat, now)
     if (!p) return []
-    return [{ name: sat.omm.OBJECT_NAME, lonLat: [p.lon, p.lat] as LonLat, noradId: sat.omm.NORAD_CAT_ID, family: sat.family }]
+    return [
+      {
+        name: sat.omm.OBJECT_NAME,
+        lonLat: [p.lon, p.lat] as LonLat,
+        noradId: sat.omm.NORAD_CAT_ID,
+        family: sat.family,
+      },
+    ]
   })
   const emphasis = (d: SatelliteDatum): 'selected' | 'dimmed' | 'normal' =>
     selected === null ? 'normal' : d.noradId === selected ? 'selected' : 'dimmed'

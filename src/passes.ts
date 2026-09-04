@@ -111,7 +111,5 @@ function finish(
 }
 
 export function upcomingPasses(satellites: Satellite[], location: Location, from: Date, hours = 24): Pass[] {
-  return satellites
-    .flatMap((sat) => passesOver(sat, location, from, hours))
-    .sort((a, b) => a.startMs - b.startMs)
+  return satellites.flatMap((sat) => passesOver(sat, location, from, hours)).sort((a, b) => a.startMs - b.startMs)
 }

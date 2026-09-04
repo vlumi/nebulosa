@@ -53,9 +53,15 @@ ws.addEventListener('message', (event) => {
     pending.get(message.id)(message)
     pending.delete(message.id)
   } else if (message.method === 'Runtime.exceptionThrown') {
-    console.error('page exception:', message.params.exceptionDetails.exception?.description ?? message.params.exceptionDetails.text)
+    console.error(
+      'page exception:',
+      message.params.exceptionDetails.exception?.description ?? message.params.exceptionDetails.text,
+    )
   } else if (message.method === 'Runtime.consoleAPICalled' && ['error', 'warning'].includes(message.params.type)) {
-    console.error(`page console.${message.params.type}:`, message.params.args.map((a) => a.description ?? a.value).join(' '))
+    console.error(
+      `page console.${message.params.type}:`,
+      message.params.args.map((a) => a.description ?? a.value).join(' '),
+    )
   }
 })
 const send = (method, params = {}) =>

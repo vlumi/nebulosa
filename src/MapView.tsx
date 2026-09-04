@@ -61,7 +61,10 @@ export function MapView({
   // A track shifted by under a minute is indistinguishable, and while scrubbing or fast-forwarding
   // a few tenths of a second of staleness is invisible; positions still move every frame.
   const trackMinute = useThrottled(Math.floor(now.getTime() / 60_000), 150)
-  const tracks = useMemo(() => trackData(satellites, new Date(trackMinute * 60_000), span), [satellites, trackMinute, span])
+  const tracks = useMemo(
+    () => trackData(satellites, new Date(trackMinute * 60_000), span),
+    [satellites, trackMinute, span],
+  )
   const currentTracks = useLatest(tracks)
 
   useEffect(() => {
@@ -91,7 +94,9 @@ export function MapView({
       getCursor: ({ isHovering, isDragging }) => (isDragging ? 'grabbing' : isHovering ? 'pointer' : 'grab'),
     })
     map.current.addControl(overlay.current)
-    marker.current = new Marker({ draggable: true, color: '#eedd66' }).setLngLat([location.lon, location.lat]).addTo(map.current)
+    marker.current = new Marker({ draggable: true, color: '#eedd66' })
+      .setLngLat([location.lon, location.lat])
+      .addTo(map.current)
     marker.current.on('dragend', () => {
       const { lng, lat } = marker.current!.getLngLat()
       locationChange.current({ lat, lon: lng })

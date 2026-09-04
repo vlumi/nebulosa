@@ -1,5 +1,5 @@
 {
   "config": { "extends": "./.markdownlint.jsonc" },
   "globs": ["**/*.md"],
-  "ignores": ["node_modules/**", ".handoff/**", "dist/**"]
+  "ignores": ["node_modules/**", ".handoff/**", "dist/**"],
 }
