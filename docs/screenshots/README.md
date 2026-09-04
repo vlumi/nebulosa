@@ -1,6 +1,6 @@
 # Screenshots
 
-One capture per milestone, taken from the deployed site with [`scripts/screenshot.sh`](../../scripts/screenshot.sh).
+One capture per milestone, taken from the deployed site with [`scripts/screenshot.mjs`](../../scripts/screenshot.mjs).
 The README shows the latest; the rest stay here as a record of how the site grew.
 
 | Date | Capture | What it shows |
