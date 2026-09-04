@@ -116,7 +116,7 @@ export function MapView({
     const at = focus.timeMs === undefined ? currentTime.current : new Date(focus.timeMs)
     const p = sat && positionAt(sat, at)
     if (p) map.current?.easeTo({ center: [p.lon, p.lat], duration: 600 })
-  }, [focus, satellites])
+  }, [focus, satellites, currentTime])
 
   useEffect(() => {
     overlay.current?.setProps({ layers: buildLayers(satellites, tracks, now, selected, hover, ghost, span) })
