@@ -76,8 +76,8 @@ test('play toggles between paused and real speed; live resets the clock', () => 
   expect(useApp.getState().clock).toEqual({ anchorReal: 3000, anchorSim: 3000, rate: 1 })
 })
 
-test('the reach layer toggles', () => {
-  expect(useApp.getState().reachVisible).toBe(false)
-  useApp.getState().toggleReach()
+test('the reach layer is on until toggled off', () => {
   expect(useApp.getState().reachVisible).toBe(true)
+  useApp.getState().toggleReach()
+  expect(useApp.getState().reachVisible).toBe(false)
 })
