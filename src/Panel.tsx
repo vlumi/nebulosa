@@ -12,7 +12,6 @@ interface Props {
 
 export function Panel({ satellites, now, selected, onSelect }: Props) {
   const epoch = newestEpoch(satellites.map((s) => s.omm))
-  const focused = satellites.find((s) => s.omm.NORAD_CAT_ID === selected)
   return (
     <>
       <ul>
@@ -25,11 +24,11 @@ export function Panel({ satellites, now, selected, onSelect }: Props) {
                 <span className="swatch" style={{ background: `rgb(${FAMILY_COLORS[s.family].join(' ')})` }} />
                 {s.omm.OBJECT_NAME} <span className="muted">#{id} · {s.omm.INCLINATION.toFixed(1)}°</span>
               </button>
+              {isSelected && <Detail satellite={s} now={now} />}
             </li>
           )
         })}
       </ul>
-      {focused && <Detail satellite={focused} now={now} />}
       <p className="muted">
         {satellites.length} satellites · elements from {epoch.toISOString().slice(0, 16).replace('T', ' ')} UTC ·{' '}
         {formatAge(epoch, now)} old
