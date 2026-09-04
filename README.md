@@ -8,9 +8,9 @@ Unofficial demo project; not affiliated with Synspective.
 
 Live at [nebulosa.misaki.fi](https://nebulosa.misaki.fi). [SCOPE.md](SCOPE.md) is the plan it was built from; [ARCHITECTURE.md](ARCHITECTURE.md) explains how it works and the maths behind it.
 
-![StriX-3 selected with a half-orbit tail and a two-orbit lead, the pass list filtered to it and to 30° or higher, the time bar with its date picker](docs/screenshots/2026-09-04-m6.png)
+![StriX-3 selected with its details, a half-orbit tail and a two-orbit lead, the pass list filtered to it and to 30° or higher, the one pass shown with the satellite ghosted at its peak; segmented controls for span, filters and speed](docs/screenshots/2026-09-04-m7.png)
 
-<img src="docs/screenshots/2026-09-04-m5-phone.png" alt="The same site on a phone: the satellite and pass panels docked as collapsible bars over the map" width="260">
+<img src="docs/screenshots/2026-09-04-m7-phone.png" alt="The same site on a phone: the panels docked as collapsible bars over the map, the pass list open and filtered to one satellite with a pass shown" width="260">
 
 Earlier captures, one per milestone, are kept in [docs/screenshots](docs/screenshots/README.md).
 
