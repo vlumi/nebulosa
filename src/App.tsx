@@ -6,6 +6,7 @@ import { satelliteFrom } from './orbit'
 import { Panel } from './Panel'
 import { TimeBar } from './TimeBar'
 import { useNow } from './useNow'
+import { useSmoothedTime } from './useSmoothedTime'
 
 type Loaded = { elements: Omm[] } | { error: string } | null
 
@@ -13,8 +14,8 @@ function App() {
   const [loaded, setLoaded] = useState<Loaded>(null)
   const [selected, setSelected] = useState<number | null>(null)
   const [clock, setClock] = useState(() => liveClock(Date.now()))
-  const now = useNow(clock.rate > 1 ? 0 : 1000)
-  const time = useMemo(() => new Date(simTime(clock, now.getTime())), [clock, now])
+  const now = useNow()
+  const time = useSmoothedTime(simTime(clock, now.getTime()))
 
   useEffect(() => {
     loadElements()

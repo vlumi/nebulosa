@@ -5,6 +5,7 @@ import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&ur
 import { useEffect, useMemo, useRef } from 'react'
 import { buildLayers, trackData, type SatelliteDatum } from './layers'
 import type { Satellite } from './orbit'
+import { useThrottled } from './useThrottled'
 
 const BASEMAP = 'https://tiles.openfreemap.org/styles/dark'
 
@@ -48,8 +49,9 @@ export function MapView({ satellites, now, selected, onSelect }: Props) {
     }
   }, [])
 
-  // A track shifted by under a minute is indistinguishable; positions still move every tick.
-  const trackMinute = Math.floor(now.getTime() / 60_000)
+  // A track shifted by under a minute is indistinguishable, and while scrubbing or fast-forwarding
+  // a few tenths of a second of staleness is invisible; positions still move every frame.
+  const trackMinute = useThrottled(Math.floor(now.getTime() / 60_000), 150)
   const tracks = useMemo(() => trackData(satellites, new Date(trackMinute * 60_000)), [satellites, trackMinute])
 
   useEffect(() => {
