@@ -231,9 +231,18 @@ main > .map {
   font-size: 0.875rem;
 }
 
-/* Open, it keeps room for its header, controls and a few rows; collapsed, it is just its header. */
+/* Open panels keep room for a few rows; collapsed, each is exactly its header and never shrinks. */
+.satellites:not(:has(.summary[aria-expanded='true'])),
+.passes:not(:has(.summary[aria-expanded='true'])) {
+  flex: none;
+}
+
+.satellites:has(.summary[aria-expanded='true']) {
+  min-height: 10rem;
+}
+
 .passes:has(.summary[aria-expanded='true']) {
-  min-height: 13rem;
+  min-height: 11rem;
 }
 
 .pass-header {
@@ -333,7 +342,8 @@ main > .map {
   transform: rotate(90deg);
 }
 
-@media (max-width: 720px) {
+/* Small viewports: phones, and windows too short for two panels above each other. Keep in step with useNarrow.ts. */
+@media (max-width: 720px), (max-height: 560px) {
   header p,
   footer,
   .maplibregl-ctrl-top-right {
@@ -357,6 +367,7 @@ main > .map {
     max-height: 45vh;
   }
 
+  .satellites:has(.summary[aria-expanded='true']),
   .passes:has(.summary[aria-expanded='true']) {
     min-height: 0;
   }
