@@ -65,6 +65,10 @@ Vite scaffold, CI pipeline green, site live at nebulosa.misaki.fi from day one (
   (time window, max elevation)
 - The seed of actual ops-planning thinking; keep the math honest (SGP4 + geometry, no fudge)
 
+### M5 — small screens
+- The panels are desktop boxes today and cover the map on a phone. Collapsible panels, a bottom
+  sheet for the lists on narrow viewports, the time bar reduced to its essentials.
+
 ## Non-goals
 
 - No backend, no accounts, no persistence beyond the fetched element set
