@@ -3,6 +3,7 @@
 //   node scripts/screenshot.mjs docs/screenshots/2026-09-04-m2.png            # deployed site
 //   node scripts/screenshot.mjs out.png http://localhost:4173/                # local preview
 //   CHROME=/usr/bin/google-chrome WAIT_MS=30000 node scripts/screenshot.mjs out.png
+//   EVAL="document.querySelector('.panel button').click()" node scripts/screenshot.mjs out.png  # act first
 import { spawn } from 'node:child_process'
 import { writeFile } from 'node:fs/promises'
 
@@ -13,6 +14,7 @@ if (!output) {
 }
 const chrome = process.env.CHROME ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const waitMs = Number(process.env.WAIT_MS ?? 15_000)
+const evalJs = process.env.EVAL
 const width = 1400
 const height = 900
 
@@ -60,6 +62,10 @@ try {
   await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false })
   await send('Page.navigate', { url })
   await new Promise((resolve) => setTimeout(resolve, waitMs))
+  if (evalJs) {
+    await send('Runtime.evaluate', { expression: evalJs, awaitPromise: true })
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+  }
   const { data } = await send('Page.captureScreenshot', { format: 'png' })
   await writeFile(output, Buffer.from(data, 'base64'))
   console.log(`Saved ${output}`)

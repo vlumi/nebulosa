@@ -1,6 +1,6 @@
 :root {
   --bg: #0b0d14;
-  --panel: rgb(11 13 20 / 0.96);
+  --panel: #0b0d14;
   --text: #d6d9e0;
   --muted: #8a90a0;
   --accent: #eedd66;
@@ -56,6 +56,7 @@ main > .map {
 
 .panel {
   position: absolute;
+  z-index: 3;
   top: 0.75rem;
   left: 0.75rem;
   max-width: 18rem;
@@ -96,6 +97,28 @@ main > .map {
   background: rgb(255 255 255 / 0.08);
 }
 
+.detail {
+  margin: 0.25rem 0 0.5rem 1.5rem;
+  padding: 0.35rem 0 0.35rem 0.6rem;
+  border-left: 2px solid rgb(255 255 255 / 0.12);
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.15rem 0.75rem;
+}
+
+.detail div {
+  display: contents;
+}
+
+.detail dt {
+  color: var(--muted);
+}
+
+.detail dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .swatch {
   width: 0.6rem;
   height: 0.6rem;
@@ -113,6 +136,7 @@ main > .map {
 
 .timebar {
   position: absolute;
+  z-index: 3;
   bottom: 0.75rem;
   left: 0.75rem;
   display: flex;
