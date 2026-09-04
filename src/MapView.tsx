@@ -2,8 +2,8 @@ import { MapboxOverlay } from '@deck.gl/mapbox'
 import { Map as MapLibre, NavigationControl, setWorkerUrl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
-import { useEffect, useRef } from 'react'
-import { buildLayers, type SatelliteDatum } from './layers'
+import { useEffect, useMemo, useRef } from 'react'
+import { buildLayers, trackData, type SatelliteDatum } from './layers'
 import type { Satellite } from './orbit'
 
 const BASEMAP = 'https://tiles.openfreemap.org/styles/dark'
@@ -47,9 +47,13 @@ export function MapView({ satellites, now, selected, onSelect }: Props) {
     }
   }, [])
 
+  // A track shifted by under a minute is indistinguishable; positions still move every tick.
+  const trackMinute = Math.floor(now.getTime() / 60_000)
+  const tracks = useMemo(() => trackData(satellites, new Date(trackMinute * 60_000)), [satellites, trackMinute])
+
   useEffect(() => {
-    overlay.current?.setProps({ layers: buildLayers(satellites, now, selected) })
-  }, [satellites, now, selected])
+    overlay.current?.setProps({ layers: buildLayers(satellites, tracks, now, selected) })
+  }, [satellites, tracks, now, selected])
 
   return <div ref={container} className="map" />
 }

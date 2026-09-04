@@ -15,7 +15,7 @@ export interface SatelliteDatum {
   family: OrbitFamily
 }
 
-interface TrackDatum extends SatelliteDatum {
+export interface TrackDatum extends SatelliteDatum {
   path: LonLat[]
 }
 
@@ -24,13 +24,12 @@ interface PositionDatum extends SatelliteDatum {
   lonLat: LonLat
 }
 
+export function trackData(satellites: Satellite[], time: Date): TrackDatum[] {
+  return satellites.map((sat) => ({ path: groundTrack(sat, time), noradId: sat.omm.NORAD_CAT_ID, family: sat.family }))
+}
+
 /** `selected` is a NORAD catalog number; everything else is dimmed while one is set. */
-export function buildLayers(satellites: Satellite[], now: Date, selected: number | null = null): Layer[] {
-  const tracks: TrackDatum[] = satellites.map((sat) => ({
-    path: groundTrack(sat, now),
-    noradId: sat.omm.NORAD_CAT_ID,
-    family: sat.family,
-  }))
+export function buildLayers(satellites: Satellite[], tracks: TrackDatum[], now: Date, selected: number | null = null): Layer[] {
   const positions: PositionDatum[] = satellites.flatMap((sat) => {
     const p = positionAt(sat, now)
     if (!p) return []
