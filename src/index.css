@@ -96,6 +96,28 @@ main > .map {
   background: rgb(255 255 255 / 0.08);
 }
 
+.detail {
+  margin: 0.25rem 0 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgb(255 255 255 / 0.1);
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.15rem 0.75rem;
+}
+
+.detail div {
+  display: contents;
+}
+
+.detail dt {
+  color: var(--muted);
+}
+
+.detail dd {
+  margin: 0;
+  white-space: nowrap;
+}
+
 .swatch {
   width: 0.6rem;
   height: 0.6rem;
