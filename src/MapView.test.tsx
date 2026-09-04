@@ -63,6 +63,12 @@ test('mounts a MapLibre map with a deck.gl overlay and feeds it the layers', () 
   expect(overlayInstance.setProps.mock.lastCall![0].layers.map((l: { id: string }) => l.id)).toContain('hover-label')
   act(() => overlayProps.onHover({ layer: null, object: undefined }))
   expect(overlayInstance.setProps.mock.lastCall![0].layers.map((l: { id: string }) => l.id)).not.toContain('hover-label')
+  expect(() => act(() => overlayProps.onHover({ layer: { id: 'tracks' }, object: undefined, coordinate: [0, 0] }))).not.toThrow()
+  expect(overlayInstance.setProps.mock.lastCall![0].layers.map((l: { id: string }) => l.id)).not.toContain('hover-label')
+
+  const continuation = { noradId: strix9.NORAD_CAT_ID, family: 'mid-inclination', samples: [{ lonLat: [10, 10], timeMs: 1 }, { lonLat: [20, 20], timeMs: 2 }] }
+  act(() => overlayProps.onHover({ layer: { id: 'ghost-track' }, object: continuation, coordinate: [19, 19] }))
+  expect(overlayInstance.setProps.mock.lastCall![0].layers.map((l: { id: string }) => l.id)).toContain('hover-label')
   overlayProps.onClick({ object: { noradId: strix9.NORAD_CAT_ID } })
   expect(onSelect).toHaveBeenCalledWith(strix9.NORAD_CAT_ID)
   overlayProps.onClick({ object: undefined })

@@ -1,7 +1,17 @@
 import type { Layer } from '@deck.gl/core'
+import { PathStyleExtension, type PathStyleExtensionProps } from '@deck.gl/extensions'
 import { PathLayer, ScatterplotLayer, SolidPolygonLayer, TextLayer } from '@deck.gl/layers'
 import { formatOffset } from './clock'
-import { nearestSample, positionAt, trackSamples, type LonLat, type OrbitFamily, type Satellite, type TrackSample } from './orbit'
+import {
+  nearestSample,
+  positionAt,
+  trackSamples,
+  trackSamplesBetween,
+  type LonLat,
+  type OrbitFamily,
+  type Satellite,
+  type TrackSample,
+} from './orbit'
 import { nightPolygon } from './sun'
 
 export type Rgb = [number, number, number]
@@ -53,6 +63,19 @@ export function trackData(satellites: Satellite[], time: Date): TrackDatum[] {
 export function hoverAt(track: TrackDatum, lonLat: LonLat): Hover {
   const sample = track.samples[nearestSample(track.samples, lonLat)]
   return { noradId: track.noradId, lonLat: sample.lonLat, timeMs: sample.timeMs }
+}
+
+const GHOST_MARGIN_MS = 5 * 60_000
+
+/**
+ * The time span a dashed continuation must cover so a ghost outside the drawn ±1-orbit track
+ * connects to it; null when the ghost already sits on the drawn track.
+ */
+function ghostReach(sat: Satellite, ghostMs: number, nowMs: number): [number, number] | null {
+  const halfSpanMs = sat.periodMinutes * 60_000
+  if (ghostMs > nowMs + halfSpanMs) return [nowMs + halfSpanMs, ghostMs + GHOST_MARGIN_MS]
+  if (ghostMs < nowMs - halfSpanMs) return [ghostMs - GHOST_MARGIN_MS, nowMs - halfSpanMs]
+  return null
 }
 
 const TAIL_CHUNKS = 60
@@ -166,6 +189,31 @@ export function buildLayers(
   const ghostPosition = ghostSat && positionAt(ghostSat, new Date(ghost.timeMs))
   if (ghostSat && ghostPosition) {
     const datum = { lonLat: [ghostPosition.lon, ghostPosition.lat] as LonLat, family: ghostSat.family }
+    const reach = ghostReach(ghostSat, ghost.timeMs, nowMs)
+    if (reach) {
+      // Sample on a grid through the ghost time itself, so the dashes pass through the marker.
+      const stepMs = 30_000
+      const from = ghost.timeMs - Math.ceil((ghost.timeMs - reach[0]) / stepMs) * stepMs
+      const continuation: TrackDatum = {
+        noradId: ghostSat.omm.NORAD_CAT_ID,
+        family: ghostSat.family,
+        samples: trackSamplesBetween(ghostSat, from, reach[1]),
+      }
+      layers.push(
+        new PathLayer<TrackDatum, PathStyleExtensionProps<TrackDatum>>({
+          id: 'ghost-track',
+          data: [continuation],
+          pickable: true,
+          wrapLongitude: true,
+          getPath: (d) => d.samples.map((sample) => sample.lonLat),
+          getColor: [...FAMILY_COLORS[ghostSat.family], 150],
+          getWidth: 1.5,
+          widthUnits: 'pixels',
+          getDashArray: [6, 4],
+          extensions: [new PathStyleExtension({ dash: true })],
+        }),
+      )
+    }
     layers.push(
       new ScatterplotLayer<typeof datum>({
         id: 'ghost',
@@ -190,6 +238,7 @@ export function buildLayers(
         getBackgroundColor: [11, 13, 20, 220],
         backgroundPadding: [6, 3],
         fontFamily: 'system-ui, sans-serif',
+        characterSet: 'auto',
       }),
     )
   }
@@ -218,6 +267,7 @@ export function buildLayers(
         getBackgroundColor: [11, 13, 20, 220],
         backgroundPadding: [6, 3],
         fontFamily: 'system-ui, sans-serif',
+        characterSet: 'auto',
       }),
     )
   }
