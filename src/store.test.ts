@@ -9,6 +9,7 @@ const pass: Pass = {
   endMs: 9000,
   maxElevationDeg: 40,
   peakAzimuthDeg: 90,
+  offNadirDeg: 45,
 }
 
 beforeEach(resetApp)
@@ -73,4 +74,10 @@ test('play toggles between paused and real speed; live resets the clock', () => 
   expect(useApp.getState().clock.rate).toBe(1)
   goLive(3000)
   expect(useApp.getState().clock).toEqual({ anchorReal: 3000, anchorSim: 3000, rate: 1 })
+})
+
+test('the reach layer toggles', () => {
+  expect(useApp.getState().reachVisible).toBe(false)
+  useApp.getState().toggleReach()
+  expect(useApp.getState().reachVisible).toBe(true)
 })

@@ -19,6 +19,8 @@ test('a sun-synchronous satellite passes Tokyo a few times a day, each pass a fe
     expect(minutes).toBeLessThan(15)
     expect(pass.maxElevationDeg).toBeGreaterThan(0)
     expect(pass.maxElevationDeg).toBeLessThanOrEqual(90)
+    expect(pass.offNadirDeg).toBeGreaterThan(0)
+    expect(pass.offNadirDeg).toBeLessThan(90 - pass.maxElevationDeg)
     expect(Math.abs(lookAt(sat, tokyo, pass.startMs)!.elevationDeg)).toBeLessThan(0.5)
     expect(lookAt(sat, tokyo, pass.peakMs)!.elevationDeg).toBeCloseTo(pass.maxElevationDeg, 6)
   }

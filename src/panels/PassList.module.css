@@ -43,6 +43,10 @@
   text-align: left;
 }
 
+.show > .detail[data-reach] {
+  color: var(--accent);
+}
+
 .goto {
   flex: none;
   width: auto;

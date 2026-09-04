@@ -39,9 +39,9 @@ test('track samples carry increasing timestamps 30 s apart around the center', (
 
 test('nearest sample handles the antimeridian', () => {
   const samples = [
-    { lonLat: [170, 0] as [number, number], timeMs: 0 },
-    { lonLat: [-179, 0] as [number, number], timeMs: 1 },
-    { lonLat: [0, 0] as [number, number], timeMs: 2 },
+    { lonLat: [170, 0] as [number, number], timeMs: 0, altKm: 500 },
+    { lonLat: [-179, 0] as [number, number], timeMs: 1, altKm: 500 },
+    { lonLat: [0, 0] as [number, number], timeMs: 2, altKm: 500 },
   ]
   expect(nearestSample(samples, [179.5, 0.2])).toBe(1)
   expect(nearestSample(samples, [160, 0])).toBe(0)

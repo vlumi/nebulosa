@@ -1,6 +1,7 @@
 import { ecfToLookAngles, eciToEcf, gstime, propagate } from 'satellite.js'
 import type { Omm } from './elements'
-import { satelliteFrom, type Satellite } from './orbit'
+import { positionAt, satelliteFrom, type Satellite } from './orbit'
+import { offNadirForElevation } from './swath'
 
 const RAD = Math.PI / 180
 const DEG = 180 / Math.PI
@@ -16,9 +17,16 @@ export interface PassFilters {
   minElevationDeg: number
   /** Only the selected satellite's passes while one is selected. */
   onlySelected: boolean
+  /** Only passes whose peak falls inside the radar's steering range. */
+  inReachOnly: boolean
 }
 
-export const DEFAULT_FILTERS: PassFilters = { horizonHours: 24, minElevationDeg: 0, onlySelected: true }
+export const DEFAULT_FILTERS: PassFilters = {
+  horizonHours: 24,
+  minElevationDeg: 0,
+  onlySelected: true,
+  inReachOnly: false,
+}
 
 export interface Location {
   lat: number
@@ -34,6 +42,8 @@ export interface Pass {
   endMs: number
   maxElevationDeg: number
   peakAzimuthDeg: number
+  /** The satellite's look angle off nadir toward the location at the peak. */
+  offNadirDeg: number
 }
 
 interface Look {
@@ -118,6 +128,7 @@ function finish(
     endMs,
     maxElevationDeg: peakElevation,
     peakAzimuthDeg: lookAt(sat, location, peakMs)?.azimuthDeg ?? 0,
+    offNadirDeg: offNadirForElevation(peakElevation, positionAt(sat, new Date(peakMs))?.altKm ?? 500),
   }
 }
 

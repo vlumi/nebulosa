@@ -36,6 +36,8 @@ interface Props {
   /** A point to show as if hovered, driven from the keyboard; the pointer wins while it is over a track. */
   probe?: Hover | null
   span?: TrackSpan
+  /** Draw the radar's reach beside the selected satellite's track. */
+  reach?: boolean
 }
 
 export function MapView({
@@ -49,6 +51,7 @@ export function MapView({
   ghost = null,
   probe = null,
   span = DEFAULT_SPAN,
+  reach = false,
 }: Props) {
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<MapLibre>(null)
@@ -127,8 +130,10 @@ export function MapView({
   }, [focus, satellites, currentTime])
 
   useEffect(() => {
-    overlay.current?.setProps({ layers: buildLayers(satellites, tracks, now, selected, hover ?? probe, ghost, span) })
-  }, [satellites, tracks, now, selected, hover, probe, ghost, span])
+    overlay.current?.setProps({
+      layers: buildLayers(satellites, tracks, now, selected, hover ?? probe, ghost, span, reach),
+    })
+  }, [satellites, tracks, now, selected, hover, probe, ghost, span, reach])
 
   return <div ref={container} className="map" />
 }

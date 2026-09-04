@@ -97,7 +97,7 @@ test('selecting a satellite narrows the pass list to it until the filter is turn
   const passes = within(await screen.findByRole('complementary', { name: 'Passes' }))
   const all = (await passes.findAllByRole('listitem')).length
   expect(all).toBeGreaterThan(1)
-  expect(passes.queryByRole('checkbox')).toBeNull()
+  expect(passes.queryByRole('checkbox', { name: /only / })).toBeNull()
 
   await userEvent.click(panel.getByRole('button', { name: /STRIX-9/ }))
   const narrowed = passes.getAllByRole('listitem')

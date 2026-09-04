@@ -37,6 +37,7 @@ export function positionAt(sat: Satellite, date: Date): GeoPoint | null {
 export interface TrackSample {
   lonLat: LonLat
   timeMs: number
+  altKm: number
 }
 
 /** How far a drawn track reaches behind and ahead of the satellite, in orbital periods. */
@@ -53,7 +54,7 @@ export function trackSamplesBetween(sat: Satellite, fromMs: number, toMs: number
   const samples: TrackSample[] = []
   for (let t = fromMs; t <= toMs; t += stepSeconds * 1000) {
     const p = positionAt(sat, new Date(t))
-    if (p) samples.push({ lonLat: [p.lon, p.lat], timeMs: t })
+    if (p) samples.push({ lonLat: [p.lon, p.lat], timeMs: t, altKm: p.altKm })
   }
   return samples
 }
