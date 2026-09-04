@@ -1,7 +1,7 @@
 import type { Layer } from '@deck.gl/core'
 import { PathStyleExtension, type PathStyleExtensionProps } from '@deck.gl/extensions'
 import { PathLayer, ScatterplotLayer, SolidPolygonLayer, TextLayer } from '@deck.gl/layers'
-import { formatOffset } from './clock'
+import { formatOffset, hhmm, hhmmss } from './format'
 import {
   DEFAULT_SPAN,
   nearestSample,
@@ -239,7 +239,7 @@ export function buildLayers(
         id: 'ghost-label',
         data: [datum],
         getPosition: (d) => d.lonLat,
-        getText: () => `${ghostSat.omm.OBJECT_NAME} · ${new Date(ghost.timeMs).toISOString().slice(11, 16)} UTC`,
+        getText: () => `${ghostSat.omm.OBJECT_NAME} · ${hhmm(ghost.timeMs)} UTC`,
         getColor: [214, 217, 224],
         getSize: 12,
         getPixelOffset: [0, 18],
@@ -254,7 +254,6 @@ export function buildLayers(
 
   if (hover) {
     const name = satellites.find((s) => s.omm.NORAD_CAT_ID === hover.noradId)?.omm.OBJECT_NAME ?? ''
-    const at = new Date(hover.timeMs).toISOString().slice(11, 19)
     layers.push(
       new ScatterplotLayer<Hover>({
         id: 'hover-marker',
@@ -268,7 +267,7 @@ export function buildLayers(
         id: 'hover-label',
         data: [hover],
         getPosition: (d) => d.lonLat,
-        getText: () => `${name} · ${at} UTC · ${formatOffset(hover.timeMs, nowMs)}`,
+        getText: () => `${name} · ${hhmmss(hover.timeMs)} UTC · ${formatOffset(hover.timeMs, nowMs)}`,
         getColor: [214, 217, 224],
         getSize: 12,
         getPixelOffset: [0, 16],

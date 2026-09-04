@@ -1,4 +1,4 @@
-import { formatOffset, isLive, liveClock, scrubbedTo, simTime, withRate } from './clock'
+import { isLive, liveClock, scrubbedTo, simTime, withRate } from './clock'
 
 const t0 = Date.UTC(2026, 8, 4, 12, 0, 0)
 const minute = 60_000
@@ -28,11 +28,4 @@ test('scrubbing jumps simulated time and keeps the rate', () => {
   const scrubbed = scrubbedTo(withRate(liveClock(t0), 10, t0), t0 - 3 * 60 * minute, t0)
   expect(simTime(scrubbed, t0)).toBe(t0 - 3 * 60 * minute)
   expect(simTime(scrubbed, t0 + minute)).toBe(t0 - 3 * 60 * minute + 10 * minute)
-})
-
-test('formats the offset from real time', () => {
-  expect(formatOffset(t0, t0)).toBe('now')
-  expect(formatOffset(t0 + 135 * minute, t0)).toBe('+2 h 15 min')
-  expect(formatOffset(t0 - 45 * minute, t0)).toBe('−45 min')
-  expect(formatOffset(t0 + 12 * 60 * minute, t0)).toBe('+12 h')
 })

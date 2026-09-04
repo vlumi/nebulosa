@@ -1,4 +1,5 @@
-import { formatOffset, isLive, liveClock, RATES, scrubbedTo, simTime, withRate, type Clock } from './clock'
+import { isLive, liveClock, RATES, scrubbedTo, simTime, withRate, type Clock } from './clock'
+import { formatOffset, utcDate, utcSecond } from './format'
 
 const RANGE_MS = 12 * 3_600_000
 const STEP_MS = 60_000
@@ -50,16 +51,16 @@ export function TimeBar({ clock, now, onChange }: Props) {
       <input
         type="date"
         aria-label="Date (UTC)"
-        value={new Date(simMs).toISOString().slice(0, 10)}
+        value={utcDate(simMs)}
         onChange={(e) => {
           if (!e.target.value) return
           const dayMs = Date.parse(`${e.target.value}T00:00:00Z`)
-          const timeOfDayMs = simMs - Date.parse(`${new Date(simMs).toISOString().slice(0, 10)}T00:00:00Z`)
+          const timeOfDayMs = simMs % 86_400_000
           onChange(withRate(scrubbedTo(clock, dayMs + timeOfDayMs, realMs), 0, realMs))
         }}
       />
       <output>
-        {new Date(simMs).toISOString().slice(0, 19).replace('T', ' ')} UTC
+        {utcSecond(simMs)} UTC
         <span className="muted"> · {formatOffset(simMs, realMs)}</span>
       </output>
     </div>

@@ -71,7 +71,7 @@ main > .map {
   pointer-events: auto;
 }
 
-.panel {
+.satellites {
   flex: 0 1 auto;
   min-height: 0;
   display: flex;
@@ -82,7 +82,7 @@ main > .map {
   font-size: 0.875rem;
 }
 
-.panel ul {
+.satellites ul {
   list-style: none;
   padding: 0;
   margin: 0 0 0.5rem;
@@ -91,16 +91,17 @@ main > .map {
   overflow: auto;
 }
 
-.panel > p,
+.satellites > p,
 .span-controls {
   flex: none;
 }
 
-.panel li.dimmed {
+.satellites li.dimmed {
   opacity: 0.45;
 }
 
-.panel button {
+.satellites li button,
+.passes li button {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -116,8 +117,9 @@ main > .map {
   cursor: pointer;
 }
 
-.panel button:hover,
-.panel button[aria-pressed='true'] {
+.satellites li button:hover,
+.satellites li button[aria-pressed='true'],
+.passes li button:hover {
   background: rgb(255 255 255 / 0.08);
 }
 
@@ -174,7 +176,10 @@ main > .map {
 }
 
 .timebar button,
-.timebar select {
+.timebar select,
+.timebar input[type='date'],
+.span-controls select,
+.pass-controls select {
   padding: 0.2rem 0.5rem;
   border: 1px solid rgb(255 255 255 / 0.15);
   border-radius: 0.25rem;
@@ -182,6 +187,11 @@ main > .map {
   color: inherit;
   font: inherit;
   cursor: pointer;
+}
+
+.span-controls select,
+.pass-controls select {
+  padding: 0.1rem 0.3rem;
 }
 
 .timebar button:disabled {
@@ -196,12 +206,6 @@ main > .map {
 }
 
 .timebar input[type='date'] {
-  padding: 0.15rem 0.4rem;
-  border: 1px solid rgb(255 255 255 / 0.15);
-  border-radius: 0.25rem;
-  background: none;
-  color: inherit;
-  font: inherit;
   color-scheme: dark;
 }
 
@@ -219,12 +223,6 @@ main > .map {
   background: var(--panel);
   border-radius: 0.5rem;
   font-size: 0.875rem;
-}
-
-.passes h2 {
-  margin: 0 0 0.25rem;
-  font-size: 0.95rem;
-  font-weight: 600;
 }
 
 .pass-header {
@@ -256,16 +254,6 @@ main > .map {
   margin: 0.5rem 0 0.25rem;
 }
 
-.span-controls select,
-.pass-controls select {
-  padding: 0.1rem 0.3rem;
-  border: 1px solid rgb(255 255 255 / 0.15);
-  border-radius: 0.25rem;
-  background: none;
-  color: inherit;
-  font: inherit;
-}
-
 .passes .row {
   display: flex;
   align-items: center;
@@ -274,26 +262,6 @@ main > .map {
 .passes .day {
   margin: 0.4rem 0 0.15rem;
   font-size: 0.8rem;
-}
-
-.passes button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-  padding: 0.1rem 0.4rem;
-  margin: 0 -0.4rem;
-  border: 0;
-  border-radius: 0.25rem;
-  background: none;
-  color: inherit;
-  font: inherit;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.passes button:hover {
-  background: rgb(255 255 255 / 0.08);
 }
 
 .passes button.goto {
@@ -354,12 +322,12 @@ main > .map {
     width: auto;
   }
 
-  .panel,
+  .satellites,
   .passes {
     padding: 0.5rem 0.75rem;
   }
 
-  .panel ul {
+  .satellites ul {
     max-height: 45vh;
   }
 
