@@ -30,7 +30,7 @@ test('mounts a MapLibre map with a deck.gl overlay and feeds it the layers', () 
   )
   expect(mapInstance.addControl).toHaveBeenCalledWith(overlayInstance)
   const layers = overlayInstance.setProps.mock.lastCall![0].layers
-  expect(layers.map((l: { id: string }) => l.id)).toEqual(['tracks', 'positions', 'labels'])
+  expect(layers.map((l: { id: string }) => l.id)).toEqual(['night', 'tracks', 'positions', 'labels'])
 
   const overlayProps = vi.mocked(MapboxOverlay).mock.calls[0][0] as { onClick: (info: unknown) => void; pickingRadius: number }
   expect(overlayProps.pickingRadius).toBeGreaterThan(0)
