@@ -41,9 +41,8 @@ export function PassList({
     <>
       <div className={styles.header}>
         <p className="muted">
-          Line of sight above the horizon over {formatLocation(location)}. Drag the pin to move. A peak in the accent
-          colour is within the radar's {STEERING.minDeg}–{STEERING.maxDeg}° steering range; overhead is too close to
-          image.
+          Line of sight above the horizon over {formatLocation(location)}. Drag the pin to move. Accent peaks are within
+          the radar's {STEERING.minDeg}–{STEERING.maxDeg}° steering range.
         </p>
         <div className={styles.controls}>
           <label>
@@ -66,7 +65,7 @@ export function PassList({
               format={(deg) => `${deg}°`}
             />
           </label>
-          <label>
+          <label title="Peaks the radar can steer to; straight overhead is too close for a side-looking radar">
             <input
               type="checkbox"
               checked={filters.inReachOnly}
