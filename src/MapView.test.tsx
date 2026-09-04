@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react'
+import { act, render } from '@testing-library/react'
 import { MapboxOverlay } from '@deck.gl/mapbox'
 import { Map as MapLibre } from 'maplibre-gl'
 import { epochOf } from './elements'
@@ -32,8 +32,17 @@ test('mounts a MapLibre map with a deck.gl overlay and feeds it the layers', () 
   const layers = overlayInstance.setProps.mock.lastCall![0].layers
   expect(layers.map((l: { id: string }) => l.id)).toEqual(['night', 'tracks', 'positions', 'labels'])
 
-  const overlayProps = vi.mocked(MapboxOverlay).mock.calls[0][0] as { onClick: (info: unknown) => void; pickingRadius: number }
+  const overlayProps = vi.mocked(MapboxOverlay).mock.calls[0][0] as {
+    onClick: (info: unknown) => void
+    onHover: (info: unknown) => void
+    pickingRadius: number
+  }
   expect(overlayProps.pickingRadius).toBeGreaterThan(0)
+
+  act(() => overlayProps.onHover({ layer: { id: 'tracks' }, object: { noradId: strix9.NORAD_CAT_ID }, coordinate: [0, 0] }))
+  expect(overlayInstance.setProps.mock.lastCall![0].layers.map((l: { id: string }) => l.id)).toContain('hover-label')
+  act(() => overlayProps.onHover({ layer: null, object: undefined }))
+  expect(overlayInstance.setProps.mock.lastCall![0].layers.map((l: { id: string }) => l.id)).not.toContain('hover-label')
   overlayProps.onClick({ object: { noradId: strix9.NORAD_CAT_ID } })
   expect(onSelect).toHaveBeenCalledWith(strix9.NORAD_CAT_ID)
   overlayProps.onClick({ object: undefined })
