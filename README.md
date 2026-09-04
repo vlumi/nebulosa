@@ -11,7 +11,7 @@ Unofficial demo project; not affiliated with Synspective.
 
 See [SCOPE.md](SCOPE.md) for the plan. Live at [nebulosa.misaki.fi](https://nebulosa.misaki.fi).
 
-![A pass of StriX-8 over Tokyo picked from the passes list: the clock paused at the pass peak, the satellite beside the observer pin, its orbit details in the panel](docs/screenshots/2026-09-04-m4.png)
+![StriX-3 selected with a half-orbit tail and a two-orbit lead, the pass list filtered to it and to 30° or higher, the time bar with its date picker](docs/screenshots/2026-09-04-m6.png)
 
 <img src="docs/screenshots/2026-09-04-m5-phone.png" alt="The same site on a phone: the satellite and pass panels docked as collapsible bars over the map" width="260">
 
