@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { liveClock, scrubbedTo, simTime, withRate } from './clock'
+import { Disclosure } from './Disclosure'
 import { type Ghost } from './layers'
 import { MapView, type Focus } from './MapView'
 import { satelliteFrom } from './orbit'
@@ -22,9 +23,14 @@ function App() {
   const [focus, setFocus] = useState<Focus | null>(null)
   const [location, setLocation] = useState<Location>(TOKYO)
   const [ghost, setGhost] = useState<Ghost | null>(null)
+  const [horizonHours, setHorizonHours] = useState(24)
+  const [onlySelected, setOnlySelected] = useState(true)
   const [clock, setClock] = useState(() => liveClock(Date.now()))
   const now = useNow()
   const narrow = useNarrow()
+  // Open by default on desktop, closed on phones, until the reader toggles a panel.
+  const [panelOpen, setPanelOpen] = useState<boolean | null>(null)
+  const [passesOpen, setPassesOpen] = useState<boolean | null>(null)
   const time = useSmoothedTime(simTime(clock, now.getTime()))
 
   useEffect(() => {
@@ -61,10 +67,12 @@ function App() {
 
   // Passes are listed from real time, so scrubbing the clock never changes the list under the reader.
   const passMinute = Math.floor(now.getTime() / 60_000)
-  const passes = useMemo(
-    () => upcomingPasses(satellites, location, new Date(passMinute * 60_000), 24),
-    [satellites, location, passMinute],
+  const allPasses = useMemo(
+    () => upcomingPasses(satellites, location, new Date(passMinute * 60_000), horizonHours),
+    [satellites, location, passMinute, horizonHours],
   )
+  const selectedSatellite = satellites.find((s) => s.omm.NORAD_CAT_ID === selected)
+  const passes = selectedSatellite && onlySelected ? allPasses.filter((p) => p.noradId === selected) : allPasses
   const familyOf = (noradId: number) => satellites.find((s) => s.omm.NORAD_CAT_ID === noradId)?.family ?? 'mid-inclination'
 
   const showPass = (pass: Pass) => {
@@ -97,32 +105,54 @@ function App() {
         />
         <div className="dock">
         <aside className="panel" aria-label="Constellation">
-          <details open={!narrow}>
-            <summary>
-              Satellites
-              {satellites.length > 0 && (
-                <span className="muted">
-                  {' '}
-                  · {satellites.length} · elements {formatAge(newestEpoch(satellites.map((s) => s.omm)), now)} old
-                </span>
-              )}
-            </summary>
+          <Disclosure
+            open={panelOpen ?? !narrow}
+            onToggle={setPanelOpen}
+            summary={
+              <>
+                Satellites
+                {satellites.length > 0 && (
+                  <span className="muted">
+                    {' '}
+                    · {satellites.length} · elements {formatAge(newestEpoch(satellites.map((s) => s.omm)), now)} old
+                  </span>
+                )}
+              </>
+            }
+          >
             {loaded === null && <p>Loading orbital elements…</p>}
             {loaded && 'error' in loaded && <p role="alert">{loaded.error}</p>}
             {satellites.length > 0 && (
               <Panel satellites={satellites} now={now} selected={selected} onSelect={selectFromList} />
             )}
-          </details>
+          </Disclosure>
         </aside>
         {satellites.length > 0 && (
           <aside className="passes" aria-label="Passes">
-            <details open={!narrow}>
-              <summary>
-                Passes over {formatLocation(location)}
-                <span className="muted"> · {passes.length}</span>
-              </summary>
-              <PassList location={location} passes={passes} familyOf={familyOf} onShow={showPass} onGoTo={goToPass} />
-            </details>
+            <Disclosure
+              open={passesOpen ?? !narrow}
+              onToggle={setPassesOpen}
+              summary={
+                <>
+                  Passes over {formatLocation(location)}
+                  <span className="muted"> · {passes.length}</span>
+                </>
+              }
+            >
+              <PassList
+                location={location}
+                passes={passes}
+                horizonHours={horizonHours}
+                onHorizonChange={setHorizonHours}
+                selectedName={selectedSatellite?.omm.OBJECT_NAME}
+                onlySelected={onlySelected}
+                onOnlySelectedChange={setOnlySelected}
+                familyOf={familyOf}
+                onShow={showPass}
+                onGoTo={goToPass}
+                now={now}
+              />
+            </Disclosure>
           </aside>
         )}
         </div>

@@ -4,6 +4,9 @@ import type { Satellite } from './orbit'
 const RAD = Math.PI / 180
 const DEG = 180 / Math.PI
 
+/** Choices for how far ahead the pass list looks. */
+export const HORIZONS_H = [6, 12, 24, 48] as const
+
 export interface Location {
   lat: number
   lon: number

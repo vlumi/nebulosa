@@ -55,15 +55,24 @@ main > .map {
 }
 
 .dock {
-  display: contents;
-}
-
-.panel {
   position: absolute;
   z-index: 3;
   top: 0.75rem;
   left: 0.75rem;
-  max-width: 18rem;
+  bottom: 4.5rem;
+  width: 20rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+.dock > * {
+  pointer-events: auto;
+}
+
+.panel {
+  flex: none;
   padding: 0.75rem 1rem;
   background: var(--panel);
   border-radius: 0.5rem;
@@ -180,11 +189,10 @@ main > .map {
 }
 
 .passes {
-  position: absolute;
-  z-index: 3;
-  top: 5rem;
-  right: 0.75rem;
-  max-width: 22rem;
+  flex: 0 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   padding: 0.75rem 1rem;
   background: var(--panel);
   border-radius: 0.5rem;
@@ -197,15 +205,43 @@ main > .map {
   font-weight: 600;
 }
 
+.pass-header {
+  flex: none;
+}
+
 .passes ol {
   list-style: none;
   padding: 0;
   margin: 0.5rem 0 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
 }
 
-.passes li {
+.pass-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 0.4rem;
+}
+
+.pass-controls select {
+  padding: 0.1rem 0.3rem;
+  border: 1px solid rgb(255 255 255 / 0.15);
+  border-radius: 0.25rem;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+
+.passes .row {
   display: flex;
   align-items: center;
+}
+
+.passes .day {
+  margin: 0.4rem 0 0.15rem;
+  font-size: 0.8rem;
 }
 
 .passes button {
@@ -241,21 +277,25 @@ main > .map {
   color: var(--muted);
 }
 
-.panel summary,
-.passes summary {
-  cursor: pointer;
+.summary {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
   font-weight: 600;
-  list-style: none;
+  text-align: left;
+  cursor: pointer;
+  flex: none;
+}
+
+.summary[aria-expanded='true'] {
   margin-bottom: 0.35rem;
 }
 
-.panel summary::-webkit-details-marker,
-.passes summary::-webkit-details-marker {
-  display: none;
-}
-
-.panel summary::before,
-.passes summary::before {
+.summary::before {
   content: '▸';
   display: inline-block;
   width: 1rem;
@@ -263,8 +303,7 @@ main > .map {
   transition: transform 0.15s;
 }
 
-.panel details[open] > summary::before,
-.passes details[open] > summary::before {
+.summary[aria-expanded='true']::before {
   transform: rotate(90deg);
 }
 
@@ -276,37 +315,25 @@ main > .map {
   }
 
   .dock {
-    position: absolute;
-    z-index: 3;
     top: 0.5rem;
     left: 0.5rem;
     right: 0.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    bottom: auto;
+    width: auto;
   }
 
   .panel,
   .passes {
-    position: static;
-    max-width: none;
     padding: 0.5rem 0.75rem;
   }
 
-  .panel details > :not(summary),
-  .passes details > :not(summary) {
+  .panel ul {
     max-height: 40vh;
     overflow: auto;
   }
 
-  .panel summary,
-  .passes summary {
-    margin-bottom: 0;
-  }
-
-  .panel details[open] > summary,
-  .passes details[open] > summary {
-    margin-bottom: 0.35rem;
+  .passes ol {
+    max-height: 40vh;
   }
 
   .timebar {
