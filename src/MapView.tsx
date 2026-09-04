@@ -37,6 +37,7 @@ export function MapView({ satellites, now, selected, onSelect }: Props) {
     overlay.current = new MapboxOverlay({
       interleaved: false,
       layers: [],
+      pickingRadius: 8,
       onClick: (info) => select.current((info.object as SatelliteDatum | undefined)?.noradId ?? null),
       getCursor: ({ isHovering, isDragging }) => (isDragging ? 'grabbing' : isHovering ? 'pointer' : 'grab'),
     })
