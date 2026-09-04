@@ -189,3 +189,13 @@ test('keyboard: arrows pick satellites, Shift-arrows pick passes, Enter goes the
   await userEvent.keyboard('{Escape}')
   expect(panel.queryAllByRole('button', { pressed: true })).toHaveLength(0)
 })
+
+test('shortcuts keep working after clicking a button with the mouse', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
+  render(<App />)
+  const panel = within(screen.getByRole('complementary', { name: 'Constellation' }))
+  await userEvent.click(await panel.findByRole('button', { name: /STRIX-9/ }))
+  expect(document.activeElement).toBe(document.body)
+  await userEvent.keyboard(' ')
+  expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument()
+})

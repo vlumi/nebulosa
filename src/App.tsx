@@ -6,7 +6,7 @@ import type { Focus } from './map/MapView'
 import { DEFAULT_SPAN, positionAt, satelliteFrom, type TrackSpan } from './orbit/orbit'
 import { Help } from './panels/Help'
 import { SatelliteList } from './panels/SatelliteList'
-import { belongsToFocusedControl, stepIndex } from './shortcuts'
+import { belongsToFocusedControl, releaseFocusAfterPointerClick, stepIndex } from './shortcuts'
 import { useLatest } from './shared/useLatest'
 import { PassList } from './panels/PassList'
 import { loadElements, newestEpoch, type Omm } from './orbit/elements'
@@ -196,7 +196,11 @@ function App() {
       e.preventDefault()
     }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    window.addEventListener('click', releaseFocusAfterPointerClick)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('click', releaseFocusAfterPointerClick)
+    }
     // Handlers are stable in behaviour; state is read through `latest`.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
