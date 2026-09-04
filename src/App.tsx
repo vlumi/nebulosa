@@ -8,7 +8,8 @@ import { SatelliteList } from './panels/SatelliteList'
 import { PassList } from './panels/PassList'
 import { loadElements, newestEpoch, type Omm } from './orbit/elements'
 import { formatAge, formatLocation } from './shared/format'
-import { DEFAULT_FILTERS, upcomingPasses, type Location, type Pass, type PassFilters } from './orbit/passes'
+import { DEFAULT_FILTERS, type Location, type Pass, type PassFilters } from './orbit/passes'
+import { usePasses } from './orbit/usePasses'
 import { TimeBar } from './time/TimeBar'
 import { useNarrow } from './panels/useNarrow'
 import { useClockTime } from './time/useClockTime'
@@ -72,15 +73,13 @@ function App() {
     if (noradId !== null) setFocus({ noradId, seq: (focus?.seq ?? 0) + 1, timeMs })
   }
 
-  const satellites = useMemo(() => (loaded && 'elements' in loaded ? loaded.elements.map(satelliteFrom) : []), [loaded])
+  const elements = useMemo(() => (loaded && 'elements' in loaded ? loaded.elements : []), [loaded])
+  const satellites = useMemo(() => elements.map(satelliteFrom), [elements])
   const byId = (noradId: number | null) => satellites.find((s) => s.omm.NORAD_CAT_ID === noradId)
 
   // Passes are listed from real time, so scrubbing the clock never changes the list under the reader.
   const passMinute = Math.floor(now.getTime() / 60_000)
-  const allPasses = useMemo(
-    () => upcomingPasses(satellites, location, new Date(passMinute * 60_000), filters.horizonHours),
-    [satellites, location, passMinute, filters.horizonHours],
-  )
+  const allPasses = usePasses(elements, location, passMinute * 60_000, filters.horizonHours)
   const selectedSatellite = byId(selection.noradId)
   const passes = allPasses.filter(
     (p) =>
