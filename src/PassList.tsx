@@ -1,12 +1,14 @@
 import { FAMILY_COLORS } from './layers'
 import type { OrbitFamily } from './orbit'
-import { formatLocation, HORIZONS_H, type Location, type Pass } from './passes'
+import { formatLocation, HORIZONS_H, MIN_ELEVATIONS, type Location, type Pass } from './passes'
 
 interface Props {
   location: Location
   passes: Pass[]
   horizonHours: number
   onHorizonChange: (hours: number) => void
+  minElevationDeg: number
+  onMinElevationChange: (deg: number) => void
   /** Name of the selected satellite when the list can be narrowed to it. */
   selectedName?: string
   onlySelected: boolean
@@ -32,6 +34,8 @@ export function PassList({
   passes,
   horizonHours,
   onHorizonChange,
+  minElevationDeg,
+  onMinElevationChange,
   selectedName,
   onlySelected,
   onOnlySelectedChange,
@@ -53,6 +57,16 @@ export function PassList({
             {HORIZONS_H.map((h) => (
               <option key={h} value={h}>
                 {h} h
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Min{' '}
+          <select aria-label="Minimum elevation" value={minElevationDeg} onChange={(e) => onMinElevationChange(Number(e.target.value))}>
+            {MIN_ELEVATIONS.map((deg) => (
+              <option key={deg} value={deg}>
+                {deg}°
               </option>
             ))}
           </select>

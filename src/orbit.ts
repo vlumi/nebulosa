@@ -39,11 +39,24 @@ export interface TrackSample {
   timeMs: number
 }
 
-/** One orbit before to one orbit after `center`; longitudes stay in [-180, 180], the renderer wraps. */
-export function trackSamples(sat: Satellite, center: Date, stepSeconds = 30): TrackSample[] {
-  const halfSpanMs = sat.periodMinutes * 60_000
+/** How far a drawn track reaches behind and ahead of the satellite, in orbital periods. */
+export interface TrackSpan {
+  pastOrbits: number
+  futureOrbits: number
+}
+
+export const DEFAULT_SPAN: TrackSpan = { pastOrbits: 1, futureOrbits: 1 }
+export const SPAN_CHOICES = [0.25, 0.5, 1, 2, 3] as const
+
+/** `span.pastOrbits` before to `span.futureOrbits` after `center`; longitudes stay in [-180, 180], the renderer wraps. */
+export function trackSamples(sat: Satellite, center: Date, stepSeconds = 30, span: TrackSpan = DEFAULT_SPAN): TrackSample[] {
+  const periodMs = sat.periodMinutes * 60_000
   const samples: TrackSample[] = []
-  for (let t = center.getTime() - halfSpanMs; t <= center.getTime() + halfSpanMs; t += stepSeconds * 1000) {
+  for (
+    let t = center.getTime() - span.pastOrbits * periodMs;
+    t <= center.getTime() + span.futureOrbits * periodMs;
+    t += stepSeconds * 1000
+  ) {
     const p = positionAt(sat, new Date(t))
     if (p) samples.push({ lonLat: [p.lon, p.lat], timeMs: t })
   }

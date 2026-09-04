@@ -88,3 +88,14 @@ test('selecting a satellite narrows the pass list to it until the filter is turn
   await userEvent.click(passes.getByRole('checkbox', { name: /only STRIX-9/ }))
   expect(passes.getAllByRole('listitem')).toHaveLength(all)
 })
+
+test('the minimum-elevation filter drops low passes', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
+  render(<App />)
+  const passes = within(await screen.findByRole('complementary', { name: 'Passes' }))
+  const all = passes.getAllByRole('listitem').length
+  await userEvent.selectOptions(passes.getByRole('combobox', { name: 'Minimum elevation' }), '45')
+  const high = passes.queryAllByRole('listitem')
+  expect(high.length).toBeLessThan(all)
+  expect(high.every((li) => Number(li.textContent!.match(/max (\d+)°/)![1]) >= 45)).toBe(true)
+})

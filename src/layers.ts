@@ -3,6 +3,7 @@ import { PathStyleExtension, type PathStyleExtensionProps } from '@deck.gl/exten
 import { PathLayer, ScatterplotLayer, SolidPolygonLayer, TextLayer } from '@deck.gl/layers'
 import { formatOffset } from './clock'
 import {
+  DEFAULT_SPAN,
   nearestSample,
   positionAt,
   trackSamples,
@@ -11,6 +12,7 @@ import {
   type OrbitFamily,
   type Satellite,
   type TrackSample,
+  type TrackSpan,
 } from './orbit'
 import { nightPolygon } from './sun'
 
@@ -56,8 +58,12 @@ export interface Ghost {
   timeMs: number
 }
 
-export function trackData(satellites: Satellite[], time: Date): TrackDatum[] {
-  return satellites.map((sat) => ({ samples: trackSamples(sat, time), noradId: sat.omm.NORAD_CAT_ID, family: sat.family }))
+export function trackData(satellites: Satellite[], time: Date, span: TrackSpan = DEFAULT_SPAN): TrackDatum[] {
+  return satellites.map((sat) => ({
+    samples: trackSamples(sat, time, 30, span),
+    noradId: sat.omm.NORAD_CAT_ID,
+    family: sat.family,
+  }))
 }
 
 export function hoverAt(track: TrackDatum, lonLat: LonLat): Hover {
@@ -71,10 +77,12 @@ const GHOST_MARGIN_MS = 5 * 60_000
  * The time span a dashed continuation must cover so a ghost outside the drawn ±1-orbit track
  * connects to it; null when the ghost already sits on the drawn track.
  */
-function ghostReach(sat: Satellite, ghostMs: number, nowMs: number): [number, number] | null {
-  const halfSpanMs = sat.periodMinutes * 60_000
-  if (ghostMs > nowMs + halfSpanMs) return [nowMs + halfSpanMs, ghostMs + GHOST_MARGIN_MS]
-  if (ghostMs < nowMs - halfSpanMs) return [ghostMs - GHOST_MARGIN_MS, nowMs - halfSpanMs]
+function ghostReach(sat: Satellite, ghostMs: number, nowMs: number, span: TrackSpan): [number, number] | null {
+  const periodMs = sat.periodMinutes * 60_000
+  const drawnEnd = nowMs + span.futureOrbits * periodMs
+  const drawnStart = nowMs - span.pastOrbits * periodMs
+  if (ghostMs > drawnEnd) return [drawnEnd, ghostMs + GHOST_MARGIN_MS]
+  if (ghostMs < drawnStart) return [ghostMs - GHOST_MARGIN_MS, drawnStart]
   return null
 }
 
@@ -124,6 +132,7 @@ export function buildLayers(
   selected: number | null = null,
   hover: Hover | null = null,
   ghost: Ghost | null = null,
+  span: TrackSpan = DEFAULT_SPAN,
 ): Layer[] {
   const nowMs = now.getTime()
   const segments = tracks.flatMap((track) => segmentsOf(track, nowMs))
@@ -189,7 +198,7 @@ export function buildLayers(
   const ghostPosition = ghostSat && positionAt(ghostSat, new Date(ghost.timeMs))
   if (ghostSat && ghostPosition) {
     const datum = { lonLat: [ghostPosition.lon, ghostPosition.lat] as LonLat, family: ghostSat.family }
-    const reach = ghostReach(ghostSat, ghost.timeMs, nowMs)
+    const reach = ghostReach(ghostSat, ghost.timeMs, nowMs, span)
     if (reach) {
       // Sample on a grid through the ghost time itself, so the dashes pass through the marker.
       const stepMs = 30_000

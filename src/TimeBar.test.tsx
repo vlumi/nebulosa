@@ -36,3 +36,14 @@ test('a scrubbed, paused clock shows its offset and can go back to live', async 
   await userEvent.click(screen.getByRole('button', { name: 'Live' }))
   expect(onChange.mock.lastCall![0]).toEqual(liveClock(t0.getTime()))
 })
+
+test('picking a date moves the clock to that UTC date at the same time of day, paused', () => {
+  const onChange = vi.fn()
+  render(<TimeBar clock={liveClock(t0.getTime())} now={t0} onChange={onChange} />)
+  const date = screen.getByLabelText('Date (UTC)') as HTMLInputElement
+  expect(date.value).toBe('2026-09-04')
+  fireEvent.change(date, { target: { value: '2026-12-21' } })
+  const clock = onChange.mock.lastCall![0]
+  expect(clock.rate).toBe(0)
+  expect(new Date(simTime(clock, t0.getTime())).toISOString()).toBe('2026-12-21T12:00:00.000Z')
+})
