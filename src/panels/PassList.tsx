@@ -1,4 +1,6 @@
 import { familyCss } from '../shared/palette'
+import panel from './panel.module.css'
+import styles from './PassList.module.css'
 import type { OrbitFamily } from '../orbit/orbit'
 import { compassPoint, dayLabel, formatLocation, hhmm, utcDayIndex } from '../shared/format'
 import { HORIZONS_H, MIN_ELEVATIONS, type Location, type Pass, type PassFilters } from '../orbit/passes'
@@ -35,12 +37,13 @@ export function PassList({
   const set = (change: Partial<PassFilters>) => onFiltersChange({ ...filters, ...change })
   return (
     <>
-      <div className="pass-header">
+      <div className={styles.header}>
         <p className="muted">Line of sight above the horizon over {formatLocation(location)}. Drag the pin to move.</p>
-        <div className="pass-controls">
+        <div className={styles.controls}>
           <label>
             Next{' '}
             <select
+              className={panel.control}
               aria-label="Hours ahead"
               value={filters.horizonHours}
               onChange={(e) => set({ horizonHours: Number(e.target.value) })}
@@ -55,6 +58,7 @@ export function PassList({
           <label>
             Min{' '}
             <select
+              className={panel.control}
               aria-label="Minimum elevation"
               value={filters.minElevationDeg}
               onChange={(e) => set({ minElevationDeg: Number(e.target.value) })}
@@ -79,31 +83,32 @@ export function PassList({
         </div>
         {passes.length === 0 && <p className="muted">None.</p>}
       </div>
-      <ol>
+      <ol className={`${panel.list} ${styles.list}`}>
         {passes.map((pass, i) => (
-          <li key={`${pass.noradId}-${pass.startMs}`} className={activePass && !isActive(pass) ? 'dimmed' : undefined}>
+          <li key={`${pass.noradId}-${pass.startMs}`} data-dimmed={activePass && !isActive(pass) ? '' : undefined}>
             {utcDayIndex(pass.startMs) !== utcDayIndex(i === 0 ? now.getTime() : passes[i - 1].startMs) && (
-              <div className="day muted">{dayLabel(pass.startMs)} UTC</div>
+              <div className={`${styles.day} muted`}>{dayLabel(pass.startMs)} UTC</div>
             )}
-            <div className="row">
+            <div className={styles.passRow}>
               <button
                 type="button"
+                className={`${panel.row} ${styles.show}`}
                 aria-current={isActive(pass) ? 'true' : undefined}
                 onClick={() => onShow(pass)}
                 title="Show where the satellite will be at the peak"
               >
-                <span className="swatch" style={{ background: familyCss(familyOf(pass.noradId)) }} />
-                <span className="time">
+                <span className={panel.swatch} style={{ background: familyCss(familyOf(pass.noradId)) }} />
+                <span className={styles.time}>
                   {hhmm(pass.startMs)}–{hhmm(pass.endMs)}
                 </span>
                 {pass.name}
-                <span className="muted">
+                <span className={`${styles.detail} muted`}>
                   max {Math.round(pass.maxElevationDeg)}° {compassPoint(pass.peakAzimuthDeg)}
                 </span>
               </button>
               <button
                 type="button"
-                className="goto"
+                className={`${panel.row} ${styles.goto}`}
                 aria-label={`Go to ${pass.name} pass at ${hhmm(pass.peakMs)}`}
                 onClick={() => onGoTo(pass)}
               >

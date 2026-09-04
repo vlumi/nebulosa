@@ -2,6 +2,8 @@ import { describeOrbit, formatAltitude } from '../orbit/describe'
 import { newestEpoch } from '../orbit/elements'
 import { formatAge, utcMinute } from '../shared/format'
 import { familyCss } from '../shared/palette'
+import panel from './panel.module.css'
+import styles from './SatelliteList.module.css'
 import { SPAN_CHOICES, type Satellite, type TrackSpan } from '../orbit/orbit'
 
 interface Props {
@@ -19,14 +21,19 @@ export function SatelliteList({ satellites, now, selected, onSelect, span, onSpa
   const epoch = newestEpoch(satellites.map((s) => s.omm))
   return (
     <>
-      <ul>
+      <ul className={`${panel.list} ${styles.list}`}>
         {satellites.map((s) => {
           const id = s.omm.NORAD_CAT_ID
           const isSelected = id === selected
           return (
-            <li key={id} className={selected !== null && !isSelected ? 'dimmed' : undefined}>
-              <button type="button" aria-pressed={isSelected} onClick={() => onSelect(isSelected ? null : id)}>
-                <span className="swatch" style={{ background: familyCss(s.family) }} />
+            <li key={id} data-dimmed={selected !== null && !isSelected ? '' : undefined}>
+              <button
+                type="button"
+                className={panel.row}
+                aria-pressed={isSelected}
+                onClick={() => onSelect(isSelected ? null : id)}
+              >
+                <span className={panel.swatch} style={{ background: familyCss(s.family) }} />
                 {s.omm.OBJECT_NAME}{' '}
                 <span className="muted">
                   <span title="NORAD catalog number">#{id}</span> ·{' '}
@@ -38,9 +45,10 @@ export function SatelliteList({ satellites, now, selected, onSelect, span, onSpa
           )
         })}
       </ul>
-      <div className="span-controls muted">
+      <div className={`${styles.spanControls} muted`}>
         Track{' '}
         <select
+          className={panel.control}
           aria-label="Track behind"
           value={span.pastOrbits}
           onChange={(e) => onSpanChange({ ...span, pastOrbits: Number(e.target.value) })}
@@ -52,6 +60,7 @@ export function SatelliteList({ satellites, now, selected, onSelect, span, onSpa
           ))}
         </select>{' '}
         <select
+          className={panel.control}
           aria-label="Track ahead"
           value={span.futureOrbits}
           onChange={(e) => onSpanChange({ ...span, futureOrbits: Number(e.target.value) })}
@@ -63,7 +72,7 @@ export function SatelliteList({ satellites, now, selected, onSelect, span, onSpa
           ))}
         </select>
       </div>
-      <p className="muted">
+      <p className={`${styles.footer} muted`}>
         Elements from {utcMinute(epoch)} UTC · {formatAge(epoch, now)} old
       </p>
     </>
@@ -82,7 +91,7 @@ function Detail({ satellite, now }: { satellite: Satellite; now: Date }) {
     ['Elements', `${utcMinute(d.epoch)} UTC · ${formatAge(d.epoch, now)} old`],
   ]
   return (
-    <dl className="detail" aria-label={`${omm.OBJECT_NAME} details`}>
+    <dl className={styles.detail} aria-label={`${omm.OBJECT_NAME} details`}>
       {rows.map(([term, value]) => (
         <div key={term}>
           <dt>{term}</dt>

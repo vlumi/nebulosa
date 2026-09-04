@@ -1,0 +1,66 @@
+.bar {
+  position: absolute;
+  z-index: 3;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--panel);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.bar button,
+.bar select,
+.bar input[type='date'] {
+  padding: 0.2rem 0.5rem;
+  border: 1px solid rgb(255 255 255 / 0.15);
+  border-radius: 0.25rem;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.bar button:disabled {
+  color: var(--accent);
+  border-color: var(--accent);
+  cursor: default;
+}
+
+.bar input[type='range'] {
+  width: 14rem;
+  accent-color: var(--accent);
+}
+
+.bar input[type='date'] {
+  color-scheme: dark;
+}
+
+.bar output {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 720px), (max-height: 560px) {
+  .bar {
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .bar input[type='range'] {
+    flex: 1 1 8rem;
+    width: auto;
+  }
+
+  .bar output {
+    flex: 1 1 100%;
+    font-size: 0.8rem;
+  }
+}

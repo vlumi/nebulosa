@@ -1,0 +1,63 @@
+.panel {
+  padding: 0.75rem 1rem;
+  background: var(--panel);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Lists overhang the panel padding so the row highlights can, without being clipped by the scroll box. */
+.list {
+  list-style: none;
+  padding: 0 0.4rem;
+  margin: 0 -0.4rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.25rem 0.4rem;
+  border: 0;
+  border-radius: 0.25rem;
+  background: none;
+  color: inherit;
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.row:hover,
+.row[aria-pressed='true'],
+.row[aria-current='true'] {
+  background: rgb(255 255 255 / 0.08);
+}
+
+li[data-dimmed] {
+  opacity: 0.45;
+}
+
+.control {
+  padding: 0.1rem 0.3rem;
+  border: 1px solid rgb(255 255 255 / 0.15);
+  border-radius: 0.25rem;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+
+.swatch {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  flex: none;
+}
+
+@media (max-width: 720px), (max-height: 560px) {
+  .panel {
+    padding: 0.5rem 0.75rem;
+  }
+}

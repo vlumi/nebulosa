@@ -1,0 +1,61 @@
+.header {
+  flex: none;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.9rem;
+  align-items: center;
+  margin-top: 0.4rem;
+}
+
+.controls label {
+  white-space: nowrap;
+}
+
+.list {
+  margin-top: 0.5rem;
+}
+
+.day {
+  margin: 0.4rem 0 0.15rem;
+  font-size: 0.8rem;
+}
+
+.passRow {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.show {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.show > .detail {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.goto {
+  flex: none;
+  width: auto;
+  color: var(--muted);
+}
+
+.time {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+@media (max-width: 720px), (max-height: 560px) {
+  .list {
+    max-height: 40vh;
+  }
+}

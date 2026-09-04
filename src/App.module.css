@@ -1,0 +1,61 @@
+.dock {
+  position: absolute;
+  z-index: 3;
+  top: 0.75rem;
+  left: 0.75rem;
+  bottom: 4.5rem;
+  width: 21rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+.dock > * {
+  pointer-events: auto;
+}
+
+/* Open panels keep room for a few rows; collapsed, each is exactly its header and never shrinks. */
+.satellites,
+.passes {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.satellites {
+  flex: 0 1 auto;
+}
+
+.passes {
+  /* Gives way long before the satellite list does; the list has priority for the column's height. */
+  flex: 0 1000 auto;
+}
+
+.satellites[data-open] {
+  min-height: 10rem;
+}
+
+.passes[data-open] {
+  min-height: 11rem;
+}
+
+.satellites:not([data-open]),
+.passes:not([data-open]) {
+  flex: none;
+}
+
+@media (max-width: 720px), (max-height: 560px) {
+  .dock {
+    top: 0.5rem;
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: auto;
+    width: auto;
+  }
+
+  .satellites[data-open],
+  .passes[data-open] {
+    min-height: 0;
+  }
+}

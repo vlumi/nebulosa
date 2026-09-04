@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import styles from './Disclosure.module.css'
 
 interface Props {
   summary: ReactNode
@@ -11,7 +12,7 @@ interface Props {
 export function Disclosure({ summary, open, onToggle, children }: Props) {
   return (
     <>
-      <button type="button" className="summary" aria-expanded={open} onClick={() => onToggle(!open)}>
+      <button type="button" className={styles.summary} aria-expanded={open} onClick={() => onToggle(!open)}>
         {summary}
       </button>
       {open && children}

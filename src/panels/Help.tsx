@@ -1,4 +1,5 @@
 import { SHORTCUTS } from '../shortcuts'
+import styles from './Help.module.css'
 
 interface Props {
   open: boolean
@@ -8,9 +9,9 @@ interface Props {
 /** The keyboard legend as a floating panel bottom-right, behind a ? button. */
 export function Help({ open, onToggle }: Props) {
   return (
-    <div className="help">
+    <div className={styles.help}>
       {open && (
-        <dl className="help-panel" role="dialog" aria-label="Keyboard shortcuts">
+        <dl className={styles.legend} role="dialog" aria-label="Keyboard shortcuts">
           {SHORTCUTS.map(({ keys, does }) => (
             <div key={keys}>
               <dt>
@@ -23,7 +24,7 @@ export function Help({ open, onToggle }: Props) {
       )}
       <button
         type="button"
-        className="help-toggle"
+        className={styles.toggle}
         aria-label="Keyboard shortcuts"
         aria-expanded={open}
         onClick={() => onToggle(!open)}
