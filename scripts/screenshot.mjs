@@ -49,6 +49,10 @@ ws.addEventListener('message', (event) => {
   if (message.id && pending.has(message.id)) {
     pending.get(message.id)(message)
     pending.delete(message.id)
+  } else if (message.method === 'Runtime.exceptionThrown') {
+    console.error('page exception:', message.params.exceptionDetails.exception?.description ?? message.params.exceptionDetails.text)
+  } else if (message.method === 'Runtime.consoleAPICalled' && ['error', 'warning'].includes(message.params.type)) {
+    console.error(`page console.${message.params.type}:`, message.params.args.map((a) => a.description ?? a.value).join(' '))
   }
 })
 const send = (method, params = {}) =>
@@ -59,6 +63,7 @@ const send = (method, params = {}) =>
   })
 
 try {
+  await send('Runtime.enable')
   await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false })
   await send('Page.navigate', { url })
   await new Promise((resolve) => setTimeout(resolve, waitMs))

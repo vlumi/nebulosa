@@ -238,6 +238,7 @@ export function buildLayers(
         getBackgroundColor: [11, 13, 20, 220],
         backgroundPadding: [6, 3],
         fontFamily: 'system-ui, sans-serif',
+        characterSet: 'auto',
       }),
     )
   }
@@ -266,6 +267,7 @@ export function buildLayers(
         getBackgroundColor: [11, 13, 20, 220],
         backgroundPadding: [6, 3],
         fontFamily: 'system-ui, sans-serif',
+        characterSet: 'auto',
       }),
     )
   }
