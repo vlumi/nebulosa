@@ -13,8 +13,7 @@
   white-space: nowrap;
 }
 
-.bar button,
-.bar select,
+.bar > button,
 .bar input[type='date'] {
   padding: 0.2rem 0.5rem;
   border: 1px solid rgb(255 255 255 / 0.15);
@@ -25,7 +24,7 @@
   cursor: pointer;
 }
 
-.bar button:disabled {
+.bar > button:disabled {
   color: var(--accent);
   border-color: var(--accent);
   cursor: default;

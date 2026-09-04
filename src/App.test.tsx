@@ -113,7 +113,7 @@ test('the minimum-elevation filter drops low passes', async () => {
   render(<App />)
   const passes = within(await screen.findByRole('complementary', { name: 'Passes' }))
   const all = (await passes.findAllByRole('listitem')).length
-  await userEvent.selectOptions(passes.getByRole('combobox', { name: 'Minimum elevation' }), '45')
+  await userEvent.click(passes.getByRole('radio', { name: '45°' }))
   const high = passes.queryAllByRole('listitem')
   expect(high.length).toBeLessThan(all)
   expect(high.every((li) => Number(li.textContent!.match(/max (\d+)°/)![1]) >= 45)).toBe(true)

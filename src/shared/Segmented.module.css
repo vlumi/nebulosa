@@ -1,0 +1,30 @@
+.group {
+  display: inline-flex;
+  vertical-align: middle;
+  border: 1px solid rgb(255 255 255 / 0.15);
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+
+.group button {
+  padding: 0.1rem 0.4rem;
+  border: 0;
+  border-left: 1px solid rgb(255 255 255 / 0.15);
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.group button:first-child {
+  border-left: 0;
+}
+
+.group button:hover {
+  color: inherit;
+}
+
+.group button[aria-checked='true'] {
+  background: rgb(255 255 255 / 0.12);
+  color: inherit;
+}

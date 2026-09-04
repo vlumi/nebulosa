@@ -19,6 +19,7 @@ export function belongsToFocusedControl(event: KeyboardEvent): boolean {
   const target = event.target as HTMLElement | null
   if (!target) return false
   if (FORM_FIELDS.has(target.tagName) || target.isContentEditable) return true
+  if (target.getAttribute('role') === 'radio' && event.key.startsWith('Arrow')) return true
   return target.tagName === 'BUTTON' && (event.key === 'Enter' || event.key === ' ')
 }
 

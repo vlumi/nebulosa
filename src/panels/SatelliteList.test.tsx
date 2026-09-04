@@ -53,8 +53,12 @@ test('the track span selects report a new span', async () => {
       onSpanChange={onSpanChange}
     />,
   )
-  await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Track ahead' }), '3')
+  await userEvent.click(
+    within(screen.getByRole('radiogroup', { name: 'Track ahead' })).getByRole('radio', { name: '3' }),
+  )
   expect(onSpanChange).toHaveBeenCalledWith({ pastOrbits: 1, futureOrbits: 3 })
-  await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Track behind' }), '0.5')
+  await userEvent.click(
+    within(screen.getByRole('radiogroup', { name: 'Track behind' })).getByRole('radio', { name: '½' }),
+  )
   expect(onSpanChange).toHaveBeenCalledWith({ pastOrbits: 0.5, futureOrbits: 1 })
 })

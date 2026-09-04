@@ -3,6 +3,7 @@ import { newestEpoch } from '../orbit/elements'
 import { formatAge, utcMinute } from '../shared/format'
 import { familyCss } from '../shared/palette'
 import panel from './panel.module.css'
+import { Segmented } from '../shared/Segmented'
 import styles from './SatelliteList.module.css'
 import { SPAN_CHOICES, type Satellite, type TrackSpan } from '../orbit/orbit'
 
@@ -15,7 +16,8 @@ interface Props {
   onSpanChange: (span: TrackSpan) => void
 }
 
-const orbits = (n: number) => `${n} orbit${n === 1 ? '' : 's'}`
+const BEHIND_CHOICES = [...SPAN_CHOICES].reverse()
+const fraction = (n: number) => ({ 0.25: '¼', 0.5: '½' })[n] ?? String(n)
 
 export function SatelliteList({ satellites, now, selected, onSelect, span, onSpanChange }: Props) {
   const epoch = newestEpoch(satellites.map((s) => s.omm))
@@ -46,31 +48,23 @@ export function SatelliteList({ satellites, now, selected, onSelect, span, onSpa
         })}
       </ul>
       <div className={`${styles.spanControls} muted`}>
-        Track{' '}
-        <select
-          className={panel.control}
-          aria-label="Track behind"
+        <span aria-hidden="true">◂</span>
+        <Segmented
+          label="Track behind"
+          options={BEHIND_CHOICES}
           value={span.pastOrbits}
-          onChange={(e) => onSpanChange({ ...span, pastOrbits: Number(e.target.value) })}
-        >
-          {SPAN_CHOICES.map((n) => (
-            <option key={n} value={n}>
-              −{orbits(n)}
-            </option>
-          ))}
-        </select>{' '}
-        <select
-          className={panel.control}
-          aria-label="Track ahead"
+          onChange={(pastOrbits) => onSpanChange({ ...span, pastOrbits })}
+          format={fraction}
+        />
+        orbits
+        <Segmented
+          label="Track ahead"
+          options={SPAN_CHOICES}
           value={span.futureOrbits}
-          onChange={(e) => onSpanChange({ ...span, futureOrbits: Number(e.target.value) })}
-        >
-          {SPAN_CHOICES.map((n) => (
-            <option key={n} value={n}>
-              +{orbits(n)}
-            </option>
-          ))}
-        </select>
+          onChange={(futureOrbits) => onSpanChange({ ...span, futureOrbits })}
+          format={fraction}
+        />
+        <span aria-hidden="true">▸</span>
       </div>
       <p className={`${styles.footer} muted`}>
         Elements from {utcMinute(epoch)} UTC · {formatAge(epoch, now)} old

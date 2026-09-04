@@ -27,6 +27,10 @@
 .spanControls {
   margin: 0.5rem 0 0.25rem;
   flex: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .footer {
