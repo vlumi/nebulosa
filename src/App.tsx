@@ -136,6 +136,7 @@ function App() {
                 familyOf={familyOf}
                 onShow={showPass}
                 onGoTo={goToPass}
+                now={now}
               />
             </details>
           </aside>

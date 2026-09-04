@@ -14,9 +14,12 @@ interface Props {
   familyOf: (noradId: number) => OrbitFamily
   onShow: (pass: Pass) => void
   onGoTo: (pass: Pass) => void
+  /** Reference for the day marker: passes not on this UTC date are marked with +N d. */
+  now: Date
 }
 
 const hhmm = (ms: number) => new Date(ms).toISOString().slice(11, 16)
+const utcDay = (ms: number) => Math.floor(ms / 86_400_000)
 
 export function PassList({
   location,
@@ -29,7 +32,9 @@ export function PassList({
   familyOf,
   onShow,
   onGoTo,
+  now,
 }: Props) {
+  const today = utcDay(now.getTime())
   return (
     <>
       <p className="muted">
@@ -62,6 +67,7 @@ export function PassList({
               <span className="swatch" style={{ background: `rgb(${FAMILY_COLORS[familyOf(pass.noradId)].join(' ')})` }} />
               <span className="time">
                 {hhmm(pass.startMs)}–{hhmm(pass.endMs)}
+                {utcDay(pass.startMs) !== today && <span className="muted"> +{utcDay(pass.startMs) - today} d</span>}
               </span>
               {pass.name}
               <span className="muted">

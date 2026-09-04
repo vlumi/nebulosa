@@ -34,6 +34,7 @@ test('lists passes with times, duration and max elevation; show and go-to are se
       familyOf={() => 'sun-synchronous'}
       onShow={onShow}
       onGoTo={onGoTo}
+      now={new Date(t0)}
     />,
   )
   expect(screen.getByText(/over 35.68°N 139.69°E/)).toBeInTheDocument()
@@ -65,6 +66,7 @@ test('shows every pass; the horizon and the selected-only filter are controls', 
       familyOf={() => 'sun-synchronous'}
       onShow={vi.fn()}
       onGoTo={vi.fn()}
+      now={new Date(t0)}
     />,
   )
   expect(screen.getAllByRole('listitem')).toHaveLength(13)
@@ -74,4 +76,25 @@ test('shows every pass; the horizon and the selected-only filter are controls', 
   expect(only).toBeChecked()
   await userEvent.click(only)
   expect(onOnlySelectedChange).toHaveBeenCalledWith(false)
+})
+
+test('passes on a later UTC day carry a day marker', () => {
+  const passes = [pass('STRIX-1', 53815, 60, 30), pass('STRIX-1', 53815, 60 + 24 * 60, 30)]
+  render(
+    <PassList
+      location={{ lat: 0, lon: 0 }}
+      passes={passes}
+      horizonHours={48}
+      onHorizonChange={vi.fn()}
+      onlySelected={false}
+      onOnlySelectedChange={vi.fn()}
+      familyOf={() => 'sun-synchronous'}
+      onShow={vi.fn()}
+      onGoTo={vi.fn()}
+      now={new Date(t0)}
+    />,
+  )
+  const rows = screen.getAllByRole('listitem')
+  expect(rows[0]).not.toHaveTextContent('+1 d')
+  expect(rows[1]).toHaveTextContent('13:00–13:08 +1 d')
 })
