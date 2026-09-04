@@ -36,8 +36,9 @@
   min-height: 10rem;
 }
 
+/* Its content sets the floor: the header, the controls and the two rows the list always keeps. */
 .passes[data-open] {
-  min-height: 14rem;
+  min-height: auto;
 }
 
 .satellites:not([data-open]),
