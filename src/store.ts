@@ -66,7 +66,7 @@ const initial = (): State => ({
   satellitesOpen: null,
   passesOpen: null,
   helpOpen: false,
-  reachVisible: false,
+  reachVisible: true,
 })
 
 export const useApp = create<State & Actions>((set, get) => ({

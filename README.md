@@ -23,7 +23,7 @@ Earlier captures, one per milestone, are kept in [docs/screenshots](docs/screens
 - SAR reach: the band of ground 15° to 45° off nadir on either side of the selected satellite's track, and per pass, the look angle at the peak and whether it is inside that range. A satellite straight overhead cannot image the pin; one that peaks at 40° to 74° can.
 - The element epoch and its age are always visible, because stale elements mean degraded accuracy.
 
-Passes are geometric visibility above the horizon, not imaging opportunities. What the radar could reach is drawn from the one public figure, Synspective's stated 15° to 45° off-nadir steering range: the `SAR reach` toggle (or `R`) shades that band on both sides of the selected satellite's track, and a pass whose peak falls inside it is marked in the list, with an `in SAR reach` filter. Which side the antenna looks, the swath actually chosen and the tasking are not public, so nothing here claims to be an imaging opportunity.
+Passes are geometric visibility above the horizon, not imaging opportunities. What the radar could reach is drawn from the one public figure, Synspective's stated 15° to 45° off-nadir steering range: selecting a satellite shades that band on both sides of its track, until the `SAR reach` toggle (or `R`) hides it, and a pass whose peak falls inside it is marked in the list, with an `in SAR reach` filter. Which side the antenna looks, the swath actually chosen and the tasking are not public, so nothing here claims to be an imaging opportunity.
 
 ## Data
 

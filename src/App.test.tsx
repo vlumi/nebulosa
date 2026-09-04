@@ -76,7 +76,8 @@ test('showing a pass selects the satellite without touching the clock; going to 
   const firstRow = (await passes.findAllByRole('listitem'))[0]
 
   await userEvent.click(firstRow.querySelector('button')!)
-  expect(screen.getAllByRole('button', { pressed: true })).toHaveLength(1)
+  const constellation = within(screen.getByRole('complementary', { name: 'Constellation' }))
+  expect(constellation.getAllByRole('button', { pressed: true })).toHaveLength(1)
   expect(screen.getByRole('button', { name: 'Live' })).toBeDisabled()
   expect(firstRow.querySelector('button')).toHaveAttribute('aria-current', 'true')
   expect(firstRow).not.toHaveAttribute('data-dimmed')
