@@ -4,19 +4,26 @@ import { approach } from './smoothing'
 /** The simulated time as displayed: follows `targetMs`, easing across jumps frame by frame. */
 export function useSmoothedTime(targetMs: number): Date {
   const [displayed, setDisplayed] = useState(targetMs)
-  const current = useRef(targetMs)
+  const target = useRef(targetMs)
 
   useEffect(() => {
-    if (current.current === targetMs) return
+    target.current = targetMs
+  }, [targetMs])
+
+  useEffect(() => {
+    let current = target.current
     let last = performance.now()
     let frame = requestAnimationFrame(function step(t) {
-      current.current = approach(current.current, targetMs, t - last)
+      const next = approach(current, target.current, t - last)
       last = t
-      setDisplayed(current.current)
-      if (current.current !== targetMs) frame = requestAnimationFrame(step)
+      if (next !== current) {
+        current = next
+        setDisplayed(next)
+      }
+      frame = requestAnimationFrame(step)
     })
     return () => cancelAnimationFrame(frame)
-  }, [targetMs])
+  }, [])
 
   return useMemo(() => new Date(displayed), [displayed])
 }
