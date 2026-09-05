@@ -124,7 +124,7 @@ export function MapView({
       })
     })
     map.current.on('zoom', applyProjection)
-    map.current.addControl(new NavigationControl({ showCompass: false }), 'top-right')
+    map.current.addControl(new NavigationControl({ visualizePitch: true }), 'top-right')
     overlay.current = new MapLibreOverlay({
       interleaved: true,
       layers: [],
