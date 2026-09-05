@@ -9,7 +9,7 @@ export const SHORTCUTS = [
   { keys: 'O', does: 'only the selected satellite\u2019s passes' },
   { keys: 'R', does: 'SAR reach beside the selected track' },
   { keys: 'G', does: 'globe / flat map' },
-  { keys: 'Esc', does: 'clear the pass, then the satellite' },
+  { keys: 'Esc', does: 'clear the pass, then the place, then the satellite' },
   { keys: '?', does: 'this help' },
 ] as const
 

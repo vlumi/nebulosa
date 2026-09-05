@@ -33,7 +33,7 @@ test('showing a pass selects, ghosts and marks it; going to it also pauses the c
   expect(s.focus?.seq).toBe(2)
 })
 
-test('escape peels back one layer at a time: help, then pass and probe, then the satellite', () => {
+test('escape peels back one layer at a time: help, then pass and probe, then the place, then the satellite', () => {
   const { showPass, probe, setHelpOpen, escape } = useApp.getState()
   showPass(pass)
   probe(30_000, 0)
@@ -42,6 +42,10 @@ test('escape peels back one layer at a time: help, then pass and probe, then the
   expect(useApp.getState().helpOpen).toBe(false)
   expect(useApp.getState().selection.activePass).toBe(pass)
   escape()
+  expect(useApp.getState().selection).toEqual({ ...NOTHING, noradId: 65971 })
+  expect(useApp.getState().placeId).toBe('tokyo')
+  escape()
+  expect(useApp.getState().placeId).toBeNull()
   expect(useApp.getState().selection).toEqual({ ...NOTHING, noradId: 65971 })
   escape()
   expect(useApp.getState().selection).toEqual(NOTHING)

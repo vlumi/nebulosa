@@ -78,6 +78,8 @@ test('selecting a satellite in the panel highlights it and dims the rest', async
   await userEvent.click(strix1Button)
   expect(strix1Button).toHaveAttribute('aria-pressed', 'true')
   await userEvent.keyboard('{Escape}')
+  expect(screen.getByRole('button', { name: /^Places · none picked/ })).toBeInTheDocument()
+  await userEvent.keyboard('{Escape}')
   expect(strix1Button).toHaveAttribute('aria-pressed', 'false')
 })
 
@@ -222,6 +224,8 @@ test('keyboard: arrows step through the open sheet, Enter goes to the pass, Spac
   await userEvent.keyboard('s')
   const constellation = within(screen.getByRole('complementary', { name: 'Constellation' }))
   expect(constellation.getByRole('button', { name: /STRIX-1/ })).toHaveAttribute('aria-pressed', 'true')
+  await userEvent.keyboard('{Escape}')
+  expect(screen.getByRole('button', { name: /^Places · none picked/ })).toBeInTheDocument()
   await userEvent.keyboard('{Escape}')
   expect(constellation.queryAllByRole('button', { pressed: true })).toHaveLength(0)
 })

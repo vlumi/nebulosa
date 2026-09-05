@@ -113,10 +113,11 @@ export const useApp = create<State & Actions>((set, get) => ({
         : { selection: { ...s.selection, probeMs: (s.selection.probeMs ?? fromMs) + deltaMs } },
     ),
   escape: () => {
-    const { helpOpen, selection } = get()
+    const { helpOpen, selection, placeId } = get()
     if (helpOpen) set({ helpOpen: false })
     else if (selection.activePass || selection.ghost || selection.probeMs !== null)
       set({ selection: { ...NOTHING, noradId: selection.noradId } })
+    else if (placeId !== null) set({ placeId: null })
     else set({ selection: NOTHING })
   },
   addPlace: (location, name) => set((s) => ({ places: [...s.places, newPlace(location, name)] })),
