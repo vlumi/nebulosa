@@ -124,6 +124,11 @@ export function MapView({
       })
     })
     map.current.on('zoom', applyProjection)
+    // The interleaved overlay (deck.gl 9.4 beta) registers no resize listener and would keep its first size.
+    map.current.on('resize', () => {
+      const canvas = map.current?.getCanvas()
+      if (canvas) overlay.current?.setProps({ width: canvas.clientWidth, height: canvas.clientHeight } as object)
+    })
     map.current.addControl(new NavigationControl({ visualizePitch: true }), 'top-right')
     overlay.current = new MapLibreOverlay({
       interleaved: true,

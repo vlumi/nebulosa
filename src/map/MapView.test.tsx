@@ -43,6 +43,7 @@ const { mapInstance, overlayInstance, markerInstance } = vi.hoisted(() => {
       setPaintProperty: vi.fn(),
       zoom: 1.5,
       getZoom: vi.fn(() => mapInstance.zoom),
+      getCanvas: vi.fn(() => ({ clientWidth: 640, clientHeight: 480 })),
       projection: undefined as { type: string } | undefined,
       getProjection: vi.fn(() => mapInstance.projection),
       setProjection: vi.fn((projection: { type: string }) => {
@@ -259,4 +260,20 @@ test('night and reach are MapLibre fill layers fed once the style loads; the glo
   const layers = overlayInstance.setProps.mock.lastCall![0].layers
   const tracks = layers.find((l: { id: string }) => l.id === 'tracks')
   expect(tracks.props.modelMatrix[14]).toBe(30_000)
+})
+
+test('a map resize hands the overlay the new canvas size', () => {
+  const sats = [strix1, strix9].map(satelliteFrom)
+  render(
+    <MapView
+      satellites={sats}
+      now={epochOf(strix1)}
+      selected={null}
+      onSelect={vi.fn()}
+      location={tokyo}
+      onLocationChange={vi.fn()}
+    />,
+  )
+  act(() => mapInstance.handlers['resize']())
+  expect(overlayInstance.setProps).toHaveBeenLastCalledWith({ width: 640, height: 480 })
 })
