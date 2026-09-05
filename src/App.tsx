@@ -1,18 +1,17 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import type { Hover } from './map/layers'
-import { loadElements, newestEpoch, type Omm } from './orbit/elements'
+import { loadElements, type Omm } from './orbit/elements'
 import { positionAt, satelliteFrom } from './orbit/orbit'
 import { type Pass } from './orbit/passes'
 import { inReach } from './orbit/swath'
 import { usePasses } from './orbit/usePasses'
-import { Disclosure } from './panels/Disclosure'
 import { Help } from './panels/Help'
 import { PassList } from './panels/PassList'
 import { MapToggle } from './panels/MapToggle'
 import { ReachToggle } from './panels/ReachToggle'
 import { SatelliteList } from './panels/SatelliteList'
+import { Toolbar } from './panels/Toolbar'
 import { useNarrow } from './panels/useNarrow'
-import { formatAge, formatLocation } from './shared/format'
 import { belongsToFocusedControl, releaseFocusAfterPointerClick, stepIndex } from './shortcuts'
 import styles from './App.module.css'
 import panel from './panels/panel.module.css'
@@ -36,6 +35,15 @@ function App() {
   const now = useMemo(() => new Date(minute * 60_000), [minute])
 
   useEffect(() => startFrameLoop(), [])
+
+  // A phone opens on the map; the sheets wait behind the toolbar.
+  const closeSheet = app.closeSheet
+  useEffect(() => {
+    if (narrow) closeSheet()
+  }, [narrow, closeSheet])
+  const closeOnPhone = () => {
+    if (narrow) closeSheet()
+  }
 
   useEffect(() => {
     loadElements()
@@ -106,11 +114,11 @@ function App() {
           break
         case 's':
         case 'S':
-          s.toggleSatellites(!(s.satellitesOpen ?? !narrow), narrow)
+          s.toggleSheet('satellites')
           break
         case 'p':
         case 'P':
-          s.togglePasses(!(s.passesOpen ?? !narrow), narrow)
+          s.toggleSheet('passes')
           break
         case 'o':
         case 'O':
@@ -135,7 +143,7 @@ function App() {
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('click', releaseFocusAfterPointerClick)
     }
-  }, [satellites, passes, narrow])
+  }, [satellites, passes])
 
   return (
     <>
@@ -147,27 +155,9 @@ function App() {
         <Suspense fallback={<div className="map" />}>
           <LiveMap satellites={satellites} selectedSatellite={selectedSatellite} />
         </Suspense>
-        <div className={styles.dock}>
-          <aside
-            className={`${panel.panel} ${styles.satellites}`}
-            data-open={(app.satellitesOpen ?? !narrow) ? '' : undefined}
-            aria-label="Constellation"
-          >
-            <Disclosure
-              open={app.satellitesOpen ?? !narrow}
-              onToggle={(open) => app.toggleSatellites(open, narrow)}
-              summary={
-                <>
-                  Satellites
-                  {satellites.length > 0 && (
-                    <span className="muted">
-                      {' '}
-                      · {satellites.length} · elements {formatAge(newestEpoch(elements), now)} old
-                    </span>
-                  )}
-                </>
-              }
-            >
+        <div className={styles.shell}>
+          {app.sheet === 'satellites' && (
+            <aside id="sheet" className={`${panel.panel} ${styles.sheet}`} aria-label="Constellation">
               {loaded === null && <p>Loading orbital elements…</p>}
               {loaded && 'error' in loaded && <p role="alert">{loaded.error}</p>}
               {satellites.length > 0 && (
@@ -175,44 +165,59 @@ function App() {
                   satellites={satellites}
                   now={now}
                   selected={app.selection.noradId}
-                  onSelect={(id) => (id === null ? app.select(null) : app.selectFromList(id))}
+                  onSelect={(id) => {
+                    if (id === null) app.select(null)
+                    else app.selectFromList(id)
+                    closeOnPhone()
+                  }}
                   span={app.span}
                   onSpanChange={app.setSpan}
                 />
               )}
-            </Disclosure>
-          </aside>
-          {satellites.length > 0 && (
-            <aside
-              className={`${panel.panel} ${styles.passes}`}
-              data-open={(app.passesOpen ?? !narrow) ? '' : undefined}
-              aria-label="Passes"
-            >
-              <Disclosure
-                open={app.passesOpen ?? !narrow}
-                onToggle={(open) => app.togglePasses(open, narrow)}
-                summary={
-                  <>
-                    Passes over {formatLocation(app.location)}
-                    <span className="muted"> · {passes.length}</span>
-                  </>
-                }
-              >
-                <PassList
-                  location={app.location}
-                  passes={passes}
-                  filters={app.filters}
-                  onFiltersChange={app.setFilters}
-                  selectedName={selectedSatellite?.omm.OBJECT_NAME}
-                  familyOf={familyOf}
-                  onShow={app.showPass}
-                  onGoTo={(pass: Pass) => app.goToPass(pass)}
-                  activePass={app.selection.activePass}
-                  now={now}
-                />
-              </Disclosure>
             </aside>
           )}
+          {app.sheet === 'passes' && satellites.length > 0 && (
+            <aside id="sheet" className={`${panel.panel} ${styles.sheet}`} aria-label="Passes">
+              <PassList
+                location={app.location}
+                passes={passes}
+                filters={app.filters}
+                onFiltersChange={app.setFilters}
+                selectedName={selectedSatellite?.omm.OBJECT_NAME}
+                familyOf={familyOf}
+                onShow={(pass) => {
+                  app.showPass(pass)
+                  closeOnPhone()
+                }}
+                onGoTo={(pass: Pass) => {
+                  app.goToPass(pass)
+                  closeOnPhone()
+                }}
+                activePass={app.selection.activePass}
+                now={now}
+              />
+            </aside>
+          )}
+          <Toolbar
+            sheet={app.sheet}
+            onToggle={app.toggleSheet}
+            satellites={{
+              count: satellites.length,
+              selected: selectedSatellite
+                ? { name: selectedSatellite.omm.OBJECT_NAME, family: selectedSatellite.family }
+                : undefined,
+            }}
+            passes={
+              satellites.length > 0
+                ? {
+                    count: passes.length,
+                    active: app.selection.activePass
+                      ? { name: app.selection.activePass.name, peakMs: app.selection.activePass.peakMs }
+                      : undefined,
+                  }
+                : undefined
+            }
+          />
         </div>
         <LiveTimeBar />
         <Help open={app.helpOpen} onToggle={app.setHelpOpen}>

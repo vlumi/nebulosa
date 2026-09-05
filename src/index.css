@@ -79,6 +79,6 @@ main > .map {
   /* Pinch replaces the zoom buttons; the compass stays, because touch rotates the map easily, above the corner pills. */
   main .maplibregl-ctrl-top-right {
     top: auto;
-    bottom: 9.4rem;
+    bottom: 11.6rem;
   }
 }

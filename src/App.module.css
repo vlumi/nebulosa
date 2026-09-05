@@ -1,4 +1,5 @@
-.dock {
+/* The shell: one sheet above a toolbar, in the corner above the time bar. The sheet grows upward as far as the top. */
+.shell {
   position: absolute;
   z-index: 3;
   top: 0.75rem;
@@ -7,56 +8,32 @@
   width: 21rem;
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   gap: 0.5rem;
   pointer-events: none;
 }
 
-.dock > * {
+.shell > * {
   pointer-events: auto;
 }
 
-/* Open panels keep room for a few rows; collapsed, each is exactly its header and never shrinks. */
-.satellites,
-.passes {
+.sheet {
+  flex: 0 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
 }
 
-.satellites {
-  flex: 0 1 auto;
-}
-
-.passes {
-  /* Gives way long before the satellite list does; the list has priority for the column's height. */
-  flex: 0 1000 auto;
-}
-
-.satellites[data-open] {
-  min-height: 10rem;
-}
-
-/* Header, controls and two rows; a content-derived minimum would count every row and defeat the scrolling. */
-.passes[data-open] {
-  min-height: 17.5rem;
-}
-
-.satellites:not([data-open]),
-.passes:not([data-open]) {
-  flex: none;
-}
-
 @media (max-width: 720px), (max-height: 560px) {
-  .dock {
+  .shell {
     top: 0.5rem;
     left: 0.5rem;
     right: 0.5rem;
-    bottom: auto;
+    bottom: 7.2rem;
     width: auto;
   }
 
-  .satellites[data-open],
-  .passes[data-open] {
-    min-height: 0;
+  .sheet {
+    max-height: 55vh;
   }
 }
