@@ -89,3 +89,28 @@ export function nearestSample(samples: TrackSample[], [lon, lat]: LonLat): numbe
   })
   return best
 }
+
+/**
+ * Cuts a path wherever consecutive points jump across the antimeridian, ending one piece at ±180° and
+ * starting the next at the opposite edge, so no segment is ever read as going the long way round.
+ */
+export function splitAtAntimeridian(path: LonLat[]): LonLat[][] {
+  const pieces: LonLat[][] = []
+  let piece: LonLat[] = []
+  path.forEach(([lon, lat], i) => {
+    if (i > 0) {
+      const [previousLon, previousLat] = path[i - 1]
+      if (Math.abs(lon - previousLon) > 180) {
+        const edge = previousLon > 0 ? 180 : -180
+        const t = (edge - previousLon) / (lon + 2 * edge - previousLon)
+        const edgeLat = previousLat + (lat - previousLat) * t
+        piece.push([edge, edgeLat])
+        pieces.push(piece)
+        piece = [[-edge, edgeLat]]
+      }
+    }
+    piece.push([lon, lat])
+  })
+  pieces.push(piece)
+  return pieces.filter((p) => p.length > 1)
+}

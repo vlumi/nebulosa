@@ -82,8 +82,8 @@ test('the reach layer is on until toggled off', () => {
   expect(useApp.getState().reachVisible).toBe(false)
 })
 
-test('the globe is off until toggled on', () => {
-  expect(useApp.getState().globe).toBe(false)
-  useApp.getState().toggleGlobe()
+test('the globe is on until toggled off', () => {
   expect(useApp.getState().globe).toBe(true)
+  useApp.getState().toggleGlobe()
+  expect(useApp.getState().globe).toBe(false)
 })

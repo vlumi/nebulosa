@@ -1,6 +1,6 @@
 import { epochOf } from './elements'
 import { strix1, strix9 } from '../test/fixtures'
-import { nearestSample, positionAt, satelliteFrom, trackSamples } from './orbit'
+import { nearestSample, positionAt, satelliteFrom, splitAtAntimeridian, trackSamples } from './orbit'
 
 test('derives period and orbit family from the elements', () => {
   const s1 = satelliteFrom(strix1)
@@ -55,4 +55,21 @@ test('the track span is configurable in orbits behind and ahead', () => {
   expect(samples[0].timeMs).toBe(center.getTime() - 0.5 * periodMs)
   expect(samples[samples.length - 1].timeMs).toBeGreaterThan(center.getTime() + 2 * periodMs - 30_000)
   expect(samples[samples.length - 1].timeMs).toBeLessThanOrEqual(center.getTime() + 2 * periodMs)
+})
+
+test('a path is cut at the antimeridian with the crossing point on both edges', () => {
+  const pieces = splitAtAntimeridian([
+    [170, 10],
+    [178, 12],
+    [-178, 14],
+    [-170, 16],
+    [175, 18],
+  ])
+  expect(pieces.map((piece) => piece.length)).toEqual([3, 4, 2])
+  expect(pieces[0][2]).toEqual([180, 13])
+  expect(pieces[1][0]).toEqual([-180, 13])
+  expect(pieces[1][3][0]).toBe(-180)
+  expect(pieces[1][3][1]).toBeCloseTo(17.333, 3)
+  expect(pieces[2][0][0]).toBe(180)
+  expect(splitAtAntimeridian([[0, 0]])).toEqual([])
 })
