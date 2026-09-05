@@ -169,9 +169,12 @@ export function MapView({
     map.current.on('zoom', applyProjection)
     map.current.on('move', () => setViewSeq((n) => n + 1))
     // The interleaved overlay (deck.gl 9.4 beta) registers no resize listener and would keep its first size.
+    // Handing it a width and height instead makes deck restyle the canvas, which is MapLibre's own, and
+    // stretches the map; asking deck to re-measure the canvas touches nothing.
     map.current.on('resize', () => {
-      const canvas = map.current?.getCanvas()
-      if (canvas) overlay.current?.setProps({ width: canvas.clientWidth, height: canvas.clientHeight } as object)
+      ;(
+        overlay.current as unknown as { _deck?: { _updateCanvasSize?: () => void } } | null
+      )?._deck?._updateCanvasSize?.()
     })
     map.current.addControl(new NavigationControl({ visualizePitch: true }), 'top-right')
     overlay.current = new MapLibreOverlay({

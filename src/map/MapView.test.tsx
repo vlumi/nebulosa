@@ -339,7 +339,7 @@ test('the visible cap of the globe shrinks as the camera comes closer', () => {
   expect(horizonDeg(5, 900)).toBeLessThan(50)
 })
 
-test('a map resize hands the overlay the new canvas size', () => {
+test('a map resize asks the deck behind the overlay to re-measure its canvas', () => {
   const sats = [strix1, strix9].map(satelliteFrom)
   render(
     <MapView
@@ -354,6 +354,9 @@ test('a map resize hands the overlay the new canvas size', () => {
       onPlaceAdd={vi.fn()}
     />,
   )
+  const remeasure = vi.fn()
+  ;(overlayInstance as unknown as { _deck: unknown })._deck = { _updateCanvasSize: remeasure }
   act(() => mapInstance.handlers['resize']())
-  expect(overlayInstance.setProps).toHaveBeenLastCalledWith({ width: 640, height: 480 })
+  expect(remeasure).toHaveBeenCalled()
+  expect(overlayInstance.setProps).not.toHaveBeenCalledWith(expect.objectContaining({ width: expect.anything() }))
 })
