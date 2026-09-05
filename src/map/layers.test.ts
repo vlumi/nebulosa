@@ -8,9 +8,9 @@ test('builds tracks, positions and labels for every satellite, colored by family
   const sats = [strix1, strix9].map(satelliteFrom)
   const at = epochOf(strix1)
   const layers = buildLayers(sats, trackData(sats, at), at)
-  expect(layers.map((l) => l.id)).toEqual(['tracks', 'positions', 'labels'])
+  expect(layers.map((l) => l.id)).toEqual(['poles', 'tracks', 'positions', 'labels'])
 
-  const [tracks, positions, labels] = layers
+  const [, tracks, positions, labels] = layers
   const trackRows = tracks.props.data as {
     noradId: number
     family: string
@@ -46,7 +46,7 @@ test('builds tracks, positions and labels for every satellite, colored by family
 test('dims everything but the selected satellite and makes layers pickable', () => {
   const sats = [strix1, strix9].map(satelliteFrom)
   const at = epochOf(strix1)
-  const [tracks, positions, labels] = buildLayers(sats, trackData(sats, at), at, strix9.NORAD_CAT_ID)
+  const [, tracks, positions, labels] = buildLayers(sats, trackData(sats, at), at, strix9.NORAD_CAT_ID)
   expect([tracks, positions, labels].every((l) => l.props.pickable)).toBe(true)
 
   const trackRows = tracks.props.data as { noradId: number; half: string }[]
@@ -73,8 +73,8 @@ test('hovering a track adds a marker and a label with the time at that point', (
   expect(hover).toEqual({ noradId: strix1.NORAD_CAT_ID, lonLat: target.lonLat, timeMs: target.timeMs })
 
   const layers = buildLayers(sats, [track], at, null, hover)
-  expect(layers.map((l) => l.id)).toEqual(['tracks', 'positions', 'labels', 'hover-marker', 'hover-label'])
-  const { getText } = layers[4].props as unknown as { getText: () => string }
+  expect(layers.map((l) => l.id)).toEqual(['poles', 'tracks', 'positions', 'labels', 'hover-marker', 'hover-label'])
+  const { getText } = layers[5].props as unknown as { getText: () => string }
   expect(getText()).toMatch(/^STRIX-1 · \d\d:\d\d:\d\d UTC · −1 h 2\d min$/)
 })
 
@@ -83,8 +83,8 @@ test('a ghost draws a hollow marker where the satellite will be at the given tim
   const at = epochOf(strix1)
   const later = at.getTime() + 15 * 60_000
   const layers = buildLayers(sats, trackData(sats, at), at, null, null, { noradId: strix1.NORAD_CAT_ID, timeMs: later })
-  expect(layers.map((l) => l.id)).toEqual(['tracks', 'positions', 'labels', 'ghost', 'ghost-label'])
-  const { getText } = layers[4].props as unknown as { getText: () => string }
+  expect(layers.map((l) => l.id)).toEqual(['poles', 'tracks', 'positions', 'labels', 'ghost', 'ghost-label'])
+  const { getText } = layers[5].props as unknown as { getText: () => string }
   expect(getText()).toBe(`STRIX-1 · ${new Date(later).toISOString().slice(11, 16)} UTC`)
 })
 
@@ -96,14 +96,22 @@ test('a ghost beyond the drawn track gets a dashed continuation reaching it', ()
     noradId: strix1.NORAD_CAT_ID,
     timeMs: farAhead,
   })
-  expect(layers.map((l) => l.id)).toEqual(['tracks', 'positions', 'labels', 'ghost-track', 'ghost', 'ghost-label'])
-  expect(layers[3].props.pickable).toBe(true)
-  const continuation = (layers[3].props.data as { samples: { lonLat: [number, number]; timeMs: number }[] }[])[0]
+  expect(layers.map((l) => l.id)).toEqual([
+    'poles',
+    'tracks',
+    'positions',
+    'labels',
+    'ghost-track',
+    'ghost',
+    'ghost-label',
+  ])
+  expect(layers[4].props.pickable).toBe(true)
+  const continuation = (layers[4].props.data as { samples: { lonLat: [number, number]; timeMs: number }[] }[])[0]
   const path = continuation.samples.map((s) => s.lonLat)
   const spanMinutes = 3 * 60 + 5 - sats[0].periodMinutes
   expect(Math.abs(path.length - spanMinutes * 2)).toBeLessThanOrEqual(2)
   expect(continuation.samples.some((s) => s.timeMs === farAhead)).toBe(true)
-  const ghostPosition = (layers[4].props.data as { lonLat: [number, number] }[])[0].lonLat
+  const ghostPosition = (layers[5].props.data as { lonLat: [number, number] }[])[0].lonLat
   const nearest = path.reduce((best, p) =>
     Math.hypot(p[0] - ghostPosition[0], p[1] - ghostPosition[1]) <
     Math.hypot(best[0] - ghostPosition[0], best[1] - ghostPosition[1])
@@ -116,7 +124,7 @@ test('a ghost beyond the drawn track gets a dashed continuation reaching it', ()
 test('selection emphasis reaches dots and labels: bigger and brighter when selected, faded when not', () => {
   const sats = [strix1, strix9].map(satelliteFrom)
   const at = epochOf(strix1)
-  const [, positions, labels] = buildLayers(sats, trackData(sats, at), at, strix9.NORAD_CAT_ID)
+  const [, , positions, labels] = buildLayers(sats, trackData(sats, at), at, strix9.NORAD_CAT_ID)
   const dots = positions.props.data as { noradId: number }[]
   const { getRadius, getFillColor } = positions.props as unknown as {
     getRadius: (d: unknown) => number

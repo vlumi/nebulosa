@@ -18,12 +18,41 @@ import { DEFAULT_SPAN, positionAt, type Satellite, type TrackSpan } from '../orb
 import type { Location } from '../orbit/passes'
 import type { Place } from '../places/places'
 import type { FlyTo } from '../store'
+import { fitZoom, GLOBE_MAX_ZOOM } from './fit'
 import { useLatest } from '../shared/useLatest'
 import { useThrottled } from '../shared/useThrottled'
 
 const BASEMAP = 'https://tiles.openfreemap.org/styles/fiord'
-/** Past this zoom the globe renders flat: curvature is invisible there, and the deck.gl beta clips its globe view away. */
-const GLOBE_MAX_ZOOM = 5.5
+
+/**
+ * The private surface of the deck instance behind the overlay that a resize has to reach: deck's own size
+ * for its viewports, and luma's cached canvas sizes, which it otherwise forces back onto the canvas.
+ */
+interface InterleavedDeck {
+  width: number
+  height: number
+  viewManager?: { setProps: (props: { width: number; height: number }) => void }
+  layerManager?: { activateViewport: (viewport: unknown) => void }
+  getViewports: () => unknown[]
+  /** The MapLibre module caches its viewport here and clears it only when the map moves. */
+  userData: { currentViewport?: unknown }
+  device?: {
+    canvasContext?: CanvasSizes
+    getDefaultCanvasContext?: () => CanvasSizes
+  }
+  _canvasContext?: CanvasSizes
+}
+
+/**
+ * luma's canvas context: cached CSS and drawing-buffer sizes of the shared canvas, and the framebuffer object
+ * standing for the canvas, whose own cached height sets the y-flip of every viewport drawn into it.
+ */
+interface CanvasSizes {
+  cssWidth: number
+  cssHeight: number
+  setDrawingBufferSize: (width: number, height: number) => void
+  getCurrentFramebuffer?: () => { resize?: (size: [number, number]) => void }
+}
 const LONG_PRESS_MS = 600
 const PIN_SELECTED = '#eedd66'
 const PIN = '#8a90a0'
@@ -128,12 +157,13 @@ export function MapView({
     [satellites, trackMinute, span],
   )
   const currentTracks = useLatest(tracks)
-
+  // The terminator moves a quarter degree a minute; rebuilding sixty strips per frame would be waste.
   const nightData = useMemo(() => nightFeature(new Date(trackMinute * 60_000)), [trackMinute])
   const reachTrack = reach && selected !== null ? tracks.find((t) => t.noradId === selected) : undefined
   const reachData = useMemo(() => (reachTrack ? reachFeature(reachTrack.samples) : EMPTY), [reachTrack])
   const reachColor = reachFill(reachTrack?.family ?? 'sun-synchronous')
   const surfaces = useLatest({ nightData, reachData, reachColor })
+
   const projection = useLatest(globe)
   const styleReady = useRef(false)
   const applyProjection = useCallback(() => {
@@ -148,7 +178,7 @@ export function MapView({
       container: container.current!,
       style: BASEMAP,
       center: [139.7, 35.7],
-      zoom: 1.5,
+      zoom: fitZoom(container.current!.clientWidth, container.current!.clientHeight, projection.current),
       doubleClickZoom: false,
     })
     const addAt = (e: { point: { x: number; y: number }; lngLat: { lat: number; lng: number } }) =>
@@ -167,21 +197,58 @@ export function MapView({
       if (!m) return
       styleReady.current = true
       applyProjection()
-      m.addSource(NIGHT_LAYER, { type: 'geojson', data: surfaces.current.nightData })
-      m.addSource(REACH_LAYER, { type: 'geojson', data: surfaces.current.reachData })
+      // No tile buffer: a fill that touches the antimeridian is wrapped into world copies, and with a buffer
+      // the copies overlap there in a band twice as dark as the rest. No simplification either: the reach is a
+      // run of small quads, and moving their vertices makes neighbours overlap or part in a ladder pattern.
+      m.addSource(NIGHT_LAYER, { type: 'geojson', data: surfaces.current.nightData, buffer: 0, tolerance: 0 })
+      m.addSource(REACH_LAYER, { type: 'geojson', data: surfaces.current.reachData, buffer: 0, tolerance: 0 })
       m.addLayer({ id: NIGHT_LAYER, type: 'fill', source: NIGHT_LAYER, paint: NIGHT_PAINT })
       m.addLayer({
         id: REACH_LAYER,
         type: 'fill',
         source: REACH_LAYER,
-        paint: { 'fill-color': surfaces.current.reachColor, 'fill-opacity': REACH_OPACITY },
+        paint: { 'fill-color': surfaces.current.reachColor, 'fill-opacity': REACH_OPACITY, 'fill-antialias': false },
       })
     })
     map.current.on('zoom', applyProjection)
+    // deck draws with its own depth and culling settings, and MapLibre caches GL state, so after each frame
+    // MapLibre is told to re-apply everything; otherwise its far-side tiles can come through as dark wedges.
+    map.current.on('render', () => {
+      ;(
+        map.current as unknown as { painter?: { context?: { setDirty?: () => void } } } | null
+      )?.painter?.context?.setDirty?.()
+      for (const marker of markers.current.values()) {
+        const element = marker.getElement()
+        element.style.pointerEvents = element.style.opacity === '0' ? 'none' : ''
+      }
+    })
     // The interleaved overlay (deck.gl 9.4 beta) registers no resize listener and would keep its first size.
+    // Handing it a width and height makes deck restyle the canvas, which is MapLibre's own, and stretches
+    // the map; its own re-measure reads sizes the shared canvas context does not update, and luma even forces
+    // those stale sizes back onto the canvas. So every cached size is refreshed from the canvas by hand, and
+    // the viewport the module caches per map move is dropped so the next frame builds a fresh one.
     map.current.on('resize', () => {
       const canvas = map.current?.getCanvas()
-      if (canvas) overlay.current?.setProps({ width: canvas.clientWidth, height: canvas.clientHeight } as object)
+      const deck = (overlay.current as unknown as { _deck?: InterleavedDeck } | null)?._deck
+      if (!canvas || !deck) return
+      const { clientWidth: width, clientHeight: height } = canvas
+      const surfaces = new Set(
+        [deck.device?.canvasContext, deck.device?.getDefaultCanvasContext?.(), deck._canvasContext].filter(
+          (s): s is CanvasSizes => Boolean(s),
+        ),
+      )
+      for (const surface of surfaces) {
+        surface.cssWidth = width
+        surface.cssHeight = height
+        surface.setDrawingBufferSize(canvas.width, canvas.height)
+        surface.getCurrentFramebuffer?.()?.resize?.([canvas.width, canvas.height])
+      }
+      deck.userData.currentViewport = undefined
+      if (deck.width === width && deck.height === height) return
+      deck.width = width
+      deck.height = height
+      deck.viewManager?.setProps({ width, height })
+      deck.layerManager?.activateViewport(deck.getViewports()[0])
     })
     map.current.addControl(new NavigationControl({ visualizePitch: true }), 'top-right')
     overlay.current = new MapLibreOverlay({
@@ -229,7 +296,11 @@ export function MapView({
       let marker = markers.current.get(place.id)
       if (!marker || marker.getElement().dataset.color !== color) {
         marker?.remove()
-        marker = new Marker({ draggable: true, color }).setLngLat([place.lon, place.lat]).addTo(m)
+        // MapLibre only dims a pin behind the globe; here it vanishes, and the render hook below also stops it
+        // taking the pointer, or a hidden pin could be grabbed and dragged onto the near side.
+        marker = new Marker({ draggable: true, color, opacityWhenCovered: '0' })
+          .setLngLat([place.lon, place.lat])
+          .addTo(m)
         marker.getElement().dataset.color = color
         marker.getElement().addEventListener('click', (e) => {
           e.stopPropagation()
@@ -250,15 +321,6 @@ export function MapView({
     if (flyTo) map.current?.easeTo({ center: [flyTo.lon, flyTo.lat], duration: 600 })
   }, [flyTo])
 
-  // Until the style has loaded the sources do not exist; the load handler above then takes the latest data.
-  useEffect(() => {
-    ;(map.current?.getSource(NIGHT_LAYER) as GeoJSONSource | undefined)?.setData(nightData)
-  }, [nightData])
-  useEffect(() => {
-    ;(map.current?.getSource(REACH_LAYER) as GeoJSONSource | undefined)?.setData(reachData)
-    if (map.current?.getLayer(REACH_LAYER)) map.current.setPaintProperty(REACH_LAYER, 'fill-color', reachColor)
-  }, [reachData, reachColor])
-
   // The projection is part of the style; before the style has loaded, the load handler above applies it.
   useEffect(applyProjection, [globe, applyProjection])
 
@@ -269,6 +331,15 @@ export function MapView({
     const p = sat && positionAt(sat, at)
     if (p) map.current?.easeTo({ center: [p.lon, p.lat], duration: 600 })
   }, [focus, satellites, currentTime])
+
+  // Until the style has loaded the sources do not exist; the load handler above then takes the latest data.
+  useEffect(() => {
+    ;(map.current?.getSource(NIGHT_LAYER) as GeoJSONSource | undefined)?.setData(nightData)
+  }, [nightData])
+  useEffect(() => {
+    ;(map.current?.getSource(REACH_LAYER) as GeoJSONSource | undefined)?.setData(reachData)
+    if (map.current?.getLayer(REACH_LAYER)) map.current.setPaintProperty(REACH_LAYER, 'fill-color', reachColor)
+  }, [reachData, reachColor])
 
   useEffect(() => {
     overlay.current?.setProps({

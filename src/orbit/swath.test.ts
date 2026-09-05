@@ -24,19 +24,21 @@ test('ribbons lie beside the track on both sides, between the near and the far l
     altKm: 500,
   }))
   const polygons = reachRibbons(eastward)
-  expect(polygons).toHaveLength(4)
+  expect(polygons).toHaveLength(40)
   const [left, right] = polygons
-  expect(left).toHaveLength(42)
+  expect(left).toHaveLength(6)
   const kmPerDeg = 111.2
-  for (const [, lat] of left) {
-    expect(lat * kmPerDeg).toBeGreaterThan(130)
-    expect(lat * kmPerDeg).toBeLessThan(530)
+  for (const ring of polygons.filter((_, i) => i % 2 === 0)) {
+    for (const [, lat] of ring) {
+      expect(lat * kmPerDeg).toBeGreaterThan(130)
+      expect(lat * kmPerDeg).toBeLessThan(530)
+    }
   }
   for (const [, lat] of right) expect(lat).toBeLessThan(-1)
   expect(reachRibbons(eastward.slice(0, 1))).toEqual([])
 })
 
-test('ribbons wrap longitude and stay inside the Mercator latitude limit', () => {
+test('ribbons wrap longitude and may reach the pole', () => {
   const polar: TrackSample[] = Array.from({ length: 5 }, (_, i) => ({
     lonLat: [178 + i, 83 + i * 0.5],
     timeMs: i,
@@ -44,6 +46,6 @@ test('ribbons wrap longitude and stay inside the Mercator latitude limit', () =>
   }))
   for (const [lon, lat] of reachRibbons(polar).flat()) {
     expect(Math.abs(lon)).toBeLessThanOrEqual(180)
-    expect(Math.abs(lat)).toBeLessThanOrEqual(85)
+    expect(Math.abs(lat)).toBeLessThanOrEqual(90)
   }
 })

@@ -1,7 +1,7 @@
 import type { Layer } from '@deck.gl/core'
 import { Matrix4 } from '@math.gl/core'
 import { PathStyleExtension, type PathStyleExtensionProps } from '@deck.gl/extensions'
-import { PathLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers'
+import { PathLayer, ScatterplotLayer, SolidPolygonLayer, TextLayer } from '@deck.gl/layers'
 import { formatOffset, hhmm, hhmmss } from '../shared/format'
 import {
   DEFAULT_SPAN,
@@ -16,6 +16,7 @@ import {
   type TrackSample,
   type TrackSpan,
 } from '../orbit/orbit'
+import { POLE_CAP } from '../orbit/sun'
 import { FAMILY_COLORS, type Rgba } from '../shared/palette'
 
 export interface SatelliteDatum {
@@ -80,6 +81,24 @@ function ghostReach(sat: Satellite, ghostMs: number, nowMs: number, span: TrackS
   return null
 }
 
+/**
+ * A polar cap as 36 cells of 10° from the rim to just short of the pole: in longitude and latitude a cap is a
+ * band across all longitudes, which the globe renderer only draws right in pieces narrower than half the world.
+ */
+function capCells(rimLat: number): LonLat[][] {
+  const pole = Math.sign(rimLat) * 89.99
+  const cells: LonLat[][] = []
+  for (let lon = -180; lon < 180; lon += 10) {
+    cells.push([
+      [lon, rimLat],
+      [lon + 10, rimLat],
+      [lon + 10, pole],
+      [lon, pole],
+    ])
+  }
+  return cells
+}
+
 const TAIL_CHUNKS = 60
 /** Share of the flown half over which the tail fades from full to floor; flat beyond it. */
 const TAIL_FADE_SPAN = 0.12
@@ -136,11 +155,6 @@ export function buildLayers(
   globe = false,
 ): Layer[] {
   const nowMs = now.getTime()
-  // Depth hides the far side of the globe; on the flat map nothing needs hiding and the test only causes z-fighting.
-  const depth = { depthCompare: globe ? 'less-equal' : 'always' } as const
-  // A translation applied after tessellation: deck's globe grid cutter mangles paths given a third coordinate.
-  const modelMatrix = globe ? new Matrix4().translate([0, 0, GLOBE_LIFT_M]) : undefined
-  const surface = { modelMatrix, parameters: depth } as const
   const segments = tracks.flatMap((track) => segmentsOf(track, nowMs))
   const positions: PositionDatum[] = satellites.flatMap((sat) => {
     const p = positionAt(sat, now)
@@ -157,8 +171,24 @@ export function buildLayers(
   const emphasis = (d: SatelliteDatum): 'selected' | 'dimmed' | 'normal' =>
     selected === null ? 'normal' : d.noradId === selected ? 'selected' : 'dimmed'
   const color = (d: SatelliteDatum, alpha: number): Rgba => [...FAMILY_COLORS[d.family], alpha]
-
+  // Depth hides the far side of the globe; on the flat map nothing needs hiding and the test only causes z-fighting.
+  const depth = { depthCompare: globe ? 'less-equal' : 'always' } as const
+  // A translation applied after tessellation: deck's globe grid cutter mangles paths given a third coordinate.
+  const modelMatrix = globe ? new Matrix4().translate([0, 0, GLOBE_LIFT_M]) : undefined
+  const surface = { modelMatrix, parameters: depth } as const
+  // Beyond ±85° the basemap has no data and draws a fan that picks up whatever touches it. Rather than patch
+  // the night and the reach into that, the caps are blank discs in the page color: honest holes.
+  const caps = [...capCells(POLE_CAP), ...capCells(-POLE_CAP)]
   const layers: Layer[] = [
+    new SolidPolygonLayer<LonLat[]>({
+      id: 'poles',
+      data: caps,
+      wrapLongitude: !globe,
+      getPolygon: (d) => d,
+      getFillColor: [11, 13, 20, 255],
+      pickable: false,
+      ...surface,
+    }),
     new PathLayer<SegmentDatum>({
       id: 'tracks',
       data: segments,

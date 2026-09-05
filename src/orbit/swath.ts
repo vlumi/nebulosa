@@ -23,9 +23,6 @@ export function inReach(offNadirDeg: number): boolean {
   return offNadirDeg >= STEERING.minDeg && offNadirDeg <= STEERING.maxDeg
 }
 
-/** Web Mercator has no poles; the far edge of a ribbon beside a near-polar track is clipped here. */
-const LAT_LIMIT = 85
-
 function destination([lon, lat]: LonLat, bearingRad: number, distanceKm: number): LonLat {
   const d = distanceKm / EARTH_RADIUS_KM
   const lat1 = lat * RAD
@@ -34,7 +31,7 @@ function destination([lon, lat]: LonLat, bearingRad: number, distanceKm: number)
     Math.sin(bearingRad) * Math.sin(d) * Math.cos(lat1),
     Math.cos(d) - Math.sin(lat1) * Math.sin(lat2),
   )
-  return [((lon + dLon * DEG + 540) % 360) - 180, Math.max(-LAT_LIMIT, Math.min(LAT_LIMIT, lat2 * DEG))]
+  return [((lon + dLon * DEG + 540) % 360) - 180, lat2 * DEG]
 }
 
 function bearing([lon1, lat1]: LonLat, [lon2, lat2]: LonLat): number {
@@ -46,11 +43,12 @@ function bearing([lon1, lat1]: LonLat, [lon2, lat2]: LonLat): number {
   return Math.atan2(y, x)
 }
 
-const SAMPLES_PER_POLYGON = 20
+/** Two segments per polygon: small pieces follow the sphere closely, and none can fold over near the poles. */
+const SAMPLES_PER_POLYGON = 2
 
 /**
  * The ground the radar can reach along a track: a ribbon on each side, from the nearest to the farthest
- * look, cut into polygons of a few samples each so the renderer can wrap them at the antimeridian.
+ * look, as a run of small quads.
  */
 export function reachRibbons(samples: TrackSample[]): LonLat[][] {
   if (samples.length < 2) return []

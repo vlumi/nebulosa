@@ -1,11 +1,12 @@
 import { act, render } from '@testing-library/react'
 import { MapLibreOverlay } from '@deck.gl/maplibre'
-import { Map as MapLibre } from 'maplibre-gl'
+import { Map as MapLibre, Marker } from 'maplibre-gl'
 import { epochOf } from '../orbit/elements'
 import { strix1, strix9 } from '../test/fixtures'
 
 const tokyo = { lat: 35.68, lon: 139.69 }
 const tokyoPlace = { id: 'tokyo', name: 'Tokyo', ...tokyo }
+import { fitZoom } from './fit'
 import { MapView } from './MapView'
 import { positionAt, satelliteFrom } from '../orbit/orbit'
 
@@ -47,7 +48,9 @@ const { mapInstance, overlayInstance, markerInstance } = vi.hoisted(() => {
       setPaintProperty: vi.fn(),
       zoom: 1.5,
       getZoom: vi.fn(() => mapInstance.zoom),
-      getCanvas: vi.fn(() => ({ clientWidth: 640, clientHeight: 480 })),
+      getCanvas: vi.fn(() => ({ clientWidth: 640, clientHeight: 480, width: 1280, height: 960 })),
+      getCenter: vi.fn(() => ({ lng: 139.7, lat: 35.7 })),
+      unproject: vi.fn(() => ({ lng: 139.7, lat: 35.7 })),
       labels: [] as unknown[],
       queryRenderedFeatures: vi.fn(() => mapInstance.labels),
       project: vi.fn(([lon, lat]: [number, number]) => ({ x: lon, y: lat })),
@@ -103,7 +106,7 @@ test('mounts a MapLibre map with a deck.gl overlay and feeds it the layers', () 
   )
   expect(mapInstance.addControl).toHaveBeenCalledWith(overlayInstance)
   const layers = overlayInstance.setProps.mock.lastCall![0].layers
-  expect(layers.map((l: { id: string }) => l.id)).toEqual(['tracks', 'positions', 'labels'])
+  expect(layers.map((l: { id: string }) => l.id)).toEqual(['poles', 'tracks', 'positions', 'labels'])
 
   const overlayProps = vi.mocked(MapLibreOverlay).mock.calls[0][0] as {
     onClick: (info: unknown) => void
@@ -286,9 +289,9 @@ test('a focus request with a time centers on the position at that time, not the 
   expect(center[1]).toBeCloseTo(expected.lat, 6)
 })
 
-test('night and reach are MapLibre fill layers fed once the style loads; the globe toggles the projection and yields to flat past zoom 5.5', () => {
+test('night and reach are MapLibre fills fed once the style loads; the projection follows the toggle, yields to flat past zoom 5.5, and lifts deck geometry on the globe', () => {
   const sats = [strix1, strix9].map(satelliteFrom)
-  const { rerender } = render(
+  const view = (globe: boolean) => (
     <MapView
       satellites={sats}
       now={epochOf(strix1)}
@@ -300,9 +303,10 @@ test('night and reach are MapLibre fill layers fed once the style loads; the glo
       onPlaceMove={vi.fn()}
       onPlaceAdd={vi.fn()}
       reach
-    />,
+      globe={globe}
+    />
   )
-  expect(mapInstance.addSource).not.toHaveBeenCalled()
+  const { rerender } = render(view(false))
   act(() => mapInstance.handlers['style.load']())
   expect(mapInstance.setProjection).toHaveBeenLastCalledWith({ type: 'mercator' })
   const added = mapInstance.addLayer.mock.calls as unknown as [{ id: string; type: string }][]
@@ -314,24 +318,9 @@ test('night and reach are MapLibre fill layers fed once the style loads; the glo
     string,
     { data: { geometry: { coordinates: unknown[] } } },
   ][]
-  const reachData = sources[1][1].data
-  expect(reachData.geometry.coordinates.length).toBeGreaterThan(10)
+  expect(sources[1][1].data.geometry.coordinates.length).toBeGreaterThan(10)
 
-  rerender(
-    <MapView
-      satellites={sats}
-      now={epochOf(strix1)}
-      selected={strix1.NORAD_CAT_ID}
-      onSelect={vi.fn()}
-      places={[tokyoPlace]}
-      placeId="tokyo"
-      onPlaceSelect={vi.fn()}
-      onPlaceMove={vi.fn()}
-      onPlaceAdd={vi.fn()}
-      reach
-      globe
-    />,
-  )
+  rerender(view(true))
   expect(mapInstance.setProjection).toHaveBeenLastCalledWith({ type: 'globe' })
   mapInstance.zoom = 7
   act(() => mapInstance.handlers['zoom']())
@@ -340,11 +329,21 @@ test('night and reach are MapLibre fill layers fed once the style loads; the glo
   act(() => mapInstance.handlers['zoom']())
   expect(mapInstance.setProjection).toHaveBeenLastCalledWith({ type: 'globe' })
   const layers = overlayInstance.setProps.mock.lastCall![0].layers
+  expect(layers.map((l: { id: string }) => l.id).slice(0, 2)).toEqual(['poles', 'tracks'])
   const tracks = layers.find((l: { id: string }) => l.id === 'tracks')
   expect(tracks.props.modelMatrix[14]).toBe(30_000)
 })
 
-test('a map resize hands the overlay the new canvas size', () => {
+test('the initial zoom fits the container: the globe to the shorter side, the flat world to the width', () => {
+  expect(fitZoom(1400, 900, true)).toBeCloseTo(2.23, 1)
+  expect(fitZoom(390, 844, true)).toBeCloseTo(1.02, 1)
+  expect(fitZoom(1400, 900, false)).toBeCloseTo(1.22, 1)
+  expect(fitZoom(100, 100, true)).toBe(0.5)
+  expect(fitZoom(4000, 4000, true)).toBeCloseTo(4.38, 1)
+  expect(fitZoom(8000, 8000, true)).toBe(5)
+})
+
+test('a map resize sets the deck viewport to the canvas size without touching the canvas', () => {
   const sats = [strix1, strix9].map(satelliteFrom)
   render(
     <MapView
@@ -359,6 +358,54 @@ test('a map resize hands the overlay the new canvas size', () => {
       onPlaceAdd={vi.fn()}
     />,
   )
+  const framebuffer = { resize: vi.fn() }
+  const surface = {
+    cssWidth: 0,
+    cssHeight: 0,
+    setDrawingBufferSize: vi.fn(),
+    getCurrentFramebuffer: () => framebuffer,
+  }
+  const deck = {
+    width: 0,
+    height: 0,
+    viewManager: { setProps: vi.fn() },
+    layerManager: { activateViewport: vi.fn() },
+    getViewports: () => ['viewport'],
+    userData: { currentViewport: 'stale' } as { currentViewport?: unknown },
+    device: { getDefaultCanvasContext: () => surface },
+  }
+  ;(overlayInstance as unknown as { _deck: unknown })._deck = deck
   act(() => mapInstance.handlers['resize']())
-  expect(overlayInstance.setProps).toHaveBeenLastCalledWith({ width: 640, height: 480 })
+  expect(deck.width).toBe(640)
+  expect(deck.height).toBe(480)
+  expect(deck.viewManager.setProps).toHaveBeenCalledWith({ width: 640, height: 480 })
+  expect(deck.layerManager.activateViewport).toHaveBeenCalledWith('viewport')
+  expect([surface.cssWidth, surface.cssHeight]).toEqual([640, 480])
+  expect(surface.setDrawingBufferSize).toHaveBeenCalledWith(1280, 960)
+  expect(framebuffer.resize).toHaveBeenCalledWith([1280, 960])
+  expect(deck.userData.currentViewport).toBeUndefined()
+  expect(overlayInstance.setProps).not.toHaveBeenCalledWith(expect.objectContaining({ width: expect.anything() }))
+})
+
+test('a pin behind the globe is invisible and cannot be grabbed', () => {
+  render(
+    <MapView
+      satellites={[]}
+      now={epochOf(strix1)}
+      selected={null}
+      onSelect={vi.fn()}
+      places={[tokyoPlace]}
+      placeId="tokyo"
+      onPlaceSelect={vi.fn()}
+      onPlaceMove={vi.fn()}
+      onPlaceAdd={vi.fn()}
+    />,
+  )
+  expect(vi.mocked(Marker).mock.calls.at(-1)![0]).toMatchObject({ opacityWhenCovered: '0' })
+  markerInstance.element.style.opacity = '0'
+  act(() => mapInstance.handlers['render']())
+  expect(markerInstance.element.style.pointerEvents).toBe('none')
+  markerInstance.element.style.opacity = '1'
+  act(() => mapInstance.handlers['render']())
+  expect(markerInstance.element.style.pointerEvents).toBe('')
 })

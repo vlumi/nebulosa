@@ -3,8 +3,6 @@ import type { LonLat } from './orbit'
 
 const DEG = 180 / Math.PI
 const RAD = Math.PI / 180
-/** Web Mercator cannot show the poles; the night polygon is closed here instead of at ±90°. */
-const POLE_CAP = 85
 
 export interface SubsolarPoint {
   lon: number
@@ -17,6 +15,9 @@ export function subsolarPoint(date: Date): SubsolarPoint {
   const lon = (((rtasc - gstime(date)) * DEG + 540) % 360) - 180
   return { lon, lat: decl * DEG }
 }
+
+/** Web Mercator, and so MapLibre's fills, end here; the polar caps beyond are blank discs. */
+export const POLE_CAP = 85
 
 /**
  * The night side as a polygon: the terminator curve sampled per degree of longitude, closed

@@ -19,10 +19,10 @@ Every capture, one per milestone, is shown in [docs/screenshots](docs/screenshot
 - Every StriX satellite's current position and ground track, propagated with SGP4 from the latest mean elements, colored by orbit family: sun-synchronous in yellow, mid-inclination in cyan. The flown part of a track fades behind the satellite, so the direction of travel is readable at a glance.
 - A clock: live, paused, or playing at up to 600×, with a slider over ±12 hours and a date picker. Positions, tracks and the day/night terminator follow it.
 - Hover a track to see when the satellite is at that point. Tap a satellite, its label, its track, or its row in the list to select it; the list shows launch, orbit, altitude, period, eccentricity and element epoch, and the rest dims.
-- Places: several pins, added with a double click or a long press on the map, dragged to move, renamed or removed in their sheet, kept in the browser. One is selected at a time, or none.
+- Places: several pins, added with a double click or a long press on the map and named after the nearest place label the map is showing, dragged to move, renamed or removed in their sheet, kept in the browser. One is selected at a time, or none.
 - Passes over the selected place: the passes sheet lists every line-of-sight pass over the next 6 to 48 hours with rise, set and peak elevation, filterable by minimum elevation and to the selected satellite. Show a pass to see where the satellite will be at its peak, or jump the clock to it.
 - SAR reach: the band of ground 15° to 45° off nadir on either side of the selected satellite's track, and per pass, the look angle at the peak and whether it is inside that range. A satellite straight overhead cannot image the pin; one that peaks at 40° to 74° can.
-- A globe, by default: `G` or the Globe pill flattens it to Mercator and back. Everything above follows the projection and the far side is hidden, so a mid-inclination orbit and the terminator read at a glance.
+- A globe, by default: `G` or the Globe pill flattens it to Mercator and back. Everything above follows the projection and the far side is hidden, so a mid-inclination orbit and the terminator read at a glance. The basemap has no data beyond 85°, so the poles are blank discs.
 - The element epoch and its age are always visible, because stale elements mean degraded accuracy.
 
 Passes are geometric visibility above the horizon, not imaging opportunities. What the radar could reach is drawn from the one public figure, Synspective's stated 15° to 45° off-nadir steering range: selecting a satellite shades that band on both sides of its track, until the `SAR reach` toggle (or `R`) hides it, and a pass whose peak falls inside it is marked in the list, with an `in SAR reach` filter. Which side the antenna looks, the swath actually chosen and the tasking are not public, so nothing here claims to be an imaging opportunity.
@@ -41,7 +41,7 @@ npm test         # Vitest
 npm run lint     # oxlint
 ```
 
-Stack: React, TypeScript and Vite; satellite.js for SGP4; deck.gl interleaved into a MapLibre GL basemap with OpenFreeMap tiles; Vitest and React Testing Library. `scripts/screenshot.mjs` captures the site with headless Chrome over the DevTools protocol and reports page errors, with options to act on the page first, sweep the pointer across the map, and pick a viewport size.
+Stack: React, TypeScript and Vite; zustand for state; CSS Modules; satellite.js for SGP4; deck.gl interleaved into a MapLibre GL basemap with OpenFreeMap tiles; Vitest and React Testing Library. `scripts/screenshot.mjs` captures the site with headless Chrome over the DevTools protocol and reports page errors, with options to act on the page first, sweep the pointer across the map, and pick a viewport size.
 
 ## Deploy
 
