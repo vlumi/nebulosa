@@ -1,5 +1,5 @@
 import { act, render } from '@testing-library/react'
-import { MapboxOverlay } from '@deck.gl/mapbox'
+import { MapLibreOverlay } from '@deck.gl/maplibre'
 import { Map as MapLibre } from 'maplibre-gl'
 import { epochOf } from '../orbit/elements'
 import { strix1, strix9 } from '../test/fixtures'
@@ -24,7 +24,31 @@ const { mapInstance, overlayInstance, markerInstance } = vi.hoisted(() => {
     getLngLat: vi.fn(() => markerInstance.lngLat),
   }
   return {
-    mapInstance: { addControl: vi.fn(), remove: vi.fn(), easeTo: vi.fn() },
+    mapInstance: {
+      addControl: vi.fn(),
+      remove: vi.fn(),
+      easeTo: vi.fn(),
+      handlers: {} as Record<string, () => void>,
+      on: vi.fn(function (this: unknown, event: string, handler: () => void) {
+        mapInstance.handlers[event] = handler
+      }),
+      off: vi.fn(),
+      sources: {} as Record<string, { setData: ReturnType<typeof vi.fn> }>,
+      addSource: vi.fn((id: string) => {
+        mapInstance.sources[id] = { setData: vi.fn() }
+      }),
+      getSource: vi.fn((id: string) => mapInstance.sources[id]),
+      addLayer: vi.fn(),
+      getLayer: vi.fn((id: string) => (mapInstance.sources[id] ? { id } : undefined)),
+      setPaintProperty: vi.fn(),
+      zoom: 1.5,
+      getZoom: vi.fn(() => mapInstance.zoom),
+      projection: undefined as { type: string } | undefined,
+      getProjection: vi.fn(() => mapInstance.projection),
+      setProjection: vi.fn((projection: { type: string }) => {
+        mapInstance.projection = projection
+      }),
+    },
     overlayInstance: { setProps: vi.fn() },
     markerInstance,
   }
@@ -40,8 +64,8 @@ vi.mock('maplibre-gl', () => ({
   setWorkerUrl: vi.fn(),
 }))
 vi.mock('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url', () => ({ default: '/worker.js' }))
-vi.mock('@deck.gl/mapbox', () => ({
-  MapboxOverlay: vi.fn(function () {
+vi.mock('@deck.gl/maplibre', () => ({
+  MapLibreOverlay: vi.fn(function () {
     return overlayInstance
   }),
 }))
@@ -68,9 +92,9 @@ test('mounts a MapLibre map with a deck.gl overlay and feeds it the layers', () 
   )
   expect(mapInstance.addControl).toHaveBeenCalledWith(overlayInstance)
   const layers = overlayInstance.setProps.mock.lastCall![0].layers
-  expect(layers.map((l: { id: string }) => l.id)).toEqual(['night', 'tracks', 'positions', 'labels'])
+  expect(layers.map((l: { id: string }) => l.id)).toEqual(['tracks', 'positions', 'labels'])
 
-  const overlayProps = vi.mocked(MapboxOverlay).mock.calls[0][0] as {
+  const overlayProps = vi.mocked(MapLibreOverlay).mock.calls[0][0] as {
     onClick: (info: unknown) => void
     onHover: (info: unknown) => void
     pickingRadius: number
@@ -183,4 +207,57 @@ test('a focus request with a time centers on the position at that time, not the 
   const { center } = mapInstance.easeTo.mock.lastCall![0]
   expect(center[0]).toBeCloseTo(expected.lon, 6)
   expect(center[1]).toBeCloseTo(expected.lat, 6)
+})
+
+test('night and reach are MapLibre fill layers fed once the style loads; the globe toggles the projection and yields to flat past zoom 5.5', () => {
+  const sats = [strix1, strix9].map(satelliteFrom)
+  const { rerender } = render(
+    <MapView
+      satellites={sats}
+      now={epochOf(strix1)}
+      selected={strix1.NORAD_CAT_ID}
+      onSelect={vi.fn()}
+      location={tokyo}
+      onLocationChange={vi.fn()}
+      reach
+    />,
+  )
+  expect(mapInstance.addSource).not.toHaveBeenCalled()
+  act(() => mapInstance.handlers['style.load']())
+  expect(mapInstance.setProjection).toHaveBeenLastCalledWith({ type: 'mercator' })
+  const added = mapInstance.addLayer.mock.calls as unknown as [{ id: string; type: string }][]
+  expect(added.map(([layer]) => [layer.id, layer.type])).toEqual([
+    ['night', 'fill'],
+    ['reach', 'fill'],
+  ])
+  const sources = mapInstance.addSource.mock.calls as unknown as [
+    string,
+    { data: { geometry: { coordinates: unknown[] } } },
+  ][]
+  const reachData = sources[1][1].data
+  expect(reachData.geometry.coordinates.length).toBeGreaterThan(10)
+
+  rerender(
+    <MapView
+      satellites={sats}
+      now={epochOf(strix1)}
+      selected={strix1.NORAD_CAT_ID}
+      onSelect={vi.fn()}
+      location={tokyo}
+      onLocationChange={vi.fn()}
+      reach
+      globe
+    />,
+  )
+  expect(mapInstance.setProjection).toHaveBeenLastCalledWith({ type: 'globe' })
+  mapInstance.zoom = 7
+  act(() => mapInstance.handlers['zoom']())
+  expect(mapInstance.setProjection).toHaveBeenLastCalledWith({ type: 'mercator' })
+  mapInstance.zoom = 3
+  act(() => mapInstance.handlers['zoom']())
+  expect(mapInstance.setProjection).toHaveBeenLastCalledWith({ type: 'globe' })
+  const layers = overlayInstance.setProps.mock.lastCall![0].layers
+  const tracks = layers.find((l: { id: string }) => l.id === 'tracks')
+  const path = tracks.props.getPath(tracks.props.data[0]) as number[][]
+  expect(path[0][2]).toBe(30_000)
 })

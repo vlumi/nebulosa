@@ -1,6 +1,6 @@
 import type { Layer } from '@deck.gl/core'
 import { PathStyleExtension, type PathStyleExtensionProps } from '@deck.gl/extensions'
-import { PathLayer, ScatterplotLayer, SolidPolygonLayer, TextLayer } from '@deck.gl/layers'
+import { PathLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers'
 import { formatOffset, hhmm, hhmmss } from '../shared/format'
 import {
   DEFAULT_SPAN,
@@ -14,8 +14,6 @@ import {
   type TrackSample,
   type TrackSpan,
 } from '../orbit/orbit'
-import { nightPolygon } from '../orbit/sun'
-import { reachRibbons } from '../orbit/swath'
 import { FAMILY_COLORS, type Rgba } from '../shared/palette'
 
 export interface SatelliteDatum {
@@ -105,6 +103,12 @@ function segmentsOf(track: TrackDatum, nowMs: number): SegmentDatum[] {
   return segments
 }
 
+/**
+ * On the globe, deck draws straight chords between samples while the basemap draws its own faceted sphere;
+ * geometry at exactly ground level sinks in and out of that mesh, so it floats this high instead.
+ */
+const GLOBE_LIFT_M = 30_000
+
 const ALPHA = {
   selected: { ahead: 255, oldest: 130 },
   normal: { ahead: 200, oldest: 40 },
@@ -127,9 +131,13 @@ export function buildLayers(
   hover: Hover | null = null,
   ghost: Ghost | null = null,
   span: TrackSpan = DEFAULT_SPAN,
-  reach = false,
+  globe = false,
 ): Layer[] {
   const nowMs = now.getTime()
+  const lift = globe ? GLOBE_LIFT_M : 0
+  // Depth hides the far side of the globe; on the flat map nothing needs hiding and the test only causes z-fighting.
+  const depth = { depthCompare: globe ? 'less-equal' : 'always' } as const
+  const above = ([lon, lat]: LonLat): [number, number, number] => [lon, lat, lift]
   const segments = tracks.flatMap((track) => segmentsOf(track, nowMs))
   const positions: PositionDatum[] = satellites.flatMap((sat) => {
     const p = positionAt(sat, now)
@@ -148,69 +156,50 @@ export function buildLayers(
   const color = (d: SatelliteDatum, alpha: number): Rgba => [...FAMILY_COLORS[d.family], alpha]
 
   const layers: Layer[] = [
-    new SolidPolygonLayer<LonLat[]>({
-      id: 'night',
-      data: [nightPolygon(now)],
-      getPolygon: (d) => d,
-      getFillColor: [0, 4, 20, 90],
-      pickable: false,
-    }),
     new PathLayer<SegmentDatum>({
       id: 'tracks',
       data: segments,
       pickable: true,
       wrapLongitude: true,
-      getPath: (d) => d.path,
+      getPath: (d) => d.path.map(above),
       getColor: (d) => {
         const { ahead, oldest } = ALPHA[emphasis(d)]
         return color(d, Math.round(ahead + (oldest - ahead) * tailFade(d.age)))
       },
       getWidth: (d) => WIDTH[emphasis(d)],
       widthUnits: 'pixels',
-      updateTriggers: { getColor: selected, getWidth: selected },
+      parameters: depth,
+      updateTriggers: { getPath: lift, getColor: selected, getWidth: selected },
     }),
     new ScatterplotLayer<PositionDatum>({
       id: 'positions',
       data: positions,
       pickable: true,
-      getPosition: (d) => d.lonLat,
+      getPosition: (d) => above(d.lonLat),
       getFillColor: (d) => color(d, emphasis(d) === 'dimmed' ? 50 : 255),
       getLineColor: [11, 13, 20],
       stroked: true,
       lineWidthMinPixels: 1.5,
       getRadius: (d) => (emphasis(d) === 'selected' ? 8 : 5),
       radiusUnits: 'pixels',
-      updateTriggers: { getFillColor: selected, getRadius: selected },
+      parameters: depth,
+      updateTriggers: { getPosition: lift, getFillColor: selected, getRadius: selected },
     }),
     new TextLayer<PositionDatum>({
       id: 'labels',
       data: positions,
       pickable: true,
-      getPosition: (d) => d.lonLat,
+      getPosition: (d) => above(d.lonLat),
       getText: (d) => d.name,
       getColor: (d) => [214, 217, 224, emphasis(d) === 'dimmed' ? 90 : 255],
       getSize: 12,
       getPixelOffset: [0, -14],
       fontFamily: 'system-ui, sans-serif',
-      updateTriggers: { getColor: selected },
+      updateTriggers: { getPosition: lift, getColor: selected },
+      // On the globe the text quads face away from the camera for half the sphere; culling would drop them.
+      parameters: { ...depth, cullMode: 'none' },
     }),
   ]
-
-  const reachTrack = reach && selected !== null ? tracks.find((t) => t.noradId === selected) : undefined
-  if (reachTrack) {
-    layers.splice(
-      1,
-      0,
-      new SolidPolygonLayer<LonLat[]>({
-        id: 'reach',
-        data: reachRibbons(reachTrack.samples),
-        getPolygon: (d) => d,
-        getFillColor: color(reachTrack, 45),
-        wrapLongitude: true,
-        pickable: false,
-      }),
-    )
-  }
 
   const ghostSat = ghost && satellites.find((s) => s.omm.NORAD_CAT_ID === ghost.noradId)
   const ghostPosition = ghostSat && positionAt(ghostSat, new Date(ghost.timeMs))
@@ -232,12 +221,13 @@ export function buildLayers(
           data: [continuation],
           pickable: true,
           wrapLongitude: true,
-          getPath: (d) => d.samples.map((sample) => sample.lonLat),
+          getPath: (d) => d.samples.map((sample) => above(sample.lonLat)),
           getColor: [...FAMILY_COLORS[ghostSat.family], 150],
           getWidth: 1.5,
           widthUnits: 'pixels',
           getDashArray: [6, 4],
           extensions: [new PathStyleExtension({ dash: true })],
+          parameters: depth,
         }),
       )
     }
@@ -245,18 +235,19 @@ export function buildLayers(
       new ScatterplotLayer<typeof datum>({
         id: 'ghost',
         data: [datum],
-        getPosition: (d) => d.lonLat,
+        getPosition: (d) => above(d.lonLat),
         getLineColor: (d) => FAMILY_COLORS[d.family],
         filled: false,
         stroked: true,
         lineWidthMinPixels: 2,
         getRadius: 7,
         radiusUnits: 'pixels',
+        parameters: depth,
       }),
       new TextLayer<typeof datum>({
         id: 'ghost-label',
         data: [datum],
-        getPosition: (d) => d.lonLat,
+        getPosition: (d) => above(d.lonLat),
         getText: () => `${ghostSat.omm.OBJECT_NAME} · ${hhmm(ghost.timeMs)} UTC`,
         getColor: [214, 217, 224],
         getSize: 12,
@@ -266,6 +257,7 @@ export function buildLayers(
         backgroundPadding: [6, 3],
         fontFamily: 'system-ui, sans-serif',
         characterSet: 'auto',
+        parameters: depth,
       }),
     )
   }
@@ -276,15 +268,16 @@ export function buildLayers(
       new ScatterplotLayer<Hover>({
         id: 'hover-marker',
         data: [hover],
-        getPosition: (d) => d.lonLat,
+        getPosition: (d) => above(d.lonLat),
         getFillColor: [255, 255, 255],
         getRadius: 4,
         radiusUnits: 'pixels',
+        parameters: depth,
       }),
       new TextLayer<Hover>({
         id: 'hover-label',
         data: [hover],
-        getPosition: (d) => d.lonLat,
+        getPosition: (d) => above(d.lonLat),
         getText: () => `${name} · ${hhmmss(hover.timeMs)} UTC · ${formatOffset(hover.timeMs, nowMs)}`,
         getColor: [214, 217, 224],
         getSize: 12,
@@ -294,6 +287,7 @@ export function buildLayers(
         backgroundPadding: [6, 3],
         fontFamily: 'system-ui, sans-serif',
         characterSet: 'auto',
+        parameters: depth,
       }),
     )
   }

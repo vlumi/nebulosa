@@ -6,7 +6,17 @@ import { strix1, strix9 } from './test/fixtures'
 
 vi.mock('maplibre-gl', () => ({
   Map: vi.fn(function () {
-    return { addControl: vi.fn(), remove: vi.fn(), easeTo: vi.fn() }
+    return {
+      addControl: vi.fn(),
+      remove: vi.fn(),
+      easeTo: vi.fn(),
+      on: vi.fn(),
+      off: vi.fn(),
+      isStyleLoaded: () => false,
+      getSource: vi.fn(),
+      getLayer: vi.fn(),
+      setProjection: vi.fn(),
+    }
   }),
   Marker: vi.fn(function () {
     const marker = {
@@ -21,8 +31,8 @@ vi.mock('maplibre-gl', () => ({
   setWorkerUrl: vi.fn(),
 }))
 vi.mock('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url', () => ({ default: '/worker.js' }))
-vi.mock('@deck.gl/mapbox', () => ({
-  MapboxOverlay: vi.fn(function () {
+vi.mock('@deck.gl/maplibre', () => ({
+  MapLibreOverlay: vi.fn(function () {
     return { setProps: vi.fn() }
   }),
 }))
