@@ -21,10 +21,10 @@ test('an empty or unreadable store yields the seed', () => {
 test('places round-trip through storage; a selection of a missing place is dropped', () => {
   const store = memory()
   const helsinki = { ...newPlace({ lat: 60.17, lon: 24.94 }), name: 'Helsinki' }
-  savePlaces({ places: [TOKYO, helsinki], placeId: helsinki.id }, store)
-  expect(loadPlaces(store)).toEqual({ places: [TOKYO, helsinki], placeId: helsinki.id })
-  savePlaces({ places: [TOKYO], placeId: 'gone' }, store)
-  expect(loadPlaces(store)).toEqual({ places: [TOKYO], placeId: null })
+  savePlaces({ places: [TOKYO, helsinki], placeId: helsinki.id, pinsLocked: true }, store)
+  expect(loadPlaces(store)).toEqual({ places: [TOKYO, helsinki], placeId: helsinki.id, pinsLocked: true })
+  savePlaces({ places: [TOKYO], placeId: 'gone', pinsLocked: false }, store)
+  expect(loadPlaces(store)).toEqual({ places: [TOKYO], placeId: null, pinsLocked: false })
 })
 
 test('a new place is named after its coordinates and gets a fresh id', () => {

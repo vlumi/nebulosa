@@ -54,6 +54,7 @@ interface Actions {
   addPlace: (location: Location, name?: string) => void
   /** Select a place, or none; from the list the map also centers on it. */
   selectPlace: (id: string | null, fly?: boolean) => void
+  setPinsLocked: (locked: boolean) => void
   movePlace: (id: string, location: Location) => void
   renamePlace: (id: string, name: string) => void
   removePlace: (id: string) => void
@@ -132,6 +133,7 @@ export const useApp = create<State & Actions>((set, get) => ({
   movePlace: (id, location) =>
     set((s) => ({ places: s.places.map((p) => (p.id === id ? { ...p, lat: location.lat, lon: location.lon } : p)) })),
   renamePlace: (id, name) => set((s) => ({ places: s.places.map((p) => (p.id === id ? { ...p, name } : p)) })),
+  setPinsLocked: (pinsLocked) => set({ pinsLocked }),
   removePlace: (id) =>
     set((s) => ({ places: s.places.filter((p) => p.id !== id), placeId: s.placeId === id ? null : s.placeId })),
   setFilters: (filters) => set({ filters }),
@@ -148,8 +150,8 @@ export const useApp = create<State & Actions>((set, get) => ({
 }))
 
 useApp.subscribe((s, previous) => {
-  if (s.places !== previous.places || s.placeId !== previous.placeId)
-    savePlaces({ places: s.places, placeId: s.placeId })
+  if (s.places !== previous.places || s.placeId !== previous.placeId || s.pinsLocked !== previous.pinsLocked)
+    savePlaces({ places: s.places, placeId: s.placeId, pinsLocked: s.pinsLocked })
 })
 
 /** The place passes are computed for, if one is selected. */

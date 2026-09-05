@@ -9,6 +9,7 @@ test('lists places with the selected one pressed; selecting, unselecting, renami
   const onSelect = vi.fn()
   const onRename = vi.fn()
   const onRemove = vi.fn()
+  const onLockChange = vi.fn()
   render(
     <PlaceList
       places={[TOKYO, helsinki]}
@@ -16,8 +17,12 @@ test('lists places with the selected one pressed; selecting, unselecting, renami
       onSelect={onSelect}
       onRename={onRename}
       onRemove={onRemove}
+      pinsLocked={false}
+      onLockChange={onLockChange}
     />,
   )
+  await userEvent.click(screen.getByRole('checkbox', { name: 'Lock pins' }))
+  expect(onLockChange).toHaveBeenCalledWith(true)
   expect(screen.getByRole('button', { name: /^Tokyo/ })).toHaveAttribute('aria-pressed', 'true')
   expect(screen.getByRole('button', { name: /^Helsinki 60.17°N 24.94°E/ })).toHaveAttribute('aria-pressed', 'false')
 

@@ -196,6 +196,8 @@ function App() {
                 }}
                 onRename={app.renamePlace}
                 onRemove={app.removePlace}
+                pinsLocked={app.pinsLocked}
+                onLockChange={app.setPinsLocked}
               />
             </aside>
           )}
@@ -278,6 +280,7 @@ function LiveMap({
     focus,
     places,
     placeId,
+    pinsLocked,
     flyTo,
     span,
     reachVisible,
@@ -303,6 +306,7 @@ function LiveMap({
       placeId={placeId}
       onPlaceSelect={selectPlace}
       onPlaceMove={movePlace}
+      pinsLocked={pinsLocked}
       onPlaceAdd={addPlace}
       flyTo={flyTo}
       ghost={selection.ghost}

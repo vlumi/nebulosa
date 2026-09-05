@@ -26,6 +26,7 @@ const { mapInstance, overlayInstance, markerInstance } = vi.hoisted(() => {
     getLngLat: vi.fn(() => markerInstance.lngLat),
     element: document.createElement('div'),
     getElement: vi.fn(() => markerInstance.element),
+    setDraggable: vi.fn(),
     remove: vi.fn(),
   }
   return {
@@ -406,4 +407,22 @@ test('a pin behind the globe is invisible and cannot be grabbed', () => {
   markerInstance.element.style.opacity = '1'
   act(() => mapInstance.handlers['render']())
   expect(markerInstance.element.style.pointerEvents).toBe('')
+})
+
+test('locked pins are not draggable, and unlocking makes them draggable again', () => {
+  const props = {
+    satellites: [],
+    now: epochOf(strix1),
+    selected: null,
+    onSelect: vi.fn(),
+    places: [tokyoPlace],
+    placeId: 'tokyo',
+    onPlaceSelect: vi.fn(),
+    onPlaceMove: vi.fn(),
+    onPlaceAdd: vi.fn(),
+  }
+  const { rerender } = render(<MapView {...props} pinsLocked />)
+  expect(Marker).toHaveBeenLastCalledWith(expect.objectContaining({ draggable: false }))
+  rerender(<MapView {...props} pinsLocked={false} />)
+  expect(markerInstance.setDraggable).toHaveBeenLastCalledWith(true)
 })

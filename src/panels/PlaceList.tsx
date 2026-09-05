@@ -11,9 +11,11 @@ interface Props {
   onSelect: (id: string | null) => void
   onRename: (id: string, name: string) => void
   onRemove: (id: string) => void
+  pinsLocked: boolean
+  onLockChange: (locked: boolean) => void
 }
 
-export function PlaceList({ places, placeId, onSelect, onRename, onRemove }: Props) {
+export function PlaceList({ places, placeId, onSelect, onRename, onRemove, pinsLocked, onLockChange }: Props) {
   const [renaming, setRenaming] = useState<string | null>(null)
   return (
     <>
@@ -21,6 +23,9 @@ export function PlaceList({ places, placeId, onSelect, onRename, onRemove }: Pro
         Passes are computed for the selected place. Double-click the map, or press and hold on a phone, to add one; drag
         a pin to move it.
       </p>
+      <label className={styles.lock}>
+        <input type="checkbox" checked={pinsLocked} onChange={(e) => onLockChange(e.target.checked)} /> Lock pins
+      </label>
       <ul className={`${panel.list} ${styles.list}`}>
         {places.map((place) => {
           const isSelected = place.id === placeId

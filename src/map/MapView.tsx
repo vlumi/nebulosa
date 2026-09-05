@@ -107,6 +107,8 @@ interface Props {
   placeId: string | null
   onPlaceSelect: (id: string) => void
   onPlaceMove: (id: string, location: Location) => void
+  /** Pins cannot be dragged while locked. */
+  pinsLocked?: boolean
   /** A double click, or a long press on a touch screen; `name` is the nearest place label the basemap shows there, if any. */
   onPlaceAdd: (location: Location, name?: string) => void
   flyTo?: FlyTo | null
@@ -129,6 +131,7 @@ export function MapView({
   placeId,
   onPlaceSelect,
   onPlaceMove,
+  pinsLocked = false,
   onPlaceAdd,
   flyTo = null,
   ghost = null,
@@ -304,7 +307,7 @@ export function MapView({
         marker?.remove()
         // MapLibre only dims a pin behind the globe; here it vanishes, and the render hook below also stops it
         // taking the pointer, or a hidden pin could be grabbed and dragged onto the near side.
-        marker = new Marker({ draggable: true, color, opacityWhenCovered: '0' })
+        marker = new Marker({ draggable: !pinsLocked, color, opacityWhenCovered: '0' })
           .setLngLat([place.lon, place.lat])
           .addTo(m)
         marker.getElement().dataset.color = color
@@ -319,9 +322,10 @@ export function MapView({
         markers.current.set(place.id, marker)
       } else {
         marker.setLngLat([place.lon, place.lat])
+        marker.setDraggable(!pinsLocked)
       }
     }
-  }, [places, placeId, placeSelect, placeMove])
+  }, [places, placeId, pinsLocked, placeSelect, placeMove])
 
   useEffect(() => {
     if (flyTo) map.current?.easeTo({ center: [flyTo.lon, flyTo.lat], duration: 600 })
