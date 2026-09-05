@@ -42,13 +42,23 @@ function unwrapped(ring: LonLat[]): LonLat[] {
   })
 }
 
-/** The fill ends where Mercator does; the polar caps beyond show as blank, like the basemap there. */
-const belowCap = (ring: LonLat[]) => ring.every(([, lat]) => Math.abs(lat) <= POLE_CAP)
+/**
+ * The fill ends where Mercator does, at the rim of the blank polar cap: corners beyond it are pulled back onto
+ * the rim so the band runs into the disc without a staircase. A quad that straddles the pole itself spans half
+ * the world in longitude, which no longitude-based renderer draws right, and is left out under the disc.
+ */
+const toRim = (ring: LonLat[]): LonLat[] =>
+  ring.map(([lon, lat]) => [lon, Math.max(-POLE_CAP, Math.min(POLE_CAP, lat))])
+const narrow = (ring: LonLat[]) => {
+  const lons = ring.map(([lon]) => lon)
+  return Math.max(...lons) - Math.min(...lons) < 90
+}
 
 export function reachFeature(samples: TrackSample[]): Feature<MultiPolygon> {
   const rings = reachRibbons(samples)
-    .filter(belowCap)
+    .map(toRim)
     .map(unwrapped)
+    .filter(narrow)
     .map((ring) => [[...ring, ring[0]]])
   return { type: 'Feature', properties: {}, geometry: { type: 'MultiPolygon', coordinates: rings } }
 }
