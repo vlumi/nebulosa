@@ -105,7 +105,6 @@ Where a satellite is, has been and will be, beyond a highlighted track.
 
 ### Small things noticed along the way
 
-- After a jump to another date the time slider still spans ±12 h around real time and sits pinned at one end. It should span the chosen day, and Live returns to today.
 - The last two quads at either end of a reach ribbon render more saturated than the rest; the geometry is verified clean, so it is a rendering effect.
 
 ### M10 — theme

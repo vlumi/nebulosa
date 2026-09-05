@@ -22,7 +22,9 @@ test('pause, speed and scrub produce the corresponding clocks', async () => {
   await userEvent.click(screen.getByRole('radio', { name: '60×' }))
   expect(onChange.mock.lastCall![0].rate).toBe(60)
 
-  fireEvent.change(screen.getByRole('slider', { name: 'Time offset' }), { target: { value: String(2 * hour) } })
+  const slider = screen.getByRole('slider', { name: 'Time of day (UTC)' }) as HTMLInputElement
+  expect(Number(slider.value)).toBe(12 * hour)
+  fireEvent.change(slider, { target: { value: String(14 * hour) } })
   expect(simTime(onChange.mock.lastCall![0], t0.getTime())).toBe(t0.getTime() + 2 * hour)
 })
 
@@ -62,4 +64,19 @@ test('play resumes a paused clock at the speed it had, which stays selected; an 
 
   fireEvent.change(screen.getByLabelText('Date (UTC)'), { target: { value: '' } })
   expect(onChange).toHaveBeenCalledTimes(1)
+})
+
+test('after a jump to another date the slider spans that day, and Live returns to today', async () => {
+  const onChange = vi.fn()
+  const solstice = Date.parse('2026-12-21T09:30:00Z')
+  const clock = withPaused(scrubbedTo(liveClock(t0.getTime()), solstice, t0.getTime()), true, t0.getTime())
+  render(<TimeBar clock={clock} now={t0} onChange={onChange} />)
+  const slider = screen.getByRole('slider', { name: 'Time of day (UTC)' }) as HTMLInputElement
+  expect(Number(slider.value)).toBe(9.5 * hour)
+
+  fireEvent.change(slider, { target: { value: String(23 * hour) } })
+  expect(new Date(simTime(onChange.mock.lastCall![0], t0.getTime())).toISOString()).toBe('2026-12-21T23:00:00.000Z')
+
+  await userEvent.click(screen.getByRole('button', { name: 'Live' }))
+  expect(onChange.mock.lastCall![0]).toEqual(liveClock(t0.getTime()))
 })

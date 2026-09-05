@@ -60,7 +60,7 @@ A selected satellite with its details inline (launch, orbit, altitude, period, e
 
 ![m2](2026-09-04-m2.png)
 
-Time controls (live, play/pause, speed, ±12 h slider), day/night terminator, tracks fading behind each satellite, fiord basemap.
+Time controls (live, play/pause, speed, time-of-day slider), day/night terminator, tracks fading behind each satellite, fiord basemap.
 
 ## 2026-09-04 · M1
 

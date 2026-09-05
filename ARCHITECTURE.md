@@ -36,7 +36,7 @@ Two zustand stores. `store.ts` holds what the reader has chosen: the selection (
 
 ## Time
 
-**The clock** is a pair of anchors and a rate: `sim = anchorSim + (real − anchorReal) × rate`. Rate 1 with a zero offset is live, 10 to 600 is fast-forward, and a paused flag freezes the simulated time while keeping the rate, so play resumes at the speed that was chosen. Scrubbing moves the sim anchor; changing speed re-anchors at the current moment so nothing jumps, and also plays. The date picker moves to the chosen UTC date at the same time of day and pauses.
+**The clock** is a pair of anchors and a rate: `sim = anchorSim + (real − anchorReal) × rate`. Rate 1 with a zero offset is live, 10 to 600 is fast-forward, and a paused flag freezes the simulated time while keeping the rate, so play resumes at the speed that was chosen. Scrubbing moves the sim anchor; changing speed re-anchors at the current moment so nothing jumps, and also plays. The slider spans the displayed UTC day, so after a jump to another date it scrubs that day rather than sitting pinned at one end of a window around real time; the date picker moves to the chosen UTC date at the same time of day and pauses, and Live returns to today.
 
 **Smoothness.** Real time is read every animation frame, and the displayed simulated time eases toward the target with an exponential approach, time constant 120 ms, snapping when within a quarter second. A scrub therefore animates rather than cuts, and at 600× the display lags the true simulated time by a constant, invisible ~70 s while staying smooth. The easing loop is registered once and reads its target from a ref; re-registering it per frame canceled the pending step and froze the display, which was a real bug once.
 
