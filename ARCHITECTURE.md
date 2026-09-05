@@ -72,7 +72,7 @@ Layer order is the polar discs, tracks, positions, labels, then the ghost's dash
 
 ## Places
 
-Several pins, one selected or none, kept in the browser's `localStorage` and seeded with Tokyo. A double click, or a long press on a touch screen, drops one where the pointer is; it is named after the nearest settlement label the basemap is showing within 60 px, else the nearest country label, else its coordinates, and can be renamed. The names come from the tiles already on screen, so no service is asked and no coordinates leave the browser. Passes are computed for the selected place only. Pins are MapLibre HTML markers, which the globe does not occlude; a covered pin is made fully transparent and loses its pointer events each frame, or it could be grabbed through the planet and dragged to the near side.
+Several pins, one selected or none, kept in the browser's `localStorage` and seeded with Tokyo. A double click, or a long press on a touch screen, drops one where the pointer is; it is named after the nearest settlement label the basemap is showing within 60 px, else the nearest country label, else its coordinates, and can be renamed. The names come from the tiles already on screen, so no service is asked and no coordinates leave the browser. Passes are computed for the selected place only. Pins are MapLibre HTML markers, which the globe does not occlude; a covered pin is made fully transparent and loses its pointer events each frame, or it could be grabbed through the planet and dragged to the near side. A lock in the places sheet makes every pin undraggable, for the phone in a pocket and the careless mouse; it is kept with the places.
 
 ## Layout
 

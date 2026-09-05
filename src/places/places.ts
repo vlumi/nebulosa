@@ -11,10 +11,12 @@ export interface PlacesState {
   places: Place[]
   /** The selected place, or none. */
   placeId: string | null
+  /** Pins cannot be dragged while locked, so a stray drag cannot move a place. */
+  pinsLocked: boolean
 }
 
 export const TOKYO: Place = { id: 'tokyo', name: 'Tokyo', lat: 35.68, lon: 139.69 }
-export const SEED: PlacesState = { places: [TOKYO], placeId: TOKYO.id }
+export const SEED: PlacesState = { places: [TOKYO], placeId: TOKYO.id, pinsLocked: false }
 
 const KEY = 'nebulosa.places'
 
@@ -43,7 +45,7 @@ export function loadPlaces(store = storage()): PlacesState {
     const places = Array.isArray(parsed.places) ? parsed.places.filter(isPlace) : []
     if (places.length === 0) return SEED
     const placeId = places.some((p) => p.id === parsed.placeId) ? (parsed.placeId as string) : null
-    return { places, placeId }
+    return { places, placeId, pinsLocked: parsed.pinsLocked === true }
   } catch {
     return SEED
   }
