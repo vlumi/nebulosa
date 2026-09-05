@@ -82,7 +82,7 @@ The two panels cover the whole screen on a phone, and choosing something should 
 
 - A **toolbar of buttons along the bottom** (satellites, places, passes; the clock stays where it is), each showing its current selection while closed: the satellite's name and swatch, the place's name, the count and next time of passes.
 - Tapping a button opens **one sheet** with that list; choosing something closes the sheet on a phone. On desktop the same sheet opens as the left column does today, and choosing keeps it open, since there is room.
-- Keyboard scheme unchanged: S and P open the sheets, Esc closes them first.
+- Keyboard scheme: S, W and P open the sheets, ↑ ↓ step through the open one, Esc closes them first.
 - Open question: whether desktop keeps a permanently open column at all, or also goes to the toolbar with sheets. The toolbar-only design is simpler and one code path; the column shows more at once. Prototype the toolbar on both and decide with screenshots.
 - Conflicts: this rewrites `App.tsx`, the panels and their styles. Nothing else should be in flight against those files while it lands.
 

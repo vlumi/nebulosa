@@ -77,6 +77,7 @@ function App() {
       const passIndex = passes.findIndex(
         (p) => p.noradId === s.selection.activePass?.noradId && p.peakMs === s.selection.activePass?.peakMs,
       )
+      const placeIndex = s.places.findIndex((p) => p.id === s.placeId)
       switch (e.key) {
         case '?':
         case '/':
@@ -88,9 +89,12 @@ function App() {
         case 'ArrowDown':
         case 'ArrowUp': {
           const delta = e.key === 'ArrowDown' ? 1 : -1
-          if (e.shiftKey) {
+          if (s.sheet === 'passes') {
             const i = stepIndex(passIndex, delta, passes.length)
             if (i >= 0) s.showPass(passes[i])
+          } else if (s.sheet === 'places') {
+            const i = stepIndex(placeIndex, delta, s.places.length)
+            if (i >= 0) s.selectPlace(s.places[i].id, true)
           } else {
             const i = stepIndex(satelliteIndex, delta, satellites.length)
             if (i >= 0) s.selectFromList(satellites[i].omm.NORAD_CAT_ID)
@@ -121,6 +125,10 @@ function App() {
         case 'p':
         case 'P':
           s.toggleSheet('passes')
+          break
+        case 'w':
+        case 'W':
+          s.toggleSheet('places')
           break
         case 'o':
         case 'O':

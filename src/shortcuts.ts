@@ -1,12 +1,11 @@
 /** The keyboard scheme, in one place: the handler dispatches on it and the legend renders from it. */
 export const SHORTCUTS = [
-  { keys: '↑ ↓', does: 'satellite' },
-  { keys: '← →', does: 'probe along its track (Shift: 5 min)' },
-  { keys: 'Shift ↑ ↓', does: 'pass' },
+  { keys: '↑ ↓', does: 'step through the open panel' },
+  { keys: '← →', does: 'probe along the selected track (Shift: 5 min)' },
   { keys: '⏎', does: 'go to the pass' },
   { keys: 'Space', does: 'play / pause' },
   { keys: 'L', does: 'live' },
-  { keys: 'S P', does: 'panels' },
+  { keys: 'S W P', does: 'satellites, places, passes' },
   { keys: 'O', does: 'only the selected satellite\u2019s passes' },
   { keys: 'R', does: 'SAR reach beside the selected track' },
   { keys: 'G', does: 'globe / flat map' },
