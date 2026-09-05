@@ -12,7 +12,7 @@ interface Reply {
  * frame; the previous list stays on screen until the new one arrives. Where workers are unavailable
  * (tests), the same computation runs inline.
  */
-export function usePasses(elements: Omm[], location: Location, fromMs: number, hours: number): Pass[] {
+export function usePasses(elements: Omm[], location: Location | null, fromMs: number, hours: number): Pass[] {
   const [passes, setPasses] = useState<Pass[]>([])
   const worker = useRef<Worker | null>(null)
   const nextId = useRef(0)
@@ -27,6 +27,7 @@ export function usePasses(elements: Omm[], location: Location, fromMs: number, h
   }, [])
 
   useEffect(() => {
+    if (!location) return
     const request: PassRequest = { id: ++nextId.current, elements, location, fromMs, hours }
     if (!worker.current) {
       setPasses(computePasses(request))
@@ -40,5 +41,5 @@ export function usePasses(elements: Omm[], location: Location, fromMs: number, h
     return () => worker.current?.removeEventListener('message', onMessage)
   }, [elements, location, fromMs, hours])
 
-  return passes
+  return location ? passes : []
 }

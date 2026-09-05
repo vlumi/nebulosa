@@ -3,12 +3,13 @@ import panel from './panel.module.css'
 import { Segmented } from '../shared/Segmented'
 import styles from './PassList.module.css'
 import type { OrbitFamily } from '../orbit/orbit'
-import { compassPoint, dayLabel, formatLocation, hhmm, utcDayIndex } from '../shared/format'
-import { HORIZONS_H, MIN_ELEVATIONS, type Location, type Pass, type PassFilters } from '../orbit/passes'
+import { compassPoint, dayLabel, hhmm, utcDayIndex } from '../shared/format'
+import { HORIZONS_H, MIN_ELEVATIONS, type Pass, type PassFilters } from '../orbit/passes'
+import type { Place } from '../places/places'
 import { inReach, STEERING } from '../orbit/swath'
 
 interface Props {
-  location: Location
+  place: Place
   passes: Pass[]
   filters: PassFilters
   onFiltersChange: (filters: PassFilters) => void
@@ -24,7 +25,7 @@ interface Props {
 }
 
 export function PassList({
-  location,
+  place,
   passes,
   filters,
   onFiltersChange,
@@ -41,8 +42,8 @@ export function PassList({
     <>
       <div className={styles.header}>
         <p className="muted">
-          Line of sight above the horizon over {formatLocation(location)}. Drag the pin to move. Accent peaks are within
-          the radar's {STEERING.minDeg}–{STEERING.maxDeg}° steering range.
+          Line of sight above the horizon over {place.name}. Drag the pin to move. Accent peaks are within the radar's{' '}
+          {STEERING.minDeg}–{STEERING.maxDeg}° steering range.
         </p>
         <div className={styles.controls}>
           <label>

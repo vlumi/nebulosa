@@ -9,12 +9,13 @@ interface Props {
   sheet: Sheet | null
   onToggle: (sheet: Sheet) => void
   satellites: { count: number; selected?: { name: string; family: OrbitFamily } }
+  places: { count: number; selected?: string }
   /** Absent until the elements have loaded. */
   passes?: { count: number; active?: { name: string; peakMs: number } }
 }
 
 /** One pill per list. Each shows what is chosen in it while its sheet is closed, and opens the sheet on tap. */
-export function Toolbar({ sheet, onToggle, satellites, passes }: Props) {
+export function Toolbar({ sheet, onToggle, satellites, places, passes }: Props) {
   return (
     <div className={styles.toolbar} role="toolbar" aria-label="Lists">
       <button
@@ -32,6 +33,20 @@ export function Toolbar({ sheet, onToggle, satellites, passes }: Props) {
           </span>
         ) : (
           satellites.count > 0 && <span className="muted">· {satellites.count}</span>
+        )}
+      </button>
+      <button
+        type="button"
+        className={styles.pill}
+        aria-pressed={sheet === 'places'}
+        aria-controls="sheet"
+        onClick={() => onToggle('places')}
+      >
+        Places{' '}
+        {places.selected ? (
+          <span className={styles.chosen}>{places.selected}</span>
+        ) : (
+          <span className="muted">· {places.count > 0 ? 'none picked' : 'none'}</span>
         )}
       </button>
       {passes && (

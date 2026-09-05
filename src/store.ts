@@ -3,6 +3,7 @@ import type { Ghost } from './map/layers'
 import type { Focus } from './map/MapView'
 import { DEFAULT_SPAN, type TrackSpan } from './orbit/orbit'
 import { DEFAULT_FILTERS, type Location, type Pass, type PassFilters } from './orbit/passes'
+import { loadPlaces, newPlace, savePlaces, SEED, type Place, type PlacesState } from './places/places'
 import { liveClock, scrubbedTo, withRate, type Clock } from './time/clock'
 
 /** What the reader is looking at: a satellite, and possibly a pass of it with its ghost, or a probe along its track. */
@@ -15,14 +16,19 @@ export interface Selection {
 }
 
 export const NOTHING: Selection = { noradId: null, ghost: null, activePass: null, probeMs: null }
-export const TOKYO: Location = { lat: 35.68, lon: 139.69 }
+export { TOKYO } from './places/places'
 
-export type Sheet = 'satellites' | 'passes'
+export type Sheet = 'satellites' | 'places' | 'passes'
 
-interface State {
+/** A request to center the map on a point; `seq` makes repeated requests distinct. */
+export interface FlyTo extends Location {
+  seq: number
+}
+
+interface State extends PlacesState {
   selection: Selection
   focus: Focus | null
-  location: Location
+  flyTo: FlyTo | null
   filters: PassFilters
   span: TrackSpan
   clock: Clock
@@ -44,7 +50,13 @@ interface Actions {
   probe: (deltaMs: number, fromMs: number) => void
   /** Help first; then pass, ghost and probe; then the satellite. */
   escape: () => void
-  setLocation: (location: Location) => void
+  /** `name` from the map's labels when there is one nearby; else the coordinates. */
+  addPlace: (location: Location, name?: string) => void
+  /** Select a place, or none; from the list the map also centers on it. */
+  selectPlace: (id: string | null, fly?: boolean) => void
+  movePlace: (id: string, location: Location) => void
+  renamePlace: (id: string, name: string) => void
+  removePlace: (id: string) => void
   setFilters: (filters: PassFilters) => void
   toggleOnlySelected: () => void
   setSpan: (span: TrackSpan) => void
@@ -58,10 +70,11 @@ interface Actions {
   toggleGlobe: () => void
 }
 
-const initial = (): State => ({
+const initial = (places: PlacesState): State => ({
+  ...places,
   selection: NOTHING,
   focus: null,
-  location: TOKYO,
+  flyTo: null,
   filters: DEFAULT_FILTERS,
   span: DEFAULT_SPAN,
   clock: liveClock(Date.now()),
@@ -72,7 +85,7 @@ const initial = (): State => ({
 })
 
 export const useApp = create<State & Actions>((set, get) => ({
-  ...initial(),
+  ...initial(loadPlaces()),
 
   select: (noradId) => set({ selection: { ...NOTHING, noradId } }),
   selectFromList: (noradId, timeMs) =>
@@ -106,7 +119,20 @@ export const useApp = create<State & Actions>((set, get) => ({
       set({ selection: { ...NOTHING, noradId: selection.noradId } })
     else set({ selection: NOTHING })
   },
-  setLocation: (location) => set({ location }),
+  addPlace: (location, name) => set((s) => ({ places: [...s.places, newPlace(location, name)] })),
+  selectPlace: (id, fly = false) =>
+    set((s) => {
+      const place = s.places.find((p) => p.id === id)
+      return {
+        placeId: place ? place.id : null,
+        flyTo: fly && place ? { lat: place.lat, lon: place.lon, seq: (s.flyTo?.seq ?? 0) + 1 } : s.flyTo,
+      }
+    }),
+  movePlace: (id, location) =>
+    set((s) => ({ places: s.places.map((p) => (p.id === id ? { ...p, lat: location.lat, lon: location.lon } : p)) })),
+  renamePlace: (id, name) => set((s) => ({ places: s.places.map((p) => (p.id === id ? { ...p, name } : p)) })),
+  removePlace: (id) =>
+    set((s) => ({ places: s.places.filter((p) => p.id !== id), placeId: s.placeId === id ? null : s.placeId })),
   setFilters: (filters) => set({ filters }),
   toggleOnlySelected: () => set((s) => ({ filters: { ...s.filters, onlySelected: !s.filters.onlySelected } })),
   setSpan: (span) => set({ span }),
@@ -120,5 +146,13 @@ export const useApp = create<State & Actions>((set, get) => ({
   toggleGlobe: () => set((s) => ({ globe: !s.globe })),
 }))
 
-/** Back to the initial state; for tests. */
-export const resetApp = () => useApp.setState(initial())
+useApp.subscribe((s, previous) => {
+  if (s.places !== previous.places || s.placeId !== previous.placeId)
+    savePlaces({ places: s.places, placeId: s.placeId })
+})
+
+/** The place passes are computed for, if one is selected. */
+export const selectedPlace = (s: PlacesState): Place | null => s.places.find((p) => p.id === s.placeId) ?? null
+
+/** Back to the seed state; for tests. */
+export const resetApp = () => useApp.setState(initial(SEED))

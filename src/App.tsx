@@ -7,6 +7,7 @@ import { inReach } from './orbit/swath'
 import { usePasses } from './orbit/usePasses'
 import { Help } from './panels/Help'
 import { PassList } from './panels/PassList'
+import { PlaceList } from './panels/PlaceList'
 import { MapToggle } from './panels/MapToggle'
 import { ReachToggle } from './panels/ReachToggle'
 import { SatelliteList } from './panels/SatelliteList'
@@ -15,7 +16,7 @@ import { useNarrow } from './panels/useNarrow'
 import { belongsToFocusedControl, releaseFocusAfterPointerClick, stepIndex } from './shortcuts'
 import styles from './App.module.css'
 import panel from './panels/panel.module.css'
-import { useApp } from './store'
+import { selectedPlace, useApp } from './store'
 import { startFrameLoop, useFrame, useMinute } from './time/frame'
 import { TimeBar } from './time/TimeBar'
 
@@ -56,7 +57,8 @@ function App() {
   const byId = (noradId: number | null) => satellites.find((s) => s.omm.NORAD_CAT_ID === noradId)
 
   // Passes are listed from real time, so scrubbing the clock never changes the list under the reader.
-  const allPasses = usePasses(elements, app.location, minute * 60_000, app.filters.horizonHours)
+  const place = selectedPlace(app)
+  const allPasses = usePasses(elements, place, minute * 60_000, app.filters.horizonHours)
   const selectedSatellite = byId(app.selection.noradId)
   const passes = allPasses.filter(
     (p) =>
@@ -176,10 +178,29 @@ function App() {
               )}
             </aside>
           )}
-          {app.sheet === 'passes' && satellites.length > 0 && (
+          {app.sheet === 'places' && (
+            <aside id="sheet" className={`${panel.panel} ${styles.sheet}`} aria-label="Places">
+              <PlaceList
+                places={app.places}
+                placeId={app.placeId}
+                onSelect={(id) => {
+                  app.selectPlace(id, true)
+                  closeOnPhone()
+                }}
+                onRename={app.renamePlace}
+                onRemove={app.removePlace}
+              />
+            </aside>
+          )}
+          {app.sheet === 'passes' && satellites.length > 0 && !place && (
+            <aside id="sheet" className={`${panel.panel} ${styles.sheet}`} aria-label="Passes">
+              <p className="muted">Pick a place to see passes over it.</p>
+            </aside>
+          )}
+          {app.sheet === 'passes' && satellites.length > 0 && place && (
             <aside id="sheet" className={`${panel.panel} ${styles.sheet}`} aria-label="Passes">
               <PassList
-                location={app.location}
+                place={place}
                 passes={passes}
                 filters={app.filters}
                 onFiltersChange={app.setFilters}
@@ -207,6 +228,7 @@ function App() {
                 ? { name: selectedSatellite.omm.OBJECT_NAME, family: selectedSatellite.family }
                 : undefined,
             }}
+            places={{ count: app.places.length, selected: place?.name }}
             passes={
               satellites.length > 0
                 ? {
@@ -244,7 +266,20 @@ function LiveMap({
 }) {
   const timeMs = useFrame((f) => f.timeMs)
   const time = useMemo(() => new Date(timeMs), [timeMs])
-  const { selection, focus, location, span, reachVisible, globe, select, setLocation } = useApp()
+  const {
+    selection,
+    focus,
+    places,
+    placeId,
+    flyTo,
+    span,
+    reachVisible,
+    globe,
+    select,
+    selectPlace,
+    movePlace,
+    addPlace,
+  } = useApp()
   const probe: Hover | null = useMemo(() => {
     if (selection.probeMs === null || !selectedSatellite) return null
     const p = positionAt(selectedSatellite, new Date(selection.probeMs))
@@ -257,8 +292,12 @@ function LiveMap({
       selected={selection.noradId}
       onSelect={select}
       focus={focus}
-      location={location}
-      onLocationChange={setLocation}
+      places={places}
+      placeId={placeId}
+      onPlaceSelect={selectPlace}
+      onPlaceMove={movePlace}
+      onPlaceAdd={addPlace}
+      flyTo={flyTo}
       ghost={selection.ghost}
       probe={probe}
       span={span}
