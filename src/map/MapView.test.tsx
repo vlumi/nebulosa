@@ -258,6 +258,5 @@ test('night and reach are MapLibre fill layers fed once the style loads; the glo
   expect(mapInstance.setProjection).toHaveBeenLastCalledWith({ type: 'globe' })
   const layers = overlayInstance.setProps.mock.lastCall![0].layers
   const tracks = layers.find((l: { id: string }) => l.id === 'tracks')
-  const path = tracks.props.getPath(tracks.props.data[0]) as number[][]
-  expect(path[0][2]).toBe(30_000)
+  expect(tracks.props.modelMatrix[14]).toBe(30_000)
 })

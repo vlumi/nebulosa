@@ -1,4 +1,5 @@
 import type { Layer } from '@deck.gl/core'
+import { Matrix4 } from '@math.gl/core'
 import { PathStyleExtension, type PathStyleExtensionProps } from '@deck.gl/extensions'
 import { PathLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers'
 import { formatOffset, hhmm, hhmmss } from '../shared/format'
@@ -6,6 +7,7 @@ import {
   DEFAULT_SPAN,
   nearestSample,
   positionAt,
+  splitAtAntimeridian,
   trackSamples,
   trackSamplesBetween,
   type LonLat,
@@ -96,10 +98,10 @@ function segmentsOf(track: TrackDatum, nowMs: number): SegmentDatum[] {
   for (let start = 0; start < past.length - 1; start += chunkSize - 1) {
     const chunk = past.slice(start, start + chunkSize)
     const age = 1 - (start + chunk.length - 1) / (past.length - 1)
-    segments.push({ ...track, half: 'past', age, path: chunk })
+    for (const piece of splitAtAntimeridian(chunk)) segments.push({ ...track, half: 'past', age, path: piece })
   }
   const future = path.slice(Math.max(0, split - 1))
-  if (future.length > 1) segments.push({ ...track, half: 'future', age: 0, path: future })
+  for (const piece of splitAtAntimeridian(future)) segments.push({ ...track, half: 'future', age: 0, path: piece })
   return segments
 }
 
@@ -134,10 +136,11 @@ export function buildLayers(
   globe = false,
 ): Layer[] {
   const nowMs = now.getTime()
-  const lift = globe ? GLOBE_LIFT_M : 0
   // Depth hides the far side of the globe; on the flat map nothing needs hiding and the test only causes z-fighting.
   const depth = { depthCompare: globe ? 'less-equal' : 'always' } as const
-  const above = ([lon, lat]: LonLat): [number, number, number] => [lon, lat, lift]
+  // A translation applied after tessellation: deck's globe grid cutter mangles paths given a third coordinate.
+  const modelMatrix = globe ? new Matrix4().translate([0, 0, GLOBE_LIFT_M]) : undefined
+  const surface = { modelMatrix, parameters: depth } as const
   const segments = tracks.flatMap((track) => segmentsOf(track, nowMs))
   const positions: PositionDatum[] = satellites.flatMap((sat) => {
     const p = positionAt(sat, now)
@@ -160,43 +163,43 @@ export function buildLayers(
       id: 'tracks',
       data: segments,
       pickable: true,
-      wrapLongitude: true,
-      getPath: (d) => d.path.map(above),
+      getPath: (d) => d.path,
       getColor: (d) => {
         const { ahead, oldest } = ALPHA[emphasis(d)]
         return color(d, Math.round(ahead + (oldest - ahead) * tailFade(d.age)))
       },
       getWidth: (d) => WIDTH[emphasis(d)],
       widthUnits: 'pixels',
-      parameters: depth,
-      updateTriggers: { getPath: lift, getColor: selected, getWidth: selected },
+      ...surface,
+      updateTriggers: { getColor: selected, getWidth: selected },
     }),
     new ScatterplotLayer<PositionDatum>({
       id: 'positions',
       data: positions,
       pickable: true,
-      getPosition: (d) => above(d.lonLat),
+      getPosition: (d) => d.lonLat,
       getFillColor: (d) => color(d, emphasis(d) === 'dimmed' ? 50 : 255),
       getLineColor: [11, 13, 20],
       stroked: true,
       lineWidthMinPixels: 1.5,
       getRadius: (d) => (emphasis(d) === 'selected' ? 8 : 5),
       radiusUnits: 'pixels',
-      parameters: depth,
-      updateTriggers: { getPosition: lift, getFillColor: selected, getRadius: selected },
+      ...surface,
+      updateTriggers: { getFillColor: selected, getRadius: selected },
     }),
     new TextLayer<PositionDatum>({
       id: 'labels',
       data: positions,
       pickable: true,
-      getPosition: (d) => above(d.lonLat),
+      getPosition: (d) => d.lonLat,
       getText: (d) => d.name,
       getColor: (d) => [214, 217, 224, emphasis(d) === 'dimmed' ? 90 : 255],
       getSize: 12,
       getPixelOffset: [0, -14],
       fontFamily: 'system-ui, sans-serif',
-      updateTriggers: { getPosition: lift, getColor: selected },
+      updateTriggers: { getColor: selected },
       // On the globe the text quads face away from the camera for half the sphere; culling would drop them.
+      modelMatrix,
       parameters: { ...depth, cullMode: 'none' },
     }),
   ]
@@ -215,19 +218,19 @@ export function buildLayers(
         family: ghostSat.family,
         samples: trackSamplesBetween(ghostSat, from, reach[1]),
       }
+      const pieces = splitAtAntimeridian(continuation.samples.map((sample) => sample.lonLat))
       layers.push(
-        new PathLayer<TrackDatum, PathStyleExtensionProps<TrackDatum>>({
+        new PathLayer<TrackDatum & { path: LonLat[] }, PathStyleExtensionProps<TrackDatum>>({
           id: 'ghost-track',
-          data: [continuation],
+          data: pieces.map((path) => ({ ...continuation, path })),
           pickable: true,
-          wrapLongitude: true,
-          getPath: (d) => d.samples.map((sample) => above(sample.lonLat)),
+          getPath: (d) => d.path,
           getColor: [...FAMILY_COLORS[ghostSat.family], 150],
           getWidth: 1.5,
           widthUnits: 'pixels',
           getDashArray: [6, 4],
           extensions: [new PathStyleExtension({ dash: true })],
-          parameters: depth,
+          ...surface,
         }),
       )
     }
@@ -235,19 +238,19 @@ export function buildLayers(
       new ScatterplotLayer<typeof datum>({
         id: 'ghost',
         data: [datum],
-        getPosition: (d) => above(d.lonLat),
+        getPosition: (d) => d.lonLat,
         getLineColor: (d) => FAMILY_COLORS[d.family],
         filled: false,
         stroked: true,
         lineWidthMinPixels: 2,
         getRadius: 7,
         radiusUnits: 'pixels',
-        parameters: depth,
+        ...surface,
       }),
       new TextLayer<typeof datum>({
         id: 'ghost-label',
         data: [datum],
-        getPosition: (d) => above(d.lonLat),
+        getPosition: (d) => d.lonLat,
         getText: () => `${ghostSat.omm.OBJECT_NAME} · ${hhmm(ghost.timeMs)} UTC`,
         getColor: [214, 217, 224],
         getSize: 12,
@@ -257,7 +260,7 @@ export function buildLayers(
         backgroundPadding: [6, 3],
         fontFamily: 'system-ui, sans-serif',
         characterSet: 'auto',
-        parameters: depth,
+        ...surface,
       }),
     )
   }
@@ -268,16 +271,16 @@ export function buildLayers(
       new ScatterplotLayer<Hover>({
         id: 'hover-marker',
         data: [hover],
-        getPosition: (d) => above(d.lonLat),
+        getPosition: (d) => d.lonLat,
         getFillColor: [255, 255, 255],
         getRadius: 4,
         radiusUnits: 'pixels',
-        parameters: depth,
+        ...surface,
       }),
       new TextLayer<Hover>({
         id: 'hover-label',
         data: [hover],
-        getPosition: (d) => above(d.lonLat),
+        getPosition: (d) => d.lonLat,
         getText: () => `${name} · ${hhmmss(hover.timeMs)} UTC · ${formatOffset(hover.timeMs, nowMs)}`,
         getColor: [214, 217, 224],
         getSize: 12,
@@ -287,7 +290,7 @@ export function buildLayers(
         backgroundPadding: [6, 3],
         fontFamily: 'system-ui, sans-serif',
         characterSet: 'auto',
-        parameters: depth,
+        ...surface,
       }),
     )
   }

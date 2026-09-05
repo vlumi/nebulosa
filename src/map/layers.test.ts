@@ -20,7 +20,10 @@ test('builds tracks, positions and labels for every satellite, colored by family
   }[]
   expect(new Set(trackRows.map((d) => d.family))).toEqual(new Set(['sun-synchronous', 'mid-inclination']))
   const strix1Rows = trackRows.filter((d) => d.noradId === strix1.NORAD_CAT_ID)
-  expect(strix1Rows.filter((d) => d.half === 'future')).toHaveLength(1)
+  expect(strix1Rows.filter((d) => d.half === 'future').length).toBeGreaterThanOrEqual(1)
+  for (const { path } of trackRows as { path: [number, number][] }[]) {
+    for (let i = 1; i < path.length; i++) expect(Math.abs(path[i][0] - path[i - 1][0])).toBeLessThanOrEqual(180)
+  }
   expect(strix1Rows.filter((d) => d.half === 'past').length).toBeGreaterThan(5)
   const ages = strix1Rows.filter((d) => d.half === 'past').map((d) => d.age)
   expect(ages[0]).toBeGreaterThan(ages[ages.length - 1])
@@ -139,9 +142,11 @@ test('ghost layers draw in the family colour and the dashed path follows the sam
   })
   const ghostTrack = layers.find((l) => l.id === 'ghost-track')!
   const ghost = layers.find((l) => l.id === 'ghost')!
-  const { getPath } = ghostTrack.props as unknown as { getPath: (d: { samples: unknown[] }) => unknown[] }
-  const continuation = (ghostTrack.props.data as { samples: unknown[] }[])[0]
-  expect(getPath(continuation)).toHaveLength(continuation.samples.length)
+  const { getPath } = ghostTrack.props as unknown as { getPath: (d: unknown) => unknown[] }
+  const pieces = ghostTrack.props.data as { samples: { lonLat: unknown }[] }[]
+  const drawn = pieces.reduce((n, piece) => n + getPath(piece).length, 0)
+  expect(drawn).toBeGreaterThanOrEqual(pieces[0].samples.length)
+  expect(getPath(pieces[0])[0]).toEqual(pieces[0].samples[0].lonLat)
   const { getLineColor } = ghost.props as unknown as { getLineColor: (d: unknown) => number[] }
   expect(getLineColor((ghost.props.data as unknown[])[0])).toEqual(FAMILY_COLORS['mid-inclination'])
 })
