@@ -4,7 +4,7 @@ import type { Focus } from './map/MapView'
 import { DEFAULT_SPAN, type TrackSpan } from './orbit/orbit'
 import { DEFAULT_FILTERS, type Location, type Pass, type PassFilters } from './orbit/passes'
 import { loadPlaces, newPlace, savePlaces, SEED, type Place, type PlacesState } from './places/places'
-import { liveClock, scrubbedTo, withRate, type Clock } from './time/clock'
+import { liveClock, scrubbedTo, withPaused, type Clock } from './time/clock'
 
 /** What the reader is looking at: a satellite, and possibly a pass of it with its ghost, or a probe along its track. */
 export interface Selection {
@@ -102,7 +102,7 @@ export const useApp = create<State & Actions>((set, get) => ({
     })),
   goToPass: (pass, realMs = Date.now()) =>
     set((s) => ({
-      clock: withRate(scrubbedTo(s.clock, pass.peakMs, realMs), 0, realMs),
+      clock: withPaused(scrubbedTo(s.clock, pass.peakMs, realMs), true, realMs),
       selection: { noradId: pass.noradId, ghost: null, activePass: pass, probeMs: null },
       focus: { noradId: pass.noradId, seq: (s.focus?.seq ?? 0) + 1, timeMs: pass.peakMs },
     })),
@@ -137,7 +137,7 @@ export const useApp = create<State & Actions>((set, get) => ({
   toggleOnlySelected: () => set((s) => ({ filters: { ...s.filters, onlySelected: !s.filters.onlySelected } })),
   setSpan: (span) => set({ span }),
   setClock: (clock) => set({ clock }),
-  togglePlay: (realMs = Date.now()) => set((s) => ({ clock: withRate(s.clock, s.clock.rate > 0 ? 0 : 1, realMs) })),
+  togglePlay: (realMs = Date.now()) => set((s) => ({ clock: withPaused(s.clock, !s.clock.paused, realMs) })),
   goLive: (realMs = Date.now()) => set({ clock: liveClock(realMs) }),
   toggleSheet: (sheet) => set((s) => ({ sheet: s.sheet === sheet ? null : sheet })),
   closeSheet: () => set({ sheet: null }),

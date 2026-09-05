@@ -28,7 +28,7 @@ test('showing a pass selects, ghosts and marks it; going to it also pauses the c
 
   useApp.getState().goToPass(pass, 100_000)
   s = useApp.getState()
-  expect(s.clock).toEqual({ anchorReal: 100_000, anchorSim: 5000, rate: 0 })
+  expect(s.clock).toEqual({ anchorReal: 100_000, anchorSim: 5000, rate: 1, paused: true })
   expect(s.selection.ghost).toBeNull()
   expect(s.focus?.seq).toBe(2)
 })
@@ -72,11 +72,11 @@ test('one sheet at a time: toggling another replaces it, toggling the same close
 test('play toggles between paused and real speed; live resets the clock', () => {
   const { togglePlay, goLive } = useApp.getState()
   togglePlay(1000)
-  expect(useApp.getState().clock.rate).toBe(0)
+  expect(useApp.getState().clock.paused).toBe(true)
   togglePlay(2000)
-  expect(useApp.getState().clock.rate).toBe(1)
+  expect(useApp.getState().clock.paused).toBe(false)
   goLive(3000)
-  expect(useApp.getState().clock).toEqual({ anchorReal: 3000, anchorSim: 3000, rate: 1 })
+  expect(useApp.getState().clock).toEqual({ anchorReal: 3000, anchorSim: 3000, rate: 1, paused: false })
 })
 
 test('the reach layer is on until toggled off', () => {

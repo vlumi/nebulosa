@@ -1,4 +1,4 @@
-import { isLive, liveClock, RATES, scrubbedTo, simTime, withRate, type Clock } from './clock'
+import { isLive, liveClock, RATES, scrubbedTo, simTime, withPaused, withRate, type Clock } from './clock'
 import { formatOffset, utcDate, utcSecond } from '../shared/format'
 import { Segmented } from '../shared/Segmented'
 import styles from './TimeBar.module.css'
@@ -16,7 +16,7 @@ export function TimeBar({ clock, now, onChange }: Props) {
   const realMs = now.getTime()
   const simMs = simTime(clock, realMs)
   const offset = Math.max(-RANGE_MS, Math.min(RANGE_MS, simMs - realMs))
-  const playing = clock.rate > 0
+  const playing = !clock.paused
 
   return (
     <div className={styles.bar}>
@@ -26,14 +26,14 @@ export function TimeBar({ clock, now, onChange }: Props) {
       <button
         type="button"
         aria-label={playing ? 'Pause' : 'Play'}
-        onClick={() => onChange(withRate(clock, playing ? 0 : 1, realMs))}
+        onClick={() => onChange(withPaused(clock, playing, realMs))}
       >
         {playing ? '❚❚' : '▶'}
       </button>
       <Segmented
         label="Speed"
         options={RATES}
-        value={playing ? clock.rate : 1}
+        value={clock.rate}
         onChange={(rate) => onChange(withRate(clock, rate, realMs))}
         format={(rate) => `${rate}×`}
       />
@@ -54,7 +54,7 @@ export function TimeBar({ clock, now, onChange }: Props) {
           if (!e.target.value) return
           const dayMs = Date.parse(`${e.target.value}T00:00:00Z`)
           const timeOfDayMs = simMs % 86_400_000
-          onChange(withRate(scrubbedTo(clock, dayMs + timeOfDayMs, realMs), 0, realMs))
+          onChange(withPaused(scrubbedTo(clock, dayMs + timeOfDayMs, realMs), true, realMs))
         }}
       />
       <output>
