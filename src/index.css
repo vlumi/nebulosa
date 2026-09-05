@@ -69,16 +69,11 @@ main > .map {
 
 /* Small viewports: phones, and windows too short for two panels above each other. Keep in step with useNarrow.ts. */
 @media (max-width: 720px), (max-height: 560px) {
+  /* Pinch replaces the zoom buttons; the compass stays, because touch rotates the map easily. */
   header p,
   footer,
   main .maplibregl-ctrl-group button.maplibregl-ctrl-zoom-in,
   main .maplibregl-ctrl-group button.maplibregl-ctrl-zoom-out {
     display: none;
-  }
-
-  /* Pinch replaces the zoom buttons; the compass stays, because touch rotates the map easily, above the corner pills. */
-  main .maplibregl-ctrl-top-right {
-    top: auto;
-    bottom: 11.6rem;
   }
 }

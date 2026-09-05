@@ -16,12 +16,43 @@ import {
 } from './surface'
 import { DEFAULT_SPAN, positionAt, type Satellite, type TrackSpan } from '../orbit/orbit'
 import type { Location } from '../orbit/passes'
+import type { Place } from '../places/places'
+import type { FlyTo } from '../store'
 import { useLatest } from '../shared/useLatest'
 import { useThrottled } from '../shared/useThrottled'
 
 const BASEMAP = 'https://tiles.openfreemap.org/styles/fiord'
 /** Past this zoom the globe renders flat: curvature is invisible there, and the deck.gl beta clips its globe view away. */
 const GLOBE_MAX_ZOOM = 5.5
+const LONG_PRESS_MS = 600
+const PIN_SELECTED = '#eedd66'
+const PIN = '#8a90a0'
+/** How far, in pixels, a basemap label may be from the tap to name the place after it. */
+const LABEL_RADIUS_PX = 60
+const SETTLEMENTS = new Set(['city', 'town', 'village'])
+
+/**
+ * The name of the nearest settlement label the basemap is showing around `point`, else the country's,
+ * else nothing: the tiles already know the names, so no service is asked and no coordinates leave the browser.
+ */
+function nearestLabel(map: MapLibre | null, point: { x: number; y: number }): string | undefined {
+  if (!map) return undefined
+  const r = LABEL_RADIUS_PX
+  const features = map.queryRenderedFeatures([
+    [point.x - r, point.y - r],
+    [point.x + r, point.y + r],
+  ])
+  const named = features.filter((f) => f.sourceLayer === 'place' && typeof f.properties?.name === 'string')
+  const rank = (f: (typeof named)[number]) => {
+    const [lon, lat] = (f.geometry as GeoJSON.Point).coordinates
+    const p = map.project([lon, lat])
+    return Math.hypot(p.x - point.x, p.y - point.y)
+  }
+  const pick = (test: (cls: unknown) => boolean) =>
+    named.filter((f) => test(f.properties.class)).sort((a, b) => rank(a) - rank(b))[0]
+  const label = pick((cls) => SETTLEMENTS.has(String(cls))) ?? pick((cls) => cls === 'country')
+  return label ? String(label.properties['name:en'] ?? label.properties.name_en ?? label.properties.name) : undefined
+}
 
 // MapLibre 6 resolves its worker relative to its own script URL, which a bundled app does not provide.
 setWorkerUrl(maplibreWorkerUrl)
@@ -42,8 +73,13 @@ interface Props {
   selected: number | null
   onSelect: (noradId: number | null) => void
   focus?: Focus | null
-  location: Location
-  onLocationChange: (location: Location) => void
+  places: Place[]
+  placeId: string | null
+  onPlaceSelect: (id: string) => void
+  onPlaceMove: (id: string, location: Location) => void
+  /** A double click, or a long press on a touch screen; `name` is the nearest place label the basemap shows there, if any. */
+  onPlaceAdd: (location: Location, name?: string) => void
+  flyTo?: FlyTo | null
   ghost?: Ghost | null
   /** A point to show as if hovered, driven from the keyboard; the pointer wins while it is over a track. */
   probe?: Hover | null
@@ -59,8 +95,12 @@ export function MapView({
   selected,
   onSelect,
   focus = null,
-  location,
-  onLocationChange,
+  places,
+  placeId,
+  onPlaceSelect,
+  onPlaceMove,
+  onPlaceAdd,
+  flyTo = null,
   ghost = null,
   probe = null,
   span = DEFAULT_SPAN,
@@ -69,12 +109,14 @@ export function MapView({
 }: Props) {
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<MapLibre>(null)
-  const marker = useRef<Marker>(null)
+  const markers = useRef(new globalThis.Map<string, Marker>())
   const overlay = useRef<MapLibreOverlay>(null)
   const [hover, setHover] = useState<Hover | null>(null)
 
   // The map and overlay are created once; their callbacks read the latest props through these.
-  const locationChange = useLatest(onLocationChange)
+  const placeSelect = useLatest(onPlaceSelect)
+  const placeMove = useLatest(onPlaceMove)
+  const placeAdd = useLatest(onPlaceAdd)
   const select = useLatest(onSelect)
   const currentTime = useLatest(now)
 
@@ -107,7 +149,19 @@ export function MapView({
       style: BASEMAP,
       center: [139.7, 35.7],
       zoom: 1.5,
+      doubleClickZoom: false,
     })
+    const addAt = (e: { point: { x: number; y: number }; lngLat: { lat: number; lng: number } }) =>
+      placeAdd.current({ lat: e.lngLat.lat, lon: e.lngLat.lng }, nearestLabel(map.current, e.point))
+    map.current.on('dblclick', addAt)
+    let press: ReturnType<typeof setTimeout> | undefined
+    map.current.on('touchstart', (e) => {
+      clearTimeout(press)
+      if (e.originalEvent.touches.length !== 1) return
+      const at = { point: e.point, lngLat: e.lngLat }
+      press = setTimeout(() => addAt(at), LONG_PRESS_MS)
+    })
+    for (const end of ['touchmove', 'touchend', 'touchcancel'] as const) map.current.on(end, () => clearTimeout(press))
     map.current.on('style.load', () => {
       const m = map.current
       if (!m) return
@@ -149,26 +203,52 @@ export function MapView({
       getCursor: ({ isHovering, isDragging }) => (isDragging ? 'grabbing' : isHovering ? 'pointer' : 'grab'),
     })
     map.current.addControl(overlay.current)
-    marker.current = new Marker({ draggable: true, color: '#eedd66' })
-      .setLngLat([location.lon, location.lat])
-      .addTo(map.current)
-    marker.current.on('dragend', () => {
-      const { lng, lat } = marker.current!.getLngLat()
-      locationChange.current({ lat, lon: lng })
-    })
+    const pins = markers.current
     return () => {
+      clearTimeout(press)
       overlay.current = null
-      marker.current = null
+      pins.clear()
       map.current?.remove()
       map.current = null
     }
-    // The marker takes its initial position from props; later moves come through the effect below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // One draggable pin per place, the selected one in the accent color; pins come and go with the list.
   useEffect(() => {
-    marker.current?.setLngLat([location.lon, location.lat])
-  }, [location])
+    const m = map.current
+    if (!m) return
+    for (const [id, marker] of markers.current) {
+      if (!places.some((p) => p.id === id)) {
+        marker.remove()
+        markers.current.delete(id)
+      }
+    }
+    for (const place of places) {
+      const color = place.id === placeId ? PIN_SELECTED : PIN
+      let marker = markers.current.get(place.id)
+      if (!marker || marker.getElement().dataset.color !== color) {
+        marker?.remove()
+        marker = new Marker({ draggable: true, color }).setLngLat([place.lon, place.lat]).addTo(m)
+        marker.getElement().dataset.color = color
+        marker.getElement().addEventListener('click', (e) => {
+          e.stopPropagation()
+          placeSelect.current(place.id)
+        })
+        marker.on('dragend', () => {
+          const { lng, lat } = marker!.getLngLat()
+          placeMove.current(place.id, { lat, lon: lng })
+        })
+        markers.current.set(place.id, marker)
+      } else {
+        marker.setLngLat([place.lon, place.lat])
+      }
+    }
+  }, [places, placeId, placeSelect, placeMove])
+
+  useEffect(() => {
+    if (flyTo) map.current?.easeTo({ center: [flyTo.lon, flyTo.lat], duration: 600 })
+  }, [flyTo])
 
   // Until the style has loaded the sources do not exist; the load handler above then takes the latest data.
   useEffect(() => {

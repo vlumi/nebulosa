@@ -62,11 +62,12 @@
   color: var(--muted);
 }
 
-/* Phones have no keyboard; the other toggles stay, above the wrapped time bar. */
+/* Phones have no keyboard; the other toggles stay, top right under the compass, clear of the sheet and the toolbar. */
 @media (max-width: 720px), (max-height: 560px) {
   .help {
+    top: 3.2rem;
     right: 0.5rem;
-    bottom: 9.7rem;
+    bottom: auto;
   }
 
   .legend,

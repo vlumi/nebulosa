@@ -5,6 +5,7 @@ import { epochOf } from '../orbit/elements'
 import { strix1, strix9 } from '../test/fixtures'
 
 const tokyo = { lat: 35.68, lon: 139.69 }
+const tokyoPlace = { id: 'tokyo', name: 'Tokyo', ...tokyo }
 import { MapView } from './MapView'
 import { positionAt, satelliteFrom } from '../orbit/orbit'
 
@@ -22,6 +23,9 @@ const { mapInstance, overlayInstance, markerInstance } = vi.hoisted(() => {
       return markerInstance
     }),
     getLngLat: vi.fn(() => markerInstance.lngLat),
+    element: document.createElement('div'),
+    getElement: vi.fn(() => markerInstance.element),
+    remove: vi.fn(),
   }
   return {
     mapInstance: {
@@ -44,6 +48,9 @@ const { mapInstance, overlayInstance, markerInstance } = vi.hoisted(() => {
       zoom: 1.5,
       getZoom: vi.fn(() => mapInstance.zoom),
       getCanvas: vi.fn(() => ({ clientWidth: 640, clientHeight: 480 })),
+      labels: [] as unknown[],
+      queryRenderedFeatures: vi.fn(() => mapInstance.labels),
+      project: vi.fn(([lon, lat]: [number, number]) => ({ x: lon, y: lat })),
       projection: undefined as { type: string } | undefined,
       getProjection: vi.fn(() => mapInstance.projection),
       setProjection: vi.fn((projection: { type: string }) => {
@@ -80,8 +87,11 @@ test('mounts a MapLibre map with a deck.gl overlay and feeds it the layers', () 
       now={epochOf(strix1)}
       selected={null}
       onSelect={onSelect}
-      location={tokyo}
-      onLocationChange={vi.fn()}
+      places={[tokyoPlace]}
+      placeId="tokyo"
+      onPlaceSelect={vi.fn()}
+      onPlaceMove={vi.fn()}
+      onPlaceAdd={vi.fn()}
     />,
   )
 
@@ -146,8 +156,11 @@ test("a focus request eases the map to the satellite's current position", () => 
       selected={null}
       onSelect={vi.fn()}
       focus={null}
-      location={tokyo}
-      onLocationChange={vi.fn()}
+      places={[tokyoPlace]}
+      placeId="tokyo"
+      onPlaceSelect={vi.fn()}
+      onPlaceMove={vi.fn()}
+      onPlaceAdd={vi.fn()}
     />,
   )
   expect(mapInstance.easeTo).not.toHaveBeenCalled()
@@ -159,8 +172,11 @@ test("a focus request eases the map to the satellite's current position", () => 
       selected={strix9.NORAD_CAT_ID}
       onSelect={vi.fn()}
       focus={{ noradId: strix9.NORAD_CAT_ID, seq: 1 }}
-      location={tokyo}
-      onLocationChange={vi.fn()}
+      places={[tokyoPlace]}
+      placeId="tokyo"
+      onPlaceSelect={vi.fn()}
+      onPlaceMove={vi.fn()}
+      onPlaceAdd={vi.fn()}
     />,
   )
   const expected = positionAt(sats[1], at)!
@@ -169,16 +185,21 @@ test("a focus request eases the map to the satellite's current position", () => 
   expect(center[1]).toBeCloseTo(expected.lat, 6)
 })
 
-test('the observer pin starts at the location and reports where it is dragged', () => {
-  const onLocationChange = vi.fn()
-  render(
+test('one pin per place: it reports drags, a tap selects it, a double click adds a place, and a flight centers the map', () => {
+  const onPlaceSelect = vi.fn()
+  const onPlaceMove = vi.fn()
+  const onPlaceAdd = vi.fn()
+  const { rerender } = render(
     <MapView
       satellites={[]}
       now={epochOf(strix1)}
       selected={null}
       onSelect={vi.fn()}
-      location={tokyo}
-      onLocationChange={onLocationChange}
+      places={[tokyoPlace]}
+      placeId="tokyo"
+      onPlaceSelect={onPlaceSelect}
+      onPlaceMove={onPlaceMove}
+      onPlaceAdd={onPlaceAdd}
     />,
   )
   expect(markerInstance.setLngLat).toHaveBeenCalledWith([tokyo.lon, tokyo.lat])
@@ -186,7 +207,59 @@ test('the observer pin starts at the location and reports where it is dragged', 
 
   markerInstance.lngLat = { lng: 24.94, lat: 60.17 }
   markerInstance.handlers.dragend()
-  expect(onLocationChange).toHaveBeenCalledWith({ lat: 60.17, lon: 24.94 })
+  expect(onPlaceMove).toHaveBeenCalledWith('tokyo', { lat: 60.17, lon: 24.94 })
+
+  markerInstance.element.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+  expect(onPlaceSelect).toHaveBeenCalledWith('tokyo')
+
+  const dblclick = mapInstance.handlers['dblclick'] as unknown as (e: unknown) => void
+  dblclick({ point: { x: 2, y: 1 }, lngLat: { lat: 1, lng: 2 } })
+  expect(onPlaceAdd).toHaveBeenLastCalledWith({ lat: 1, lon: 2 }, undefined)
+  mapInstance.labels = [
+    {
+      sourceLayer: 'place',
+      properties: { class: 'country', name: 'Finland' },
+      geometry: { type: 'Point', coordinates: [3, 1] },
+    },
+    {
+      sourceLayer: 'place',
+      properties: { class: 'city', name: 'Helsinki', 'name:en': 'Helsinki' },
+      geometry: { type: 'Point', coordinates: [30, 1] },
+    },
+    {
+      sourceLayer: 'place',
+      properties: { class: 'town', name: 'Espoo' },
+      geometry: { type: 'Point', coordinates: [4, 1] },
+    },
+    {
+      sourceLayer: 'water',
+      properties: { class: 'lake', name: 'Nope' },
+      geometry: { type: 'Point', coordinates: [2, 1] },
+    },
+  ]
+  dblclick({ point: { x: 2, y: 1 }, lngLat: { lat: 1, lng: 2 } })
+  expect(onPlaceAdd).toHaveBeenLastCalledWith({ lat: 1, lon: 2 }, 'Espoo')
+  mapInstance.labels = mapInstance.labels.filter(
+    (f) => (f as { properties: { class: string } }).properties.class === 'country',
+  )
+  dblclick({ point: { x: 2, y: 1 }, lngLat: { lat: 1, lng: 2 } })
+  expect(onPlaceAdd).toHaveBeenLastCalledWith({ lat: 1, lon: 2 }, 'Finland')
+
+  rerender(
+    <MapView
+      satellites={[]}
+      now={epochOf(strix1)}
+      selected={null}
+      onSelect={vi.fn()}
+      places={[tokyoPlace]}
+      placeId="tokyo"
+      onPlaceSelect={onPlaceSelect}
+      onPlaceMove={onPlaceMove}
+      onPlaceAdd={onPlaceAdd}
+      flyTo={{ lat: 60.17, lon: 24.94, seq: 1 }}
+    />,
+  )
+  expect(mapInstance.easeTo).toHaveBeenLastCalledWith({ center: [24.94, 60.17], duration: 600 })
 })
 
 test('a focus request with a time centers on the position at that time, not the displayed one', () => {
@@ -200,8 +273,11 @@ test('a focus request with a time centers on the position at that time, not the 
       selected={strix1.NORAD_CAT_ID}
       onSelect={vi.fn()}
       focus={{ noradId: strix1.NORAD_CAT_ID, seq: 1, timeMs: later }}
-      location={tokyo}
-      onLocationChange={vi.fn()}
+      places={[tokyoPlace]}
+      placeId="tokyo"
+      onPlaceSelect={vi.fn()}
+      onPlaceMove={vi.fn()}
+      onPlaceAdd={vi.fn()}
     />,
   )
   const expected = positionAt(sats[0], new Date(later))!
@@ -218,8 +294,11 @@ test('night and reach are MapLibre fill layers fed once the style loads; the glo
       now={epochOf(strix1)}
       selected={strix1.NORAD_CAT_ID}
       onSelect={vi.fn()}
-      location={tokyo}
-      onLocationChange={vi.fn()}
+      places={[tokyoPlace]}
+      placeId="tokyo"
+      onPlaceSelect={vi.fn()}
+      onPlaceMove={vi.fn()}
+      onPlaceAdd={vi.fn()}
       reach
     />,
   )
@@ -244,8 +323,11 @@ test('night and reach are MapLibre fill layers fed once the style loads; the glo
       now={epochOf(strix1)}
       selected={strix1.NORAD_CAT_ID}
       onSelect={vi.fn()}
-      location={tokyo}
-      onLocationChange={vi.fn()}
+      places={[tokyoPlace]}
+      placeId="tokyo"
+      onPlaceSelect={vi.fn()}
+      onPlaceMove={vi.fn()}
+      onPlaceAdd={vi.fn()}
       reach
       globe
     />,
@@ -270,8 +352,11 @@ test('a map resize hands the overlay the new canvas size', () => {
       now={epochOf(strix1)}
       selected={null}
       onSelect={vi.fn()}
-      location={tokyo}
-      onLocationChange={vi.fn()}
+      places={[tokyoPlace]}
+      placeId="tokyo"
+      onPlaceSelect={vi.fn()}
+      onPlaceMove={vi.fn()}
+      onPlaceAdd={vi.fn()}
     />,
   )
   act(() => mapInstance.handlers['resize']())

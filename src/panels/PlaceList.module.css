@@ -1,0 +1,78 @@
+.header {
+  flex: none;
+  margin-top: 0;
+}
+
+.list {
+  margin-bottom: 0.25rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.row > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pin {
+  background: var(--muted);
+}
+
+.pin[data-selected] {
+  background: var(--accent);
+}
+
+.coords {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.action {
+  flex: none;
+  padding: 0.25rem 0.4rem;
+  border: 0;
+  border-radius: 0.25rem;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.action:hover {
+  color: var(--text);
+  background: rgb(255 255 255 / 0.08);
+}
+
+.rename {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.15rem 0.4rem;
+}
+
+.rename input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.1rem 0.3rem;
+  border: 1px solid rgb(255 255 255 / 0.3);
+  border-radius: 0.25rem;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+
+.rename button {
+  padding: 0.1rem 0.5rem;
+  border: 1px solid rgb(255 255 255 / 0.15);
+  border-radius: 0.25rem;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}

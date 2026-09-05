@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { PassList } from './PassList'
 import { DEFAULT_FILTERS, type Pass } from '../orbit/passes'
+import { TOKYO } from '../places/places'
 
 const t0 = Date.UTC(2026, 8, 4, 12, 0, 0)
 const pass = (name: string, noradId: number, startMin: number, maxEl: number): Pass => ({
@@ -21,7 +22,7 @@ test('lists passes with times, duration and max elevation; show and go-to are se
   const passes = [pass('STRIX-1', 53815, 5, 47.4), pass('STRIX-9', 100561, 90, 12.2)]
   render(
     <PassList
-      location={{ lat: 35.68, lon: 139.69 }}
+      place={TOKYO}
       passes={passes}
       filters={{ ...DEFAULT_FILTERS, onlySelected: false }}
       onFiltersChange={vi.fn()}
@@ -31,7 +32,7 @@ test('lists passes with times, duration and max elevation; show and go-to are se
       now={new Date(t0)}
     />,
   )
-  expect(screen.getByText(/over 35.68°N 139.69°E/)).toBeInTheDocument()
+  expect(screen.getByText(/over Tokyo/)).toBeInTheDocument()
   const rows = screen.getAllByRole('listitem')
   expect(rows[0]).toHaveTextContent('12:05–12:13STRIX-147° S')
   expect(rows[1]).toHaveTextContent('13:30–13:38STRIX-912° S')
@@ -49,7 +50,7 @@ test('shows every pass; the horizon and the selected-only filter are controls', 
   const onFiltersChange = vi.fn()
   render(
     <PassList
-      location={{ lat: 0, lon: 0 }}
+      place={TOKYO}
       passes={many}
       filters={DEFAULT_FILTERS}
       onFiltersChange={onFiltersChange}
@@ -73,7 +74,7 @@ test('a separator row marks where the list crosses into a later UTC day', () => 
   const passes = [pass('STRIX-1', 53815, 60, 30), pass('STRIX-1', 53815, 60 + 24 * 60, 30)]
   render(
     <PassList
-      location={{ lat: 0, lon: 0 }}
+      place={TOKYO}
       passes={passes}
       filters={{ ...DEFAULT_FILTERS, horizonHours: 48, onlySelected: false }}
       onFiltersChange={vi.fn()}
@@ -92,7 +93,7 @@ test('a peak inside the steering range is marked and titled with its look angle;
   const onFiltersChange = vi.fn()
   render(
     <PassList
-      location={{ lat: 35.68, lon: 139.69 }}
+      place={TOKYO}
       passes={[pass('STRIX-1', 53815, 5, 60), pass('STRIX-9', 100561, 90, 20)]}
       filters={DEFAULT_FILTERS}
       onFiltersChange={onFiltersChange}

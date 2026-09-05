@@ -24,6 +24,8 @@ vi.mock('maplibre-gl', () => ({
       addTo: () => marker,
       on: () => marker,
       getLngLat: () => ({ lng: 0, lat: 0 }),
+      getElement: () => document.createElement('div'),
+      remove: () => {},
     }
     return marker
   }),
@@ -87,7 +89,7 @@ test('showing a pass selects the satellite without touching the clock; going to 
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
   render(<App />)
   const passes = await openPasses()
-  expect(passes.getByText(/over 35.68°N 139.69°E/)).toBeInTheDocument()
+  expect(passes.getByText(/over Tokyo/)).toBeInTheDocument()
   const firstRow = (await passes.findAllByRole('listitem'))[0]
 
   await userEvent.click(firstRow.querySelector('button')!)
@@ -225,4 +227,21 @@ test('shortcuts keep working after clicking a button with the mouse', async () =
   expect(document.activeElement).toBe(document.body)
   await userEvent.keyboard(' ')
   expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument()
+})
+
+test('places: the pill names the selected place; with none, passes wait for one; removing a place unselects it', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
+  render(<App />)
+  expect(screen.getByRole('button', { name: /^Places Tokyo/ })).toBeInTheDocument()
+  await userEvent.click(screen.getByRole('button', { name: /^Places/ }))
+  const places = within(screen.getByRole('complementary', { name: 'Places' }))
+  await userEvent.click(places.getByRole('button', { name: /^Tokyo/ }))
+  expect(screen.getByRole('button', { name: /^Places · none picked/ })).toBeInTheDocument()
+  const passes = await openPasses()
+  expect(passes.getByText(/Pick a place/)).toBeInTheDocument()
+  await userEvent.click(screen.getByRole('button', { name: /^Places/ }))
+  await userEvent.click(
+    within(screen.getByRole('complementary', { name: 'Places' })).getByRole('button', { name: 'Remove Tokyo' }),
+  )
+  expect(screen.getByRole('button', { name: /^Places · none$/ })).toBeInTheDocument()
 })
