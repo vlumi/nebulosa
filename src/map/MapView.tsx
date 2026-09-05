@@ -19,7 +19,6 @@ import type { Location } from '../orbit/passes'
 import type { Place } from '../places/places'
 import type { FlyTo } from '../store'
 import { fitZoom, GLOBE_MAX_ZOOM } from './fit'
-import { polarNightCells } from '../orbit/sun'
 import { useLatest } from '../shared/useLatest'
 import { useThrottled } from '../shared/useThrottled'
 
@@ -160,7 +159,6 @@ export function MapView({
   const currentTracks = useLatest(tracks)
   // The terminator moves a quarter degree a minute; rebuilding sixty strips per frame would be waste.
   const nightData = useMemo(() => nightFeature(new Date(trackMinute * 60_000)), [trackMinute])
-  const polarNight = useMemo(() => polarNightCells(new Date(trackMinute * 60_000)), [trackMinute])
   const reachTrack = reach && selected !== null ? tracks.find((t) => t.noradId === selected) : undefined
   const reachData = useMemo(() => (reachTrack ? reachFeature(reachTrack.samples) : EMPTY), [reachTrack])
   const reachColor = reachFill(reachTrack?.family ?? 'sun-synchronous')
@@ -199,14 +197,17 @@ export function MapView({
       if (!m) return
       styleReady.current = true
       applyProjection()
-      m.addSource(NIGHT_LAYER, { type: 'geojson', data: surfaces.current.nightData })
-      m.addSource(REACH_LAYER, { type: 'geojson', data: surfaces.current.reachData })
+      // No tile buffer: a fill that touches the antimeridian is wrapped into world copies, and with a buffer
+      // the copies overlap there in a band twice as dark as the rest. No simplification either: the reach is a
+      // run of small quads, and moving their vertices makes neighbours overlap or part in a ladder pattern.
+      m.addSource(NIGHT_LAYER, { type: 'geojson', data: surfaces.current.nightData, buffer: 0, tolerance: 0 })
+      m.addSource(REACH_LAYER, { type: 'geojson', data: surfaces.current.reachData, buffer: 0, tolerance: 0 })
       m.addLayer({ id: NIGHT_LAYER, type: 'fill', source: NIGHT_LAYER, paint: NIGHT_PAINT })
       m.addLayer({
         id: REACH_LAYER,
         type: 'fill',
         source: REACH_LAYER,
-        paint: { 'fill-color': surfaces.current.reachColor, 'fill-opacity': REACH_OPACITY },
+        paint: { 'fill-color': surfaces.current.reachColor, 'fill-opacity': REACH_OPACITY, 'fill-antialias': false },
       })
     })
     map.current.on('zoom', applyProjection)
@@ -334,9 +335,9 @@ export function MapView({
 
   useEffect(() => {
     overlay.current?.setProps({
-      layers: buildLayers(satellites, tracks, now, selected, hover ?? probe, ghost, span, globe, reach, polarNight),
+      layers: buildLayers(satellites, tracks, now, selected, hover ?? probe, ghost, span, globe),
     })
-  }, [satellites, tracks, now, selected, hover, probe, ghost, span, globe, reach, polarNight])
+  }, [satellites, tracks, now, selected, hover, probe, ghost, span, globe])
 
   return <div ref={container} className="map" />
 }

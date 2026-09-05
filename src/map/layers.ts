@@ -16,8 +16,7 @@ import {
   type TrackSample,
   type TrackSpan,
 } from '../orbit/orbit'
-import { POLE_CAP, polarNightCells } from '../orbit/sun'
-import { reachRibbons } from '../orbit/swath'
+import { POLE_CAP } from '../orbit/sun'
 import { FAMILY_COLORS, type Rgba } from '../shared/palette'
 
 export interface SatelliteDatum {
@@ -82,17 +81,22 @@ function ghostReach(sat: Satellite, ghostMs: number, nowMs: number, span: TrackS
   return null
 }
 
-/** A ring that crosses the antimeridian, rewritten to continue past ±180° instead of jumping back. */
-function unwrapped(ring: LonLat[]): LonLat[] {
-  let offset = 0
-  return ring.map(([lon, lat], i) => {
-    if (i > 0) {
-      const previous = ring[i - 1][0] + offset
-      if (lon + offset - previous > 180) offset -= 360
-      else if (previous - (lon + offset) > 180) offset += 360
-    }
-    return [lon + offset, lat]
-  })
+/**
+ * A polar cap as 36 cells of 10° from the rim to just short of the pole: in longitude and latitude a cap is a
+ * band across all longitudes, which the globe renderer only draws right in pieces narrower than half the world.
+ */
+function capCells(rimLat: number): LonLat[][] {
+  const pole = Math.sign(rimLat) * 89.99
+  const cells: LonLat[][] = []
+  for (let lon = -180; lon < 180; lon += 10) {
+    cells.push([
+      [lon, rimLat],
+      [lon + 10, rimLat],
+      [lon + 10, pole],
+      [lon, pole],
+    ])
+  }
+  return cells
 }
 
 const TAIL_CHUNKS = 60
@@ -149,18 +153,8 @@ export function buildLayers(
   ghost: Ghost | null = null,
   span: TrackSpan = DEFAULT_SPAN,
   globe = false,
-  reach = false,
-  polarNight: LonLat[][] = polarNightCells(now),
 ): Layer[] {
   const nowMs = now.getTime()
-  // Depth hides the far side of the globe; on the flat map nothing needs hiding and the test only causes z-fighting.
-  const depth = { depthCompare: globe ? 'less-equal' : 'always' } as const
-  // A translation applied after tessellation: deck's globe grid cutter mangles paths given a third coordinate.
-  const modelMatrix = globe ? new Matrix4().translate([0, 0, GLOBE_LIFT_M]) : undefined
-  const surface = { modelMatrix, parameters: depth } as const
-  // Only the polar caps are drawn here; MapLibre fills the night and the reach up to ±85° itself, with its own
-  // occlusion, and cannot reach farther. The caps are small enough to be treated like the lines.
-  const polar = (ring: LonLat[]) => ring.some(([, lat]) => Math.abs(lat) > POLE_CAP - 0.5)
   const segments = tracks.flatMap((track) => segmentsOf(track, nowMs))
   const positions: PositionDatum[] = satellites.flatMap((sat) => {
     const p = positionAt(sat, now)
@@ -177,32 +171,24 @@ export function buildLayers(
   const emphasis = (d: SatelliteDatum): 'selected' | 'dimmed' | 'normal' =>
     selected === null ? 'normal' : d.noradId === selected ? 'selected' : 'dimmed'
   const color = (d: SatelliteDatum, alpha: number): Rgba => [...FAMILY_COLORS[d.family], alpha]
-
-  const reachTrack = reach && selected !== null ? tracks.find((t) => t.noradId === selected) : undefined
+  // Depth hides the far side of the globe; on the flat map nothing needs hiding and the test only causes z-fighting.
+  const depth = { depthCompare: globe ? 'less-equal' : 'always' } as const
+  // A translation applied after tessellation: deck's globe grid cutter mangles paths given a third coordinate.
+  const modelMatrix = globe ? new Matrix4().translate([0, 0, GLOBE_LIFT_M]) : undefined
+  const surface = { modelMatrix, parameters: depth } as const
+  // Beyond ±85° the basemap has no data and draws a fan that picks up whatever touches it. Rather than patch
+  // the night and the reach into that, the caps are blank discs in the page color: honest holes.
+  const caps = [...capCells(POLE_CAP), ...capCells(-POLE_CAP)]
   const layers: Layer[] = [
     new SolidPolygonLayer<LonLat[]>({
-      id: 'night',
-      data: polarNight,
+      id: 'poles',
+      data: caps,
       wrapLongitude: !globe,
       getPolygon: (d) => d,
-      getFillColor: [0, 4, 20, 90],
+      getFillColor: [11, 13, 20, 255],
       pickable: false,
       ...surface,
     }),
-    ...(reachTrack
-      ? [
-          new SolidPolygonLayer<LonLat[]>({
-            id: 'reach',
-            // Rings continue past ±180° rather than jump, so the globe's grid cutter reads them the short way round.
-            data: reachRibbons(reachTrack.samples).filter(polar).map(unwrapped),
-            getPolygon: (d) => d,
-            getFillColor: color(reachTrack, 45),
-            wrapLongitude: !globe,
-            pickable: false,
-            ...surface,
-          }),
-        ]
-      : []),
     new PathLayer<SegmentDatum>({
       id: 'tracks',
       data: segments,

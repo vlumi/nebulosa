@@ -8,7 +8,7 @@ test('builds tracks, positions and labels for every satellite, colored by family
   const sats = [strix1, strix9].map(satelliteFrom)
   const at = epochOf(strix1)
   const layers = buildLayers(sats, trackData(sats, at), at)
-  expect(layers.map((l) => l.id)).toEqual(['night', 'tracks', 'positions', 'labels'])
+  expect(layers.map((l) => l.id)).toEqual(['poles', 'tracks', 'positions', 'labels'])
 
   const [, tracks, positions, labels] = layers
   const trackRows = tracks.props.data as {
@@ -73,7 +73,7 @@ test('hovering a track adds a marker and a label with the time at that point', (
   expect(hover).toEqual({ noradId: strix1.NORAD_CAT_ID, lonLat: target.lonLat, timeMs: target.timeMs })
 
   const layers = buildLayers(sats, [track], at, null, hover)
-  expect(layers.map((l) => l.id)).toEqual(['night', 'tracks', 'positions', 'labels', 'hover-marker', 'hover-label'])
+  expect(layers.map((l) => l.id)).toEqual(['poles', 'tracks', 'positions', 'labels', 'hover-marker', 'hover-label'])
   const { getText } = layers[5].props as unknown as { getText: () => string }
   expect(getText()).toMatch(/^STRIX-1 · \d\d:\d\d:\d\d UTC · −1 h 2\d min$/)
 })
@@ -83,7 +83,7 @@ test('a ghost draws a hollow marker where the satellite will be at the given tim
   const at = epochOf(strix1)
   const later = at.getTime() + 15 * 60_000
   const layers = buildLayers(sats, trackData(sats, at), at, null, null, { noradId: strix1.NORAD_CAT_ID, timeMs: later })
-  expect(layers.map((l) => l.id)).toEqual(['night', 'tracks', 'positions', 'labels', 'ghost', 'ghost-label'])
+  expect(layers.map((l) => l.id)).toEqual(['poles', 'tracks', 'positions', 'labels', 'ghost', 'ghost-label'])
   const { getText } = layers[5].props as unknown as { getText: () => string }
   expect(getText()).toBe(`STRIX-1 · ${new Date(later).toISOString().slice(11, 16)} UTC`)
 })
@@ -97,7 +97,7 @@ test('a ghost beyond the drawn track gets a dashed continuation reaching it', ()
     timeMs: farAhead,
   })
   expect(layers.map((l) => l.id)).toEqual([
-    'night',
+    'poles',
     'tracks',
     'positions',
     'labels',
@@ -157,22 +157,4 @@ test('ghost layers draw in the family color and the dashed path follows the samp
   expect(getPath(pieces[0])[0]).toEqual(pieces[0].samples[0].lonLat)
   const { getLineColor } = ghost.props as unknown as { getLineColor: (d: unknown) => number[] }
   expect(getLineColor((ghost.props.data as unknown[])[0])).toEqual(FAMILY_COLORS['mid-inclination'])
-})
-
-test('the polar part of the reach draws for the selected satellite when asked, under the tracks and above the night', () => {
-  const sats = [strix1, strix9].map(satelliteFrom)
-  const at = epochOf(strix1)
-  const tracks = trackData(sats, at)
-  const ids = (layers: { id: string }[]) => layers.map((l) => l.id)
-  expect(ids(buildLayers(sats, tracks, at, strix1.NORAD_CAT_ID))).not.toContain('reach')
-  expect(ids(buildLayers(sats, tracks, at, null, null, null, undefined, false, true))).not.toContain('reach')
-  const layers = buildLayers(sats, tracks, at, strix1.NORAD_CAT_ID, null, null, undefined, true, true)
-  expect(ids(layers).slice(0, 3)).toEqual(['night', 'reach', 'tracks'])
-  const rings = layers[1].props.data as [number, number][][]
-  expect(rings.length).toBeGreaterThan(0)
-  for (const ring of rings) {
-    expect(ring.some(([, lat]) => Math.abs(lat) > 84.5)).toBe(true)
-    for (let i = 1; i < ring.length; i++) expect(Math.abs(ring[i][0] - ring[i - 1][0])).toBeLessThan(180)
-  }
-  expect((layers[1].props.modelMatrix as number[])[14]).toBe(30_000)
 })

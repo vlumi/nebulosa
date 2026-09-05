@@ -6,8 +6,8 @@ import { nightFeature, reachFeature } from './surface'
 test('the night feature is one closed ring reaching both antimeridian edges', () => {
   const ring = nightFeature(epochOf(strix1)).geometry.coordinates[0]
   expect(ring[0]).toEqual(ring[ring.length - 1])
-  expect(Math.min(...ring.map(([lon]) => lon))).toBe(-180.5)
-  expect(Math.max(...ring.map(([lon]) => lon))).toBe(180.5)
+  expect(Math.min(...ring.map(([lon]) => lon))).toBe(-180)
+  expect(Math.max(...ring.map(([lon]) => lon))).toBe(180)
 })
 
 test('reach rings are closed and never jump across the antimeridian; a crossing continues past ±180°', () => {

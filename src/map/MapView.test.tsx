@@ -106,7 +106,7 @@ test('mounts a MapLibre map with a deck.gl overlay and feeds it the layers', () 
   )
   expect(mapInstance.addControl).toHaveBeenCalledWith(overlayInstance)
   const layers = overlayInstance.setProps.mock.lastCall![0].layers
-  expect(layers.map((l: { id: string }) => l.id)).toEqual(['night', 'tracks', 'positions', 'labels'])
+  expect(layers.map((l: { id: string }) => l.id)).toEqual(['poles', 'tracks', 'positions', 'labels'])
 
   const overlayProps = vi.mocked(MapLibreOverlay).mock.calls[0][0] as {
     onClick: (info: unknown) => void
@@ -329,7 +329,7 @@ test('night and reach are MapLibre fills fed once the style loads; the projectio
   act(() => mapInstance.handlers['zoom']())
   expect(mapInstance.setProjection).toHaveBeenLastCalledWith({ type: 'globe' })
   const layers = overlayInstance.setProps.mock.lastCall![0].layers
-  expect(layers.map((l: { id: string }) => l.id).slice(0, 3)).toEqual(['night', 'reach', 'tracks'])
+  expect(layers.map((l: { id: string }) => l.id).slice(0, 2)).toEqual(['poles', 'tracks'])
   const tracks = layers.find((l: { id: string }) => l.id === 'tracks')
   expect(tracks.props.modelMatrix[14]).toBe(30_000)
 })
