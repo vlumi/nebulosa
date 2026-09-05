@@ -115,16 +115,14 @@ test('mounts a MapLibre map with a deck.gl overlay and feeds it the layers', () 
   }
   expect(overlayProps.pickingRadius).toBeGreaterThan(0)
 
-  act(() =>
-    overlayProps.onHover({ layer: { id: 'tracks' }, object: { noradId: strix9.NORAD_CAT_ID }, coordinate: [0, 0] }),
-  )
+  act(() => overlayProps.onHover({ layer: { id: 'tracks' }, object: { noradId: strix9.NORAD_CAT_ID }, x: 0, y: 0 }))
   expect(overlayInstance.setProps.mock.lastCall![0].layers.map((l: { id: string }) => l.id)).toContain('hover-label')
   act(() => overlayProps.onHover({ layer: null, object: undefined }))
   expect(overlayInstance.setProps.mock.lastCall![0].layers.map((l: { id: string }) => l.id)).not.toContain(
     'hover-label',
   )
   expect(() =>
-    act(() => overlayProps.onHover({ layer: { id: 'tracks' }, object: undefined, coordinate: [0, 0] })),
+    act(() => overlayProps.onHover({ layer: { id: 'tracks' }, object: undefined, x: 0, y: 0 })),
   ).not.toThrow()
   expect(overlayInstance.setProps.mock.lastCall![0].layers.map((l: { id: string }) => l.id)).not.toContain(
     'hover-label',
@@ -138,7 +136,7 @@ test('mounts a MapLibre map with a deck.gl overlay and feeds it the layers', () 
       { lonLat: [20, 20], timeMs: 2, altKm: 500 },
     ],
   }
-  act(() => overlayProps.onHover({ layer: { id: 'ghost-track' }, object: continuation, coordinate: [19, 19] }))
+  act(() => overlayProps.onHover({ layer: { id: 'ghost-track' }, object: continuation, x: 19, y: 19 }))
   expect(overlayInstance.setProps.mock.lastCall![0].layers.map((l: { id: string }) => l.id)).toContain('hover-label')
   overlayProps.onClick({ object: { noradId: strix9.NORAD_CAT_ID } })
   expect(onSelect).toHaveBeenCalledWith(strix9.NORAD_CAT_ID)
