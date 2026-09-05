@@ -48,7 +48,7 @@ const { mapInstance, overlayInstance, markerInstance } = vi.hoisted(() => {
       setPaintProperty: vi.fn(),
       zoom: 1.5,
       getZoom: vi.fn(() => mapInstance.zoom),
-      getCanvas: vi.fn(() => ({ clientWidth: 640, clientHeight: 480 })),
+      getCanvas: vi.fn(() => ({ clientWidth: 640, clientHeight: 480, width: 1280, height: 960 })),
       getCenter: vi.fn(() => ({ lng: 139.7, lat: 35.7 })),
       labels: [] as unknown[],
       queryRenderedFeatures: vi.fn(() => mapInstance.labels),
@@ -339,7 +339,7 @@ test('the visible cap of the globe shrinks as the camera comes closer', () => {
   expect(horizonDeg(5, 900)).toBeLessThan(50)
 })
 
-test('a map resize asks the deck behind the overlay to re-measure its canvas', () => {
+test('a map resize sets the deck viewport to the canvas size without touching the canvas', () => {
   const sats = [strix1, strix9].map(satelliteFrom)
   render(
     <MapView
@@ -354,9 +354,31 @@ test('a map resize asks the deck behind the overlay to re-measure its canvas', (
       onPlaceAdd={vi.fn()}
     />,
   )
-  const remeasure = vi.fn()
-  ;(overlayInstance as unknown as { _deck: unknown })._deck = { _updateCanvasSize: remeasure }
+  const framebuffer = { resize: vi.fn() }
+  const surface = {
+    cssWidth: 0,
+    cssHeight: 0,
+    setDrawingBufferSize: vi.fn(),
+    getCurrentFramebuffer: () => framebuffer,
+  }
+  const deck = {
+    width: 0,
+    height: 0,
+    viewManager: { setProps: vi.fn() },
+    layerManager: { activateViewport: vi.fn() },
+    getViewports: () => ['viewport'],
+    userData: { currentViewport: 'stale' } as { currentViewport?: unknown },
+    device: { getDefaultCanvasContext: () => surface },
+  }
+  ;(overlayInstance as unknown as { _deck: unknown })._deck = deck
   act(() => mapInstance.handlers['resize']())
-  expect(remeasure).toHaveBeenCalled()
+  expect(deck.width).toBe(640)
+  expect(deck.height).toBe(480)
+  expect(deck.viewManager.setProps).toHaveBeenCalledWith({ width: 640, height: 480 })
+  expect(deck.layerManager.activateViewport).toHaveBeenCalledWith('viewport')
+  expect([surface.cssWidth, surface.cssHeight]).toEqual([640, 480])
+  expect(surface.setDrawingBufferSize).toHaveBeenCalledWith(1280, 960)
+  expect(framebuffer.resize).toHaveBeenCalledWith([1280, 960])
+  expect(deck.userData.currentViewport).toBeUndefined()
   expect(overlayInstance.setProps).not.toHaveBeenCalledWith(expect.objectContaining({ width: expect.anything() }))
 })
