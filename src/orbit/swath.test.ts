@@ -1,7 +1,7 @@
 import type { TrackSample } from './orbit'
 import { groundOffsetKm, inReach, offNadirForElevation, reachRibbons, STEERING } from './swath'
 
-test('a look off nadir lands hundreds of kilometres to the side, farther the steeper the look', () => {
+test('a look off nadir lands hundreds of kilometers to the side, farther the steeper the look', () => {
   expect(groundOffsetKm(15, 500)).toBeCloseTo(134, -1)
   expect(groundOffsetKm(30, 500)).toBeCloseTo(290, -1)
   expect(groundOffsetKm(45, 500)).toBeCloseTo(524, -1)

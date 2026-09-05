@@ -2,7 +2,7 @@
 
 Ground-track visualizer for the Synspective StriX SAR constellation, from public orbital data.
 
-**The name:** *Strix nebulosa*, the great grey owl: same genus as the StriX satellites, the iconic owl of Finland, and Latin for "cloudy", so an owl named *cloudy* for satellites built to see through clouds. Owls see in the dark; so does SAR.
+**The name:** *Strix nebulosa*, the great gray owl: same genus as the StriX satellites, the iconic owl of Finland, and Latin for "cloudy", so an owl named *cloudy* for satellites built to see through clouds. Owls see in the dark; so does SAR.
 
 **Status:** unofficial demo project, not affiliated with Synspective. All data is public (NORAD GP data via CelesTrak). Milestones M0 to M6 below were delivered on 2026-09-04, SAR reach and the globe on the two days after; [Next](#next) is the plan from here, and [docs/screenshots](docs/screenshots/README.md) holds one capture per milestone.
 
