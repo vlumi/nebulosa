@@ -135,15 +135,15 @@ test('selecting a satellite narrows the pass list to it until the filter is turn
   expect(passes.getAllByRole('listitem')).toHaveLength(all)
 })
 
-test('the minimum-elevation filter drops low passes', async () => {
+test('the swath filter keeps only the passes the radar can steer to', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
   render(<App />)
   const passes = await openPasses()
   const all = (await passes.findAllByRole('listitem')).length
-  await userEvent.click(passes.getByRole('radio', { name: '45°' }))
-  const high = passes.queryAllByRole('listitem')
-  expect(high.length).toBeLessThan(all)
-  expect(high.every((li) => Number(li.textContent!.match(/(\d+)° [NESW]/)![1]) >= 45)).toBe(true)
+  await userEvent.click(passes.getByRole('radio', { name: 'in SAR reach' }))
+  const reachable = passes.queryAllByRole('listitem')
+  expect(reachable.length).toBeLessThan(all)
+  expect(reachable.every((li) => li.querySelector('[data-reach]'))).toBe(true)
 })
 
 test('on a phone the map comes first: one sheet at a time, and choosing something closes it', async () => {
