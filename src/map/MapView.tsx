@@ -25,34 +25,11 @@ import { useThrottled } from '../shared/useThrottled'
 
 const BASEMAP = 'https://tiles.openfreemap.org/styles/fiord'
 
-/**
- * The private surface of the deck instance behind the overlay that a resize has to reach: deck's own size
- * for its viewports, and luma's cached canvas sizes, which it otherwise forces back onto the canvas.
- */
+/** luma's canvas context behind the overlay's deck, reached only to resize the framebuffer it keeps for the canvas. */
 interface InterleavedDeck {
-  width: number
-  height: number
-  viewManager?: { setProps: (props: { width: number; height: number }) => void }
-  layerManager?: { activateViewport: (viewport: unknown) => void }
-  getViewports: () => unknown[]
-  /** The MapLibre module caches its viewport here and clears it only when the map moves. */
-  userData: { currentViewport?: unknown }
   device?: {
-    canvasContext?: CanvasSizes
-    getDefaultCanvasContext?: () => CanvasSizes
+    getDefaultCanvasContext?: () => { getCurrentFramebuffer?: () => { resize?: (size: [number, number]) => void } }
   }
-  _canvasContext?: CanvasSizes
-}
-
-/**
- * luma's canvas context: cached CSS and drawing-buffer sizes of the shared canvas, and the framebuffer object
- * standing for the canvas, whose own cached height sets the y-flip of every viewport drawn into it.
- */
-interface CanvasSizes {
-  cssWidth: number
-  cssHeight: number
-  setDrawingBufferSize: (width: number, height: number) => void
-  getCurrentFramebuffer?: () => { resize?: (size: [number, number]) => void }
 }
 const LONG_PRESS_MS = 600
 const PIN_SELECTED = '#eedd66'
@@ -229,33 +206,18 @@ export function MapView({
         element.style.pointerEvents = element.style.opacity === '0' ? 'none' : ''
       }
     })
-    // The interleaved overlay (deck.gl 9.4 beta) registers no resize listener and would keep its first size.
-    // Handing it a width and height makes deck restyle the canvas, which is MapLibre's own, and stretches
-    // the map; its own re-measure reads sizes the shared canvas context does not update, and luma even forces
-    // those stale sizes back onto the canvas. So every cached size is refreshed from the canvas by hand, and
-    // the viewport the module caches per map move is dropped so the next frame builds a fresh one.
+    // luma.gl (9.4 beta) keeps a framebuffer object for the canvas, and its height sets the y-flip of every
+    // viewport drawn into it. luma's deferred resize refreshes that object only when luma itself has to change
+    // the canvas size; MapLibre has already resized the canvas by then, so the object keeps the old height and
+    // the overlay draws offset by exactly the resize. Everything else follows on its own: deck re-measures
+    // through luma's ResizeObserver, and MapLibre's move event drops the module's cached viewport.
+    // Fix proposed upstream (visgl/luma.gl, CanvasSurface tracks the size it configured the device for). Once
+    // the lockfile's @luma.gl/core carries it, delete this handler, the InterleavedDeck type and their test.
     map.current.on('resize', () => {
       const canvas = map.current?.getCanvas()
       const deck = (overlay.current as unknown as { _deck?: InterleavedDeck } | null)?._deck
       if (!canvas || !deck) return
-      const { clientWidth: width, clientHeight: height } = canvas
-      const surfaces = new Set(
-        [deck.device?.canvasContext, deck.device?.getDefaultCanvasContext?.(), deck._canvasContext].filter(
-          (s): s is CanvasSizes => Boolean(s),
-        ),
-      )
-      for (const surface of surfaces) {
-        surface.cssWidth = width
-        surface.cssHeight = height
-        surface.setDrawingBufferSize(canvas.width, canvas.height)
-        surface.getCurrentFramebuffer?.()?.resize?.([canvas.width, canvas.height])
-      }
-      deck.userData.currentViewport = undefined
-      if (deck.width === width && deck.height === height) return
-      deck.width = width
-      deck.height = height
-      deck.viewManager?.setProps({ width, height })
-      deck.layerManager?.activateViewport(deck.getViewports()[0])
+      deck.device?.getDefaultCanvasContext?.().getCurrentFramebuffer?.()?.resize?.([canvas.width, canvas.height])
     })
     map.current.addControl(new NavigationControl({ visualizePitch: true }), 'top-right')
     overlay.current = new MapLibreOverlay({
