@@ -15,7 +15,8 @@ export default defineConfig({
         codeSplitting: {
           groups: [
             { name: 'maplibre', test: /node_modules\/maplibre-gl\// },
-            { name: 'deck', test: /node_modules\/@(deck|luma|math|loaders|probe)\.gl\// },
+            { name: 'luma', test: /node_modules\/@(luma|loaders|probe)\.gl\// },
+            { name: 'deck', test: /node_modules\/@(deck|math)\.gl\// },
           ],
         },
       },
