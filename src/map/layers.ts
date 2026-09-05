@@ -16,7 +16,7 @@ import {
   type TrackSample,
   type TrackSpan,
 } from '../orbit/orbit'
-import { nightStrips } from '../orbit/sun'
+import { nightCells } from '../orbit/sun'
 import { reachRibbons } from '../orbit/swath'
 import { FAMILY_COLORS, type Rgba } from '../shared/palette'
 
@@ -183,7 +183,7 @@ export function buildLayers(
   span: TrackSpan = DEFAULT_SPAN,
   globe = false,
   reach = false,
-  night: LonLat[][] = nightStrips(now),
+  night: LonLat[][] = nightCells(now),
   view: GlobeView | null = null,
 ): Layer[] {
   const nowMs = now.getTime()

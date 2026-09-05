@@ -18,7 +18,7 @@ import type { Location } from '../orbit/passes'
 import type { Place } from '../places/places'
 import type { FlyTo } from '../store'
 import { fitZoom, GLOBE_MAX_ZOOM, horizonDeg } from './fit'
-import { nightStrips } from '../orbit/sun'
+import { nightCells } from '../orbit/sun'
 import { useLatest } from '../shared/useLatest'
 import { useThrottled } from '../shared/useThrottled'
 
@@ -130,7 +130,7 @@ export function MapView({
   )
   const currentTracks = useLatest(tracks)
   // The terminator moves a quarter degree a minute; rebuilding sixty strips per frame would be waste.
-  const night = useMemo(() => nightStrips(new Date(trackMinute * 60_000)), [trackMinute])
+  const night = useMemo(() => nightCells(new Date(trackMinute * 60_000)), [trackMinute])
 
   const projection = useLatest(globe)
   const styleReady = useRef(false)
