@@ -2,6 +2,16 @@
 
 One capture per milestone, taken from the deployed site with [`scripts/screenshot.mjs`](../../scripts/screenshot.mjs), newest first. The README shows the latest pair; the rest stay here as a record of how the site grew.
 
+## 2026-09-05 · Globe
+
+![m9](2026-09-05-m9.png)
+
+The map opens as a globe: MapLibre's globe projection with deck.gl interleaved into it, the far side hidden. STRIX-3 selected with its details, its reach band beside the track, the pass list filtered to it and to 30° or higher, the one pass shown with the satellite ghosted at its peak; the Globe and SAR reach pills bottom-right.
+
+<img src="2026-09-05-m9-phone.png" alt="m9 on a phone" width="260">
+
+The same on a phone (390×844): the pass list filtered to STRIX-8, peaks inside the steering range in the accent colour, one pass shown, the globe below.
+
 ## 2026-09-04 · SAR reach
 
 ![m8](2026-09-04-m8.png)
