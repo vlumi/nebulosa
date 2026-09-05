@@ -4,6 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { buildLayers, hoverAt, trackData, type Ghost, type Hover, type SatelliteDatum, type TrackDatum } from './layers'
+import type { LonLat } from '../orbit/orbit'
 import {
   EMPTY,
   NIGHT_LAYER,
@@ -141,6 +142,8 @@ export function MapView({
   const markers = useRef(new globalThis.Map<string, Marker>())
   const overlay = useRef<MapLibreOverlay>(null)
   const [hover, setHover] = useState<Hover | null>(null)
+  // Labels are placed per camera on the globe, so a move re-renders even while the clock stands still.
+  const [viewVersion, setViewVersion] = useState(0)
 
   // The map and overlay are created once; their callbacks read the latest props through these.
   const placeSelect = useLatest(onPlaceSelect)
@@ -213,6 +216,7 @@ export function MapView({
     map.current.on('zoom', applyProjection)
     // deck draws with its own depth and culling settings, and MapLibre caches GL state, so after each frame
     // MapLibre is told to re-apply everything; otherwise its far-side tiles can come through as dark wedges.
+    map.current.on('move', () => setViewVersion((v) => v + 1))
     map.current.on('render', () => {
       ;(
         map.current as unknown as { painter?: { context?: { setDirty?: () => void } } } | null
@@ -265,7 +269,9 @@ export function MapView({
             : info.layer?.id === 'tracks'
               ? currentTracks.current.find((t) => t.noradId === over.noradId)
               : undefined
-        setHover(track && info.coordinate ? hoverAt(track, info.coordinate as [number, number]) : null)
+        // deck's picked coordinate is wrong on the beta's globe; MapLibre's own unproject is right in both projections.
+        const point = track && map.current && info.x !== undefined ? map.current.unproject([info.x, info.y]) : null
+        setHover(track && point ? hoverAt(track, [point.lng, point.lat]) : null)
       },
       getCursor: ({ isHovering, isDragging }) => (isDragging ? 'grabbing' : isHovering ? 'pointer' : 'grab'),
     })
@@ -341,11 +347,32 @@ export function MapView({
     if (map.current?.getLayer(REACH_LAYER)) map.current.setPaintProperty(REACH_LAYER, 'fill-color', reachColor)
   }, [reachData, reachColor])
 
+  // Whether a point faces the camera: MapLibre projects a far-side point to the pixel in front of it, so the round
+  // trip through its unproject comes back somewhere else. Public API only, and right for any pitch.
+  const onNearSide = (lonLat: LonLat): boolean => {
+    const m = map.current
+    if (!m) return true
+    const back = m.unproject(m.project(lonLat))
+    const dLon = Math.abs(((back.lng - lonLat[0] + 540) % 360) - 180)
+    return dLon < 1 && Math.abs(back.lat - lonLat[1]) < 1
+  }
+
   useEffect(() => {
     overlay.current?.setProps({
-      layers: buildLayers(satellites, tracks, now, selected, hover ?? probe, ghost, span, globe),
+      layers: buildLayers(
+        satellites,
+        tracks,
+        now,
+        selected,
+        hover ?? probe,
+        ghost,
+        span,
+        globe,
+        globe ? onNearSide : undefined,
+      ),
     })
-  }, [satellites, tracks, now, selected, hover, probe, ghost, span, globe])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [satellites, tracks, now, selected, hover, probe, ghost, span, globe, viewVersion])
 
   return <div ref={container} className="map" />
 }

@@ -153,6 +153,8 @@ export function buildLayers(
   ghost: Ghost | null = null,
   span: TrackSpan = DEFAULT_SPAN,
   globe = false,
+  /** On the globe, whether a point faces the camera; labels of points that do not are left out. */
+  onNearSide: (lonLat: LonLat) => boolean = () => true,
 ): Layer[] {
   const nowMs = now.getTime()
   const segments = tracks.flatMap((track) => segmentsOf(track, nowMs))
@@ -176,6 +178,9 @@ export function buildLayers(
   // A translation applied after tessellation: deck's globe grid cutter mangles paths given a third coordinate.
   const modelMatrix = globe ? new Matrix4().translate([0, 0, GLOBE_LIFT_M]) : undefined
   const surface = { modelMatrix, parameters: depth } as const
+  // A label is a billboard at the lifted position: depth-tested, the sphere cuts it near the limb, and its quads face
+  // away from the camera for half the globe, so labels skip both tests and far-side ones are dropped instead.
+  const text = { modelMatrix, parameters: { depthCompare: 'always', cullMode: 'none' } } as const
   // Beyond ±85° the basemap has no data and draws a fan that picks up whatever touches it. Rather than patch
   // the night and the reach into that, the caps are blank discs in the page color: honest holes.
   const caps = [...capCells(POLE_CAP), ...capCells(-POLE_CAP)]
@@ -219,7 +224,7 @@ export function buildLayers(
     }),
     new TextLayer<PositionDatum>({
       id: 'labels',
-      data: positions,
+      data: positions.filter((d) => onNearSide(d.lonLat)),
       pickable: true,
       getPosition: (d) => d.lonLat,
       getText: (d) => d.name,
@@ -228,9 +233,7 @@ export function buildLayers(
       getPixelOffset: [0, -14],
       fontFamily: 'system-ui, sans-serif',
       updateTriggers: { getColor: selected },
-      // On the globe the text quads face away from the camera for half the sphere; culling would drop them.
-      modelMatrix,
-      parameters: { ...depth, cullMode: 'none' },
+      ...text,
     }),
   ]
 
@@ -279,7 +282,7 @@ export function buildLayers(
       }),
       new TextLayer<typeof datum>({
         id: 'ghost-label',
-        data: [datum],
+        data: onNearSide(datum.lonLat) ? [datum] : [],
         getPosition: (d) => d.lonLat,
         getText: () => `${ghostSat.omm.OBJECT_NAME} · ${hhmm(ghost.timeMs)} UTC`,
         getColor: [214, 217, 224],
@@ -290,7 +293,7 @@ export function buildLayers(
         backgroundPadding: [6, 3],
         fontFamily: 'system-ui, sans-serif',
         characterSet: 'auto',
-        ...surface,
+        ...text,
       }),
     )
   }
@@ -320,7 +323,7 @@ export function buildLayers(
         backgroundPadding: [6, 3],
         fontFamily: 'system-ui, sans-serif',
         characterSet: 'auto',
-        ...surface,
+        ...text,
       }),
     )
   }

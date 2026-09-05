@@ -40,7 +40,7 @@ test('builds tracks, positions and labels for every satellite, colored by family
   const { getFillColor: fill } = positions.props as unknown as { getFillColor: (d: unknown) => number[] }
   expect(fill(positionData[0])).toEqual([...FAMILY_COLORS['sun-synchronous'], 255])
   expect(fill(positionData[1])).toEqual([...FAMILY_COLORS['mid-inclination'], 255])
-  expect(labels.props.data).toBe(positionData)
+  expect(labels.props.data).toEqual(positionData)
 })
 
 test('dims everything but the selected satellite and makes layers pickable', () => {
@@ -157,4 +157,15 @@ test('ghost layers draw in the family color and the dashed path follows the samp
   expect(getPath(pieces[0])[0]).toEqual(pieces[0].samples[0].lonLat)
   const { getLineColor } = ghost.props as unknown as { getLineColor: (d: unknown) => number[] }
   expect(getLineColor((ghost.props.data as unknown[])[0])).toEqual(FAMILY_COLORS['mid-inclination'])
+})
+
+test('on the globe, labels skip the depth test and far-side ones are left out', () => {
+  const sats = [strix1, strix9].map(satelliteFrom)
+  const at = epochOf(strix1)
+  const nearSideOnly = (lonLat: [number, number]) => lonLat[0] > 0
+  const [, , , labels] = buildLayers(sats, trackData(sats, at), at, null, null, null, undefined, true, nearSideOnly)
+  const shown = (labels.props.data as { lonLat: [number, number] }[]).map((d) => d.lonLat)
+  expect(shown.length).toBeLessThan(2)
+  expect(shown.every(nearSideOnly)).toBe(true)
+  expect(labels.props.parameters).toMatchObject({ depthCompare: 'always', cullMode: 'none' })
 })
