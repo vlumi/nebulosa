@@ -1,6 +1,7 @@
 /** The keyboard scheme, in one place: the handler dispatches on it and the legend renders from it. */
 export const SHORTCUTS = [
   { keys: '↑ ↓', does: 'step through the open panel' },
+  { keys: 'Shift ↑ ↓', does: 'move the selected place in its list' },
   { keys: '← →', does: 'probe along the selected track (Shift: 5 min)' },
   { keys: '⏎', does: 'go to the pass' },
   { keys: 'Space', does: 'play / pause' },

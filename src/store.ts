@@ -55,6 +55,8 @@ interface Actions {
   /** Select a place, or none; from the list the map also centers on it. */
   selectPlace: (id: string | null, fly?: boolean) => void
   setPinsLocked: (locked: boolean) => void
+  /** Move a place one step up or down its list. */
+  reorderPlace: (id: string, delta: 1 | -1) => void
   movePlace: (id: string, location: Location) => void
   renamePlace: (id: string, name: string) => void
   removePlace: (id: string) => void
@@ -134,6 +136,15 @@ export const useApp = create<State & Actions>((set, get) => ({
     set((s) => ({ places: s.places.map((p) => (p.id === id ? { ...p, lat: location.lat, lon: location.lon } : p)) })),
   renamePlace: (id, name) => set((s) => ({ places: s.places.map((p) => (p.id === id ? { ...p, name } : p)) })),
   setPinsLocked: (pinsLocked) => set({ pinsLocked }),
+  reorderPlace: (id, delta) =>
+    set((s) => {
+      const from = s.places.findIndex((p) => p.id === id)
+      const to = from + delta
+      if (from < 0 || to < 0 || to >= s.places.length) return {}
+      const places = [...s.places]
+      places.splice(to, 0, ...places.splice(from, 1))
+      return { places }
+    }),
   removePlace: (id) =>
     set((s) => ({ places: s.places.filter((p) => p.id !== id), placeId: s.placeId === id ? null : s.placeId })),
   setFilters: (filters) => set({ filters }),

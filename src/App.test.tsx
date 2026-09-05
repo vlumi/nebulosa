@@ -271,6 +271,12 @@ test('keyboard: W opens the places sheet and the arrows then step through the pl
   expect(screen.getByRole('button', { name: /^Places Helsinki/ })).toBeInTheDocument()
   await userEvent.keyboard('{ArrowUp}')
   expect(places.getByRole('button', { name: /^Tokyo/ })).toHaveAttribute('aria-pressed', 'true')
+  await userEvent.keyboard('{Shift>}{ArrowDown}{/Shift}')
+  expect(places.getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+    expect.stringMatching(/^Helsinki/),
+    expect.stringMatching(/^Tokyo/),
+  ])
+  expect(places.getByRole('button', { name: /^Tokyo/ })).toHaveAttribute('aria-pressed', 'true')
 
   await userEvent.keyboard('w')
   expect(screen.queryByRole('complementary')).toBeNull()
