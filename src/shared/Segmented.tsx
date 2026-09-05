@@ -1,7 +1,7 @@
 import type { KeyboardEvent } from 'react'
 import styles from './Segmented.module.css'
 
-interface Props<T extends number> {
+interface Props<T extends number | string> {
   label: string
   options: readonly T[]
   value: T
@@ -12,7 +12,7 @@ interface Props<T extends number> {
 const ARROW_DELTA: Record<string, 1 | -1> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }
 
 /** A radio group drawn as one row of buttons: every choice visible, one click to change. */
-export function Segmented<T extends number>({ label, options, value, onChange, format = String }: Props<T>) {
+export function Segmented<T extends number | string>({ label, options, value, onChange, format = String }: Props<T>) {
   const step = (event: KeyboardEvent<HTMLElement>) => {
     const delta = ARROW_DELTA[event.key]
     if (!delta) return

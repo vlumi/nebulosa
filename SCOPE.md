@@ -107,7 +107,6 @@ Where a satellite is, has been and will be, beyond a highlighted track.
 
 - After a jump to another date the time slider still spans ±12 h around real time and sits pinned at one end. It should span the chosen day, and Live returns to today.
 - The last two quads at either end of a reach ribbon render more saturated than the rest; the geometry is verified clean, so it is a rendering effect.
-- The minimum-elevation filter on passes is a proxy for the wrong thing. What matters for a SAR pass is whether the place lies inside the band the radar can steer to, so the filter should be a two-way choice, anywhere above the horizon or inside the swath, folding the `in SAR reach` checkbox into it and dropping the degree steps.
 
 ### M10 — theme
 

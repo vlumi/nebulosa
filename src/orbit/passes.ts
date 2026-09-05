@@ -8,24 +8,22 @@ const DEG = 180 / Math.PI
 
 /** Choices for how far ahead the pass list looks. */
 export const HORIZONS_H = [6, 12, 24, 48] as const
-/** Choices for the least peak elevation a listed pass must reach. */
-export const MIN_ELEVATIONS = [0, 10, 30, 45, 60] as const
+/** Every line-of-sight pass, or only those whose peak falls inside the radar's steering range. */
+export const PASS_SCOPES = ['horizon', 'swath'] as const
+export type PassScope = (typeof PASS_SCOPES)[number]
 
 /** How the pass list is narrowed. */
 export interface PassFilters {
   horizonHours: number
-  minElevationDeg: number
+  within: PassScope
   /** Only the selected satellite's passes while one is selected. */
   onlySelected: boolean
-  /** Only passes whose peak falls inside the radar's steering range. */
-  inReachOnly: boolean
 }
 
 export const DEFAULT_FILTERS: PassFilters = {
   horizonHours: 24,
-  minElevationDeg: 0,
+  within: 'horizon',
   onlySelected: true,
-  inReachOnly: false,
 }
 
 export interface Location {

@@ -20,7 +20,7 @@ The reach band on by default beside the selected satellite's track: 15° to 45°
 
 <img src="2026-09-04-m8-phone.png" alt="m8 on a phone" width="260">
 
-The same on a phone (390×844): the pass list filtered to the selected satellite, peaks inside the steering range in the accent color, the `in SAR reach` filter beside the others, one pass shown and the rest dimmed.
+The same on a phone (390×844): the pass list filtered to the selected satellite, peaks inside the steering range in the accent color, the `in SAR reach` choice beside the others, one pass shown and the rest dimmed.
 
 ## 2026-09-04 · Segmented controls
 

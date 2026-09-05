@@ -4,7 +4,7 @@ import { Segmented } from '../shared/Segmented'
 import styles from './PassList.module.css'
 import type { OrbitFamily } from '../orbit/orbit'
 import { compassPoint, dayLabel, hhmm, utcDayIndex } from '../shared/format'
-import { HORIZONS_H, MIN_ELEVATIONS, type Pass, type PassFilters } from '../orbit/passes'
+import { HORIZONS_H, PASS_SCOPES, type Pass, type PassFilters } from '../orbit/passes'
 import type { Place } from '../places/places'
 import { inReach, STEERING } from '../orbit/swath'
 
@@ -56,23 +56,15 @@ export function PassList({
               format={(h) => `${h} h`}
             />
           </label>
-          <label>
-            Min{' '}
+          <label title="Every pass in line of sight, or only those the radar can steer to; straight overhead is too close for a side-looking radar">
+            Show{' '}
             <Segmented
-              label="Minimum elevation"
-              options={MIN_ELEVATIONS}
-              value={filters.minElevationDeg}
-              onChange={(minElevationDeg) => set({ minElevationDeg })}
-              format={(deg) => `${deg}°`}
+              label="Passes"
+              options={PASS_SCOPES}
+              value={filters.within}
+              onChange={(within) => set({ within })}
+              format={(scope) => (scope === 'horizon' ? 'above horizon' : 'in SAR reach')}
             />
-          </label>
-          <label title="Peaks the radar can steer to; straight overhead is too close for a side-looking radar">
-            <input
-              type="checkbox"
-              checked={filters.inReachOnly}
-              onChange={(e) => set({ inReachOnly: e.target.checked })}
-            />{' '}
-            in SAR reach
           </label>
           {selectedName && (
             <label>

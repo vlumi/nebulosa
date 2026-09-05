@@ -62,8 +62,7 @@ function App() {
   const selectedSatellite = byId(app.selection.noradId)
   const passes = allPasses.filter(
     (p) =>
-      p.maxElevationDeg >= app.filters.minElevationDeg &&
-      (!app.filters.inReachOnly || inReach(p.offNadirDeg)) &&
+      (app.filters.within === 'horizon' || inReach(p.offNadirDeg)) &&
       (!selectedSatellite || !app.filters.onlySelected || p.noradId === app.selection.noradId),
   )
   const familyOf = (noradId: number) => byId(noradId)?.family ?? 'mid-inclination'

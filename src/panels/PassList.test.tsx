@@ -105,6 +105,6 @@ test('a peak inside the steering range is marked and titled with its look angle;
   )
   expect(screen.getByTitle('30° off nadir at the peak, within SAR reach')).toHaveAttribute('data-reach')
   expect(screen.getByTitle('60° off nadir at the peak')).not.toHaveAttribute('data-reach')
-  await userEvent.click(screen.getByRole('checkbox', { name: 'in SAR reach' }))
-  expect(onFiltersChange).toHaveBeenCalledWith({ ...DEFAULT_FILTERS, inReachOnly: true })
+  await userEvent.click(screen.getByRole('radio', { name: 'in SAR reach' }))
+  expect(onFiltersChange).toHaveBeenCalledWith({ ...DEFAULT_FILTERS, within: 'swath' })
 })
