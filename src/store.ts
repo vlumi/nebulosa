@@ -69,7 +69,7 @@ const initial = (): State => ({
   passesOpen: null,
   helpOpen: false,
   reachVisible: true,
-  globe: false,
+  globe: true,
 })
 
 export const useApp = create<State & Actions>((set, get) => ({
