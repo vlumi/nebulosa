@@ -6,7 +6,7 @@ import { strix1, strix9 } from '../test/fixtures'
 
 const tokyo = { lat: 35.68, lon: 139.69 }
 const tokyoPlace = { id: 'tokyo', name: 'Tokyo', ...tokyo }
-import { fitZoom, horizonDeg } from './fit'
+import { fitZoom, horizonDeg, measureHorizonDeg } from './fit'
 import { MapView } from './MapView'
 import { positionAt, satelliteFrom } from '../orbit/orbit'
 
@@ -50,6 +50,7 @@ const { mapInstance, overlayInstance, markerInstance } = vi.hoisted(() => {
       getZoom: vi.fn(() => mapInstance.zoom),
       getCanvas: vi.fn(() => ({ clientWidth: 640, clientHeight: 480, width: 1280, height: 960 })),
       getCenter: vi.fn(() => ({ lng: 139.7, lat: 35.7 })),
+      unproject: vi.fn(() => ({ lng: 139.7, lat: 35.7 })),
       labels: [] as unknown[],
       queryRenderedFeatures: vi.fn(() => mapInstance.labels),
       project: vi.fn(([lon, lat]: [number, number]) => ({ x: lon, y: lat })),
@@ -381,4 +382,29 @@ test('a map resize sets the deck viewport to the canvas size without touching th
   expect(framebuffer.resize).toHaveBeenCalledWith([1280, 960])
   expect(deck.userData.currentViewport).toBeUndefined()
   expect(overlayInstance.setProps).not.toHaveBeenCalledWith(expect.objectContaining({ width: expect.anything() }))
+})
+
+test('the horizon is measured on the map: the farthest screen point that round-trips through the projection', () => {
+  // A toy globe: orthographic, radius 300 px around the screen center (400, 300), center at 0°N 0°E.
+  const R = 300
+  const toy = {
+    getCenter: () => ({ lng: 0, lat: 0 }),
+    getCanvas: () => ({ clientWidth: 800, clientHeight: 600 }),
+    project: ([lng, lat]: [number, number]) => ({
+      x: 400 + R * Math.sin((lng * Math.PI) / 180) * Math.cos((lat * Math.PI) / 180),
+      y: 300 - R * Math.sin((lat * Math.PI) / 180),
+    }),
+    unproject: ([x, y]: [number, number]) => {
+      const nx = Math.max(-1, Math.min(1, (x - 400) / R))
+      const ny = Math.max(-1, Math.min(1, (300 - y) / R))
+      const lat = Math.asin(ny)
+      const lng = Math.asin(Math.max(-1, Math.min(1, nx / Math.cos(lat))))
+      return { lng: (lng * 180) / Math.PI, lat: (lat * 180) / Math.PI }
+    },
+  }
+  // An orthographic globe shows exactly 90°; the bisection gets within a fraction of a degree of it.
+  expect(measureHorizonDeg(toy, 50)).toBeGreaterThan(85)
+  expect(measureHorizonDeg(toy, 50)).toBeLessThanOrEqual(90)
+  const flat = { ...toy, project: () => ({ x: NaN, y: NaN }) }
+  expect(measureHorizonDeg(flat, 50)).toBe(50)
 })

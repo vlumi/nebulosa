@@ -17,7 +17,7 @@ import { DEFAULT_SPAN, positionAt, type Satellite, type TrackSpan } from '../orb
 import type { Location } from '../orbit/passes'
 import type { Place } from '../places/places'
 import type { FlyTo } from '../store'
-import { fitZoom, GLOBE_MAX_ZOOM, horizonDeg } from './fit'
+import { fitZoom, GLOBE_MAX_ZOOM, horizonDeg, measureHorizonDeg } from './fit'
 import { nightCells } from '../orbit/sun'
 import { useLatest } from '../shared/useLatest'
 import { useThrottled } from '../shared/useThrottled'
@@ -311,7 +311,7 @@ export function MapView({
         ? {
             lon: m.getCenter().lng,
             lat: m.getCenter().lat,
-            horizonDeg: horizonDeg(m.getZoom(), container.current?.clientHeight || 900),
+            horizonDeg: measureHorizonDeg(m, horizonDeg(m.getZoom(), container.current?.clientHeight || 900)),
           }
         : null
     overlay.current?.setProps({
