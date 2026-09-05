@@ -30,6 +30,7 @@ interface State {
   helpOpen: boolean
   /** The radar's reach drawn beside the selected satellite's track. */
   reachVisible: boolean
+  globe: boolean
 }
 
 interface Actions {
@@ -54,6 +55,7 @@ interface Actions {
   togglePasses: (open: boolean, narrow: boolean) => void
   setHelpOpen: (open: boolean) => void
   toggleReach: () => void
+  toggleGlobe: () => void
 }
 
 const initial = (): State => ({
@@ -67,6 +69,7 @@ const initial = (): State => ({
   passesOpen: null,
   helpOpen: false,
   reachVisible: true,
+  globe: false,
 })
 
 export const useApp = create<State & Actions>((set, get) => ({
@@ -117,6 +120,7 @@ export const useApp = create<State & Actions>((set, get) => ({
     set((s) => ({ passesOpen: open, satellitesOpen: open && narrow ? false : s.satellitesOpen })),
   setHelpOpen: (helpOpen) => set({ helpOpen }),
   toggleReach: () => set((s) => ({ reachVisible: !s.reachVisible })),
+  toggleGlobe: () => set((s) => ({ globe: !s.globe })),
 }))
 
 /** Back to the initial state; for tests. */

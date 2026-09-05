@@ -2,15 +2,15 @@ import { epochOf } from '../orbit/elements'
 import { strix1, strix9 } from '../test/fixtures'
 import { FAMILY_COLORS } from '../shared/palette'
 import { buildLayers, hoverAt, trackData } from './layers'
-import { DEFAULT_SPAN, satelliteFrom } from '../orbit/orbit'
+import { satelliteFrom } from '../orbit/orbit'
 
 test('builds tracks, positions and labels for every satellite, colored by family', () => {
   const sats = [strix1, strix9].map(satelliteFrom)
   const at = epochOf(strix1)
   const layers = buildLayers(sats, trackData(sats, at), at)
-  expect(layers.map((l) => l.id)).toEqual(['night', 'tracks', 'positions', 'labels'])
+  expect(layers.map((l) => l.id)).toEqual(['tracks', 'positions', 'labels'])
 
-  const [, tracks, positions, labels] = layers
+  const [tracks, positions, labels] = layers
   const trackRows = tracks.props.data as {
     noradId: number
     family: string
@@ -43,7 +43,7 @@ test('builds tracks, positions and labels for every satellite, colored by family
 test('dims everything but the selected satellite and makes layers pickable', () => {
   const sats = [strix1, strix9].map(satelliteFrom)
   const at = epochOf(strix1)
-  const [, tracks, positions, labels] = buildLayers(sats, trackData(sats, at), at, strix9.NORAD_CAT_ID)
+  const [tracks, positions, labels] = buildLayers(sats, trackData(sats, at), at, strix9.NORAD_CAT_ID)
   expect([tracks, positions, labels].every((l) => l.props.pickable)).toBe(true)
 
   const trackRows = tracks.props.data as { noradId: number; half: string }[]
@@ -70,8 +70,8 @@ test('hovering a track adds a marker and a label with the time at that point', (
   expect(hover).toEqual({ noradId: strix1.NORAD_CAT_ID, lonLat: target.lonLat, timeMs: target.timeMs })
 
   const layers = buildLayers(sats, [track], at, null, hover)
-  expect(layers.map((l) => l.id)).toEqual(['night', 'tracks', 'positions', 'labels', 'hover-marker', 'hover-label'])
-  const { getText } = layers[5].props as unknown as { getText: () => string }
+  expect(layers.map((l) => l.id)).toEqual(['tracks', 'positions', 'labels', 'hover-marker', 'hover-label'])
+  const { getText } = layers[4].props as unknown as { getText: () => string }
   expect(getText()).toMatch(/^STRIX-1 · \d\d:\d\d:\d\d UTC · −1 h 2\d min$/)
 })
 
@@ -80,8 +80,8 @@ test('a ghost draws a hollow marker where the satellite will be at the given tim
   const at = epochOf(strix1)
   const later = at.getTime() + 15 * 60_000
   const layers = buildLayers(sats, trackData(sats, at), at, null, null, { noradId: strix1.NORAD_CAT_ID, timeMs: later })
-  expect(layers.map((l) => l.id)).toEqual(['night', 'tracks', 'positions', 'labels', 'ghost', 'ghost-label'])
-  const { getText } = layers[5].props as unknown as { getText: () => string }
+  expect(layers.map((l) => l.id)).toEqual(['tracks', 'positions', 'labels', 'ghost', 'ghost-label'])
+  const { getText } = layers[4].props as unknown as { getText: () => string }
   expect(getText()).toBe(`STRIX-1 · ${new Date(later).toISOString().slice(11, 16)} UTC`)
 })
 
@@ -93,22 +93,14 @@ test('a ghost beyond the drawn track gets a dashed continuation reaching it', ()
     noradId: strix1.NORAD_CAT_ID,
     timeMs: farAhead,
   })
-  expect(layers.map((l) => l.id)).toEqual([
-    'night',
-    'tracks',
-    'positions',
-    'labels',
-    'ghost-track',
-    'ghost',
-    'ghost-label',
-  ])
-  expect(layers[4].props.pickable).toBe(true)
-  const continuation = (layers[4].props.data as { samples: { lonLat: [number, number]; timeMs: number }[] }[])[0]
+  expect(layers.map((l) => l.id)).toEqual(['tracks', 'positions', 'labels', 'ghost-track', 'ghost', 'ghost-label'])
+  expect(layers[3].props.pickable).toBe(true)
+  const continuation = (layers[3].props.data as { samples: { lonLat: [number, number]; timeMs: number }[] }[])[0]
   const path = continuation.samples.map((s) => s.lonLat)
   const spanMinutes = 3 * 60 + 5 - sats[0].periodMinutes
   expect(Math.abs(path.length - spanMinutes * 2)).toBeLessThanOrEqual(2)
   expect(continuation.samples.some((s) => s.timeMs === farAhead)).toBe(true)
-  const ghostPosition = (layers[5].props.data as { lonLat: [number, number] }[])[0].lonLat
+  const ghostPosition = (layers[4].props.data as { lonLat: [number, number] }[])[0].lonLat
   const nearest = path.reduce((best, p) =>
     Math.hypot(p[0] - ghostPosition[0], p[1] - ghostPosition[1]) <
     Math.hypot(best[0] - ghostPosition[0], best[1] - ghostPosition[1])
@@ -121,7 +113,7 @@ test('a ghost beyond the drawn track gets a dashed continuation reaching it', ()
 test('selection emphasis reaches dots and labels: bigger and brighter when selected, faded when not', () => {
   const sats = [strix1, strix9].map(satelliteFrom)
   const at = epochOf(strix1)
-  const [, , positions, labels] = buildLayers(sats, trackData(sats, at), at, strix9.NORAD_CAT_ID)
+  const [, positions, labels] = buildLayers(sats, trackData(sats, at), at, strix9.NORAD_CAT_ID)
   const dots = positions.props.data as { noradId: number }[]
   const { getRadius, getFillColor } = positions.props as unknown as {
     getRadius: (d: unknown) => number
@@ -152,23 +144,4 @@ test('ghost layers draw in the family colour and the dashed path follows the sam
   expect(getPath(continuation)).toHaveLength(continuation.samples.length)
   const { getLineColor } = ghost.props as unknown as { getLineColor: (d: unknown) => number[] }
   expect(getLineColor((ghost.props.data as unknown[])[0])).toEqual(FAMILY_COLORS['mid-inclination'])
-})
-
-test('the reach ribbons draw under the tracks for the selected satellite, only when asked', () => {
-  const sats = [strix1, strix9].map(satelliteFrom)
-  const at = epochOf(strix1)
-  const tracks = trackData(sats, at)
-  const ids = (layers: { id: string }[]) => layers.map((l) => l.id)
-  expect(ids(buildLayers(sats, tracks, at, strix1.NORAD_CAT_ID, null, null, DEFAULT_SPAN, false))).not.toContain(
-    'reach',
-  )
-  expect(ids(buildLayers(sats, tracks, at, null, null, null, DEFAULT_SPAN, true))).not.toContain('reach')
-  const layers = buildLayers(sats, tracks, at, strix1.NORAD_CAT_ID, null, null, DEFAULT_SPAN, true)
-  expect(ids(layers).slice(0, 3)).toEqual(['night', 'reach', 'tracks'])
-  const reach = layers[1]
-  expect((reach.props.data as unknown[]).length).toBeGreaterThan(10)
-  expect((reach.props as unknown as { getFillColor: number[] }).getFillColor).toEqual([
-    ...FAMILY_COLORS['sun-synchronous'],
-    45,
-  ])
 })

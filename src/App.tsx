@@ -8,6 +8,7 @@ import { usePasses } from './orbit/usePasses'
 import { Disclosure } from './panels/Disclosure'
 import { Help } from './panels/Help'
 import { PassList } from './panels/PassList'
+import { MapToggle } from './panels/MapToggle'
 import { ReachToggle } from './panels/ReachToggle'
 import { SatelliteList } from './panels/SatelliteList'
 import { useNarrow } from './panels/useNarrow'
@@ -119,6 +120,10 @@ function App() {
         case 'R':
           s.toggleReach()
           break
+        case 'g':
+        case 'G':
+          s.toggleGlobe()
+          break
         default:
           return
       }
@@ -211,6 +216,9 @@ function App() {
         </div>
         <LiveTimeBar />
         <Help open={app.helpOpen} onToggle={app.setHelpOpen}>
+          <MapToggle on={app.globe} onToggle={app.toggleGlobe} title="Globe or flat map">
+            Globe
+          </MapToggle>
           <ReachToggle on={app.reachVisible} onToggle={app.toggleReach} />
         </Help>
       </main>
@@ -231,7 +239,7 @@ function LiveMap({
 }) {
   const timeMs = useFrame((f) => f.timeMs)
   const time = useMemo(() => new Date(timeMs), [timeMs])
-  const { selection, focus, location, span, reachVisible, select, setLocation } = useApp()
+  const { selection, focus, location, span, reachVisible, globe, select, setLocation } = useApp()
   const probe: Hover | null = useMemo(() => {
     if (selection.probeMs === null || !selectedSatellite) return null
     const p = positionAt(selectedSatellite, new Date(selection.probeMs))
@@ -250,6 +258,7 @@ function LiveMap({
       probe={probe}
       span={span}
       reach={reachVisible}
+      globe={globe}
     />
   )
 }

@@ -1,15 +1,27 @@
-import { MapboxOverlay } from '@deck.gl/mapbox'
-import { Map as MapLibre, Marker, NavigationControl, setWorkerUrl } from 'maplibre-gl'
+import { MapLibreOverlay } from '@deck.gl/maplibre'
+import { Map as MapLibre, Marker, NavigationControl, setWorkerUrl, type GeoJSONSource } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { buildLayers, hoverAt, trackData, type Ghost, type Hover, type SatelliteDatum, type TrackDatum } from './layers'
+import {
+  EMPTY,
+  NIGHT_LAYER,
+  NIGHT_PAINT,
+  nightFeature,
+  REACH_LAYER,
+  REACH_OPACITY,
+  reachFeature,
+  reachFill,
+} from './surface'
 import { DEFAULT_SPAN, positionAt, type Satellite, type TrackSpan } from '../orbit/orbit'
 import type { Location } from '../orbit/passes'
 import { useLatest } from '../shared/useLatest'
 import { useThrottled } from '../shared/useThrottled'
 
 const BASEMAP = 'https://tiles.openfreemap.org/styles/fiord'
+/** Past this zoom the globe renders flat: curvature is invisible there, and the deck.gl beta clips its globe view away. */
+const GLOBE_MAX_ZOOM = 5.5
 
 // MapLibre 6 resolves its worker relative to its own script URL, which a bundled app does not provide.
 setWorkerUrl(maplibreWorkerUrl)
@@ -38,6 +50,7 @@ interface Props {
   span?: TrackSpan
   /** Draw the radar's reach beside the selected satellite's track. */
   reach?: boolean
+  globe?: boolean
 }
 
 export function MapView({
@@ -52,11 +65,12 @@ export function MapView({
   probe = null,
   span = DEFAULT_SPAN,
   reach = false,
+  globe = false,
 }: Props) {
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<MapLibre>(null)
   const marker = useRef<Marker>(null)
-  const overlay = useRef<MapboxOverlay>(null)
+  const overlay = useRef<MapLibreOverlay>(null)
   const [hover, setHover] = useState<Hover | null>(null)
 
   // The map and overlay are created once; their callbacks read the latest props through these.
@@ -73,6 +87,20 @@ export function MapView({
   )
   const currentTracks = useLatest(tracks)
 
+  const nightData = useMemo(() => nightFeature(new Date(trackMinute * 60_000)), [trackMinute])
+  const reachTrack = reach && selected !== null ? tracks.find((t) => t.noradId === selected) : undefined
+  const reachData = useMemo(() => (reachTrack ? reachFeature(reachTrack.samples) : EMPTY), [reachTrack])
+  const reachColor = reachFill(reachTrack?.family ?? 'sun-synchronous')
+  const surfaces = useLatest({ nightData, reachData, reachColor })
+  const projection = useLatest(globe)
+  const styleReady = useRef(false)
+  const applyProjection = useCallback(() => {
+    const m = map.current
+    if (!m || !styleReady.current) return
+    const wanted = projection.current && m.getZoom() < GLOBE_MAX_ZOOM ? 'globe' : 'mercator'
+    if (m.getProjection()?.type !== wanted) m.setProjection({ type: wanted })
+  }, [projection])
+
   useEffect(() => {
     map.current = new MapLibre({
       container: container.current!,
@@ -80,9 +108,25 @@ export function MapView({
       center: [139.7, 35.7],
       zoom: 1.5,
     })
+    map.current.on('style.load', () => {
+      const m = map.current
+      if (!m) return
+      styleReady.current = true
+      applyProjection()
+      m.addSource(NIGHT_LAYER, { type: 'geojson', data: surfaces.current.nightData })
+      m.addSource(REACH_LAYER, { type: 'geojson', data: surfaces.current.reachData })
+      m.addLayer({ id: NIGHT_LAYER, type: 'fill', source: NIGHT_LAYER, paint: NIGHT_PAINT })
+      m.addLayer({
+        id: REACH_LAYER,
+        type: 'fill',
+        source: REACH_LAYER,
+        paint: { 'fill-color': surfaces.current.reachColor, 'fill-opacity': REACH_OPACITY },
+      })
+    })
+    map.current.on('zoom', applyProjection)
     map.current.addControl(new NavigationControl({ showCompass: false }), 'top-right')
-    overlay.current = new MapboxOverlay({
-      interleaved: false,
+    overlay.current = new MapLibreOverlay({
+      interleaved: true,
       layers: [],
       pickingRadius: 8,
       onClick: (info) => select.current((info.object as SatelliteDatum | undefined)?.noradId ?? null),
@@ -121,6 +165,18 @@ export function MapView({
     marker.current?.setLngLat([location.lon, location.lat])
   }, [location])
 
+  // Until the style has loaded the sources do not exist; the load handler above then takes the latest data.
+  useEffect(() => {
+    ;(map.current?.getSource(NIGHT_LAYER) as GeoJSONSource | undefined)?.setData(nightData)
+  }, [nightData])
+  useEffect(() => {
+    ;(map.current?.getSource(REACH_LAYER) as GeoJSONSource | undefined)?.setData(reachData)
+    if (map.current?.getLayer(REACH_LAYER)) map.current.setPaintProperty(REACH_LAYER, 'fill-color', reachColor)
+  }, [reachData, reachColor])
+
+  // The projection is part of the style; before the style has loaded, the load handler above applies it.
+  useEffect(applyProjection, [globe, applyProjection])
+
   useEffect(() => {
     if (!focus) return
     const sat = satellites.find((s) => s.omm.NORAD_CAT_ID === focus.noradId)
@@ -131,9 +187,9 @@ export function MapView({
 
   useEffect(() => {
     overlay.current?.setProps({
-      layers: buildLayers(satellites, tracks, now, selected, hover ?? probe, ghost, span, reach),
+      layers: buildLayers(satellites, tracks, now, selected, hover ?? probe, ghost, span, globe),
     })
-  }, [satellites, tracks, now, selected, hover, probe, ghost, span, reach])
+  }, [satellites, tracks, now, selected, hover, probe, ghost, span, globe])
 
   return <div ref={container} className="map" />
 }
