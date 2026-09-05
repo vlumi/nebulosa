@@ -4,7 +4,7 @@ Ground-track visualizer for the Synspective StriX SAR constellation, from public
 
 **The name:** *Strix nebulosa*, the great gray owl: same genus as the StriX satellites, the iconic owl of Finland, and Latin for "cloudy", so an owl named *cloudy* for satellites built to see through clouds. Owls see in the dark; so does SAR.
 
-**Status:** unofficial demo project, not affiliated with Synspective. All data is public (NORAD GP data via CelesTrak). Milestones M0 to M6 below were delivered on 2026-09-04, SAR reach and the globe on the two days after; [Next](#next) is the plan from here, and [docs/screenshots](docs/screenshots/README.md) holds one capture per milestone.
+**Status:** unofficial demo project, not affiliated with Synspective. All data is public (NORAD GP data via CelesTrak). Milestones M0 to M6 below were delivered on 2026-09-04, SAR reach and the globe on the two days after, the shell (M7) and places (M8) on 2026-09-05; [Next](#next) is the plan from here, and [docs/screenshots](docs/screenshots/README.md) holds one capture per milestone.
 
 ## Data
 
@@ -71,12 +71,12 @@ Vite scaffold, CI pipeline green, site live at nebulosa.misaki.fi from day one (
 
 Five pieces of UI work and two chores, ordered so that each lands on a settled base instead of on a panel that the next step redraws. The shell comes first because every later piece needs a home in it; places before focus mode because focus mode reads the selected place; the theme last because it touches only tokens and the basemap once the shell is stable.
 
-### Chores, first and independent
+### Chores, first and independent (done)
 
 - **en-US everywhere.** A dozen British spellings across code comments, test names and the docs: colour, centre, kilometres, the great grey owl. One pass, one PR, no conflicts with anything below.
 - **Resize bug.** Resizing the window leaves the deck.gl overlay at its old size while the basemap re-lays out, so tracks and satellites drift off the map, globe and flat alike. Reproduced by shrinking the map container; re-applying the overlay's props on MapLibre's resize event does not cure it, so the fault is in the beta module's own resize handling. Next probe is to set the overlay's width and height explicitly from the container on that event, and failing that, to recreate the overlay. Small, isolated, worth doing before the shell so the shell's own resizes are trustworthy.
 
-### M7 — shell
+### M7 — shell (done)
 
 The two panels cover the whole screen on a phone, and choosing something should hand the screen back to the map while still saying what was chosen.
 
@@ -86,7 +86,7 @@ The two panels cover the whole screen on a phone, and choosing something should 
 - Open question: whether desktop keeps a permanently open column at all, or also goes to the toolbar with sheets. The toolbar-only design is simpler and one code path; the column shows more at once. Prototype the toolbar on both and decide with screenshots.
 - Conflicts: this rewrites `App.tsx`, the panels and their styles. Nothing else should be in flight against those files while it lands.
 
-### M8 — places
+### M8 — places (done)
 
 - **Several pins**, not one. Add a place with a long press on a phone or a double click on desktop; name it from the reverse geocode if cheap, else from its coordinates; remove it from the list.
 - **One place selected at a time, or none.** Passes are computed for the selected place; with none selected the passes button says so and the list is empty. Unselecting is a tap on the selected place.
@@ -102,6 +102,11 @@ Where a satellite is, has been and will be, beyond a highlighted track.
 - **Readout:** sub-satellite point, altitude, speed, direction, time to the next pass over the selected place, and time to the next terminator crossing, in the satellite's sheet while focused.
 - **Own timeline:** the arrow-key probe becomes a visible strip under the readout, showing the next few passes and the day and night stretches along the track; dragging it moves the ghost.
 - Conflicts: store selection, `layers.ts`, the satellite sheet from M7. Wait for M7; independent of M8 except for the next-pass field.
+
+### Small things noticed along the way
+
+- After a jump to another date the time slider still spans ±12 h around real time and sits pinned at one end. It should span the chosen day, and Live returns to today.
+- The last two quads at either end of a reach ribbon render more saturated than the rest; the geometry is verified clean, so it is a rendering effect.
 
 ### M10 — theme
 
