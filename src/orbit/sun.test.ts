@@ -79,3 +79,20 @@ test('cells tile the night exactly: at any longitude the covered latitude equals
     expect(coveredAt(cells, lon)).toBeCloseTo(expected, 1)
   }
 })
+
+test('every cell is a simple polygon: three to five distinct vertices, positive area, no spurs', () => {
+  for (const iso of ['2026-06-21T12:00:00Z', '2026-09-05T04:00:00Z', '2026-12-21T00:00:00Z', '2026-03-20T09:00:00Z']) {
+    for (const ring of nightCells(new Date(iso))) {
+      expect(ring.length).toBeGreaterThanOrEqual(3)
+      expect(ring.length).toBeLessThanOrEqual(5)
+      expect(new Set(ring.map(([lon, lat]) => `${lon.toFixed(9)},${lat.toFixed(9)}`)).size).toBe(ring.length)
+      let area = 0
+      for (let i = 0; i < ring.length; i++) {
+        const [x1, y1] = ring[i]
+        const [x2, y2] = ring[(i + 1) % ring.length]
+        area += x1 * y2 - x2 * y1
+      }
+      expect(Math.abs(area)).toBeGreaterThan(1e-9)
+    }
+  }
+})

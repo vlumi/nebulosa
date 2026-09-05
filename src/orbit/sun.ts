@@ -30,24 +30,29 @@ function terminatorLat(deltaDeg: number, declRad: number): number {
 
 /**
  * The part of one grid cell that is night, given the terminator's latitude `a` at its west edge and `b` at its
- * east edge: the rectangle clipped by the straight line between them, with vertices wherever that line
- * crosses the cell's top or bottom. Night lies below the line when the Sun is north of the equator, above it
- * when south. Null when the cell is all day.
+ * east edge: the cell rectangle clipped against the straight line between them (Sutherland–Hodgman, one edge),
+ * night lying below the line when the Sun is north of the equator and above it when south. Null when all day.
  */
 function nightInCell(lon0: number, lon1: number, a: number, b: number, lat0: number, lat1: number, north: boolean) {
-  // The cell edge that is certainly night: the bottom when night lies below the line, the top when above.
-  const nightLimit = north ? lat0 : lat1
-  if (north ? Math.max(a, b) <= lat0 : Math.min(a, b) >= lat1) return null
-  const clamp = (lat: number) => Math.max(lat0, Math.min(lat1, lat))
-  // Along the line from the east edge back to the west edge, note where it crosses the cell's top or bottom.
-  const line: LonLat[] = [[lon1, clamp(b)]]
-  const crossings = (b > a ? [lat1, lat0] : [lat0, lat1]).filter((lat) => lat > Math.min(a, b) && lat < Math.max(a, b))
-  for (const lat of crossings) line.push([lon0 + ((lat - a) / (b - a)) * (lon1 - lon0), lat])
-  line.push([lon0, clamp(a)])
-  // The night side's own edge of the cell, then the terminator side of it.
-  return ([[lon0, nightLimit], [lon1, nightLimit], ...line] as LonLat[]).filter(
-    (point, i, ring) => i === 0 || point[0] !== ring[i - 1][0] || point[1] !== ring[i - 1][1],
-  )
+  const lineAt = (lon: number) => a + ((lon - lon0) / (lon1 - lon0)) * (b - a)
+  const inside = ([lon, lat]: LonLat) => (north ? lat <= lineAt(lon) : lat >= lineAt(lon))
+  const corners: LonLat[] = [
+    [lon0, lat0],
+    [lon1, lat0],
+    [lon1, lat1],
+    [lon0, lat1],
+  ]
+  const clipped: LonLat[] = []
+  corners.forEach((p, i) => {
+    const q = corners[(i + 1) % 4]
+    const pIn = inside(p)
+    if (pIn) clipped.push(p)
+    if (pIn !== inside(q)) {
+      // A vertical edge meets the line at its own longitude; a horizontal one where the line reaches its latitude.
+      clipped.push(p[0] === q[0] ? [p[0], lineAt(p[0])] : [lon0 + ((p[1] - a) / (b - a)) * (lon1 - lon0), p[1]])
+    }
+  })
+  return clipped.length >= 3 ? clipped : null
 }
 
 /**
