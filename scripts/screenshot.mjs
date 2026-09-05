@@ -6,6 +6,7 @@
 //   EVAL="document.querySelector('[aria-label=Constellation] li button').click()" node scripts/screenshot.mjs out.png  # act first
 //   HOVER=1 node scripts/screenshot.mjs out.png    # sweep the pointer across the map first (surfaces hover errors)
 //   WIDTH=390 HEIGHT=844 node scripts/screenshot.mjs phone.png   # phone-sized viewport
+//   DPR=2 node scripts/screenshot.mjs retina.png                  # high-DPI rendering
 import { spawn } from 'node:child_process'
 import { writeFile } from 'node:fs/promises'
 
@@ -20,6 +21,7 @@ const evalJs = process.env.EVAL
 const hover = process.env.HOVER === '1'
 const width = Number(process.env.WIDTH ?? 1400)
 const height = Number(process.env.HEIGHT ?? 900)
+const dpr = Number(process.env.DPR ?? 1)
 
 const browser = spawn(chrome, [
   '--headless=new',
@@ -73,7 +75,7 @@ const send = (method, params = {}) =>
 
 try {
   await send('Runtime.enable')
-  await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 800 })
+  await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: dpr, mobile: width < 800 })
   await send('Page.navigate', { url })
   await new Promise((resolve) => setTimeout(resolve, waitMs))
   if (evalJs) {

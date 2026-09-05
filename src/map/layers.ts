@@ -1,7 +1,7 @@
 import type { Layer } from '@deck.gl/core'
 import { Matrix4 } from '@math.gl/core'
 import { PathStyleExtension, type PathStyleExtensionProps } from '@deck.gl/extensions'
-import { PathLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers'
+import { PathLayer, ScatterplotLayer, SolidPolygonLayer, TextLayer } from '@deck.gl/layers'
 import { formatOffset, hhmm, hhmmss } from '../shared/format'
 import {
   DEFAULT_SPAN,
@@ -16,6 +16,8 @@ import {
   type TrackSample,
   type TrackSpan,
 } from '../orbit/orbit'
+import { nightStrips } from '../orbit/sun'
+import { reachRibbons } from '../orbit/swath'
 import { FAMILY_COLORS, type Rgba } from '../shared/palette'
 
 export interface SatelliteDatum {
@@ -80,6 +82,52 @@ function ghostReach(sat: Satellite, ghostMs: number, nowMs: number, span: TrackS
   return null
 }
 
+/** What the globe shows: its center and how far from it, in degrees along the surface, the limb lies. */
+export interface GlobeView {
+  lon: number
+  lat: number
+  horizonDeg: number
+}
+
+const RAD = Math.PI / 180
+
+function angularDistanceDeg([lon1, lat1]: LonLat, [lon2, lat2]: LonLat): number {
+  const a = lat1 * RAD
+  const b = lat2 * RAD
+  const cosine = Math.sin(a) * Math.sin(b) + Math.cos(a) * Math.cos(b) * Math.cos((lon2 - lon1) * RAD)
+  return Math.acos(Math.max(-1, Math.min(1, cosine))) / RAD
+}
+
+/**
+ * The pieces whose middle is on the visible side of the globe. The surfaces are drawn without a depth test,
+ * because at the limb no lift can separate them from the basemap's sphere, so the far side is left out here
+ * instead; pieces are small enough that one straddling the limb overshoots by a pixel or two.
+ */
+export function withinHorizon(pieces: LonLat[][], view: GlobeView | null): LonLat[][] {
+  if (!view) return pieces
+  const center: LonLat = [view.lon, view.lat]
+  return pieces.filter((ring) => {
+    const middle: LonLat = [
+      ring.reduce((sum, [lon]) => sum + lon, 0) / ring.length,
+      ring.reduce((sum, [, lat]) => sum + lat, 0) / ring.length,
+    ]
+    return angularDistanceDeg(middle, center) <= view.horizonDeg
+  })
+}
+
+/** A ring that crosses the antimeridian, rewritten to continue past ±180° instead of jumping back. */
+function unwrapped(ring: LonLat[]): LonLat[] {
+  let offset = 0
+  return ring.map(([lon, lat], i) => {
+    if (i > 0) {
+      const previous = ring[i - 1][0] + offset
+      if (lon + offset - previous > 180) offset -= 360
+      else if (previous - (lon + offset) > 180) offset += 360
+    }
+    return [lon + offset, lat]
+  })
+}
+
 const TAIL_CHUNKS = 60
 /** Share of the flown half over which the tail fades from full to floor; flat beyond it. */
 const TAIL_FADE_SPAN = 0.12
@@ -134,6 +182,9 @@ export function buildLayers(
   ghost: Ghost | null = null,
   span: TrackSpan = DEFAULT_SPAN,
   globe = false,
+  reach = false,
+  night: LonLat[][] = nightStrips(now),
+  view: GlobeView | null = null,
 ): Layer[] {
   const nowMs = now.getTime()
   // Depth hides the far side of the globe; on the flat map nothing needs hiding and the test only causes z-fighting.
@@ -141,6 +192,8 @@ export function buildLayers(
   // A translation applied after tessellation: deck's globe grid cutter mangles paths given a third coordinate.
   const modelMatrix = globe ? new Matrix4().translate([0, 0, GLOBE_LIFT_M]) : undefined
   const surface = { modelMatrix, parameters: depth } as const
+  // Filled surfaces skip the depth test; withinHorizon leaves out the far side instead.
+  const filled = { parameters: { depthCompare: 'always', cullMode: 'none' } } as const
   const segments = tracks.flatMap((track) => segmentsOf(track, nowMs))
   const positions: PositionDatum[] = satellites.flatMap((sat) => {
     const p = positionAt(sat, now)
@@ -158,7 +211,31 @@ export function buildLayers(
     selected === null ? 'normal' : d.noradId === selected ? 'selected' : 'dimmed'
   const color = (d: SatelliteDatum, alpha: number): Rgba => [...FAMILY_COLORS[d.family], alpha]
 
+  const reachTrack = reach && selected !== null ? tracks.find((t) => t.noradId === selected) : undefined
   const layers: Layer[] = [
+    new SolidPolygonLayer<LonLat[]>({
+      id: 'night',
+      data: withinHorizon(night, view),
+      wrapLongitude: !globe,
+      getPolygon: (d) => d,
+      getFillColor: [0, 4, 20, 90],
+      pickable: false,
+      ...filled,
+    }),
+    ...(reachTrack
+      ? [
+          new SolidPolygonLayer<LonLat[]>({
+            id: 'reach',
+            // Rings continue past ±180° rather than jump, so the globe's grid cutter reads them the short way round.
+            data: withinHorizon(reachRibbons(reachTrack.samples).map(unwrapped), view),
+            getPolygon: (d) => d,
+            getFillColor: color(reachTrack, 45),
+            wrapLongitude: !globe,
+            pickable: false,
+            ...filled,
+          }),
+        ]
+      : []),
     new PathLayer<SegmentDatum>({
       id: 'tracks',
       data: segments,

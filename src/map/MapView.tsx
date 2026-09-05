@@ -1,29 +1,28 @@
 import { MapLibreOverlay } from '@deck.gl/maplibre'
-import { Map as MapLibre, Marker, NavigationControl, setWorkerUrl, type GeoJSONSource } from 'maplibre-gl'
+import { Map as MapLibre, Marker, NavigationControl, setWorkerUrl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { buildLayers, hoverAt, trackData, type Ghost, type Hover, type SatelliteDatum, type TrackDatum } from './layers'
 import {
-  EMPTY,
-  NIGHT_LAYER,
-  NIGHT_PAINT,
-  nightFeature,
-  REACH_LAYER,
-  REACH_OPACITY,
-  reachFeature,
-  reachFill,
-} from './surface'
+  buildLayers,
+  hoverAt,
+  trackData,
+  type Ghost,
+  type GlobeView,
+  type Hover,
+  type SatelliteDatum,
+  type TrackDatum,
+} from './layers'
 import { DEFAULT_SPAN, positionAt, type Satellite, type TrackSpan } from '../orbit/orbit'
 import type { Location } from '../orbit/passes'
 import type { Place } from '../places/places'
 import type { FlyTo } from '../store'
+import { fitZoom, GLOBE_MAX_ZOOM, horizonDeg } from './fit'
+import { nightStrips } from '../orbit/sun'
 import { useLatest } from '../shared/useLatest'
 import { useThrottled } from '../shared/useThrottled'
 
 const BASEMAP = 'https://tiles.openfreemap.org/styles/fiord'
-/** Past this zoom the globe renders flat: curvature is invisible there, and the deck.gl beta clips its globe view away. */
-const GLOBE_MAX_ZOOM = 5.5
 const LONG_PRESS_MS = 600
 const PIN_SELECTED = '#eedd66'
 const PIN = '#8a90a0'
@@ -112,6 +111,8 @@ export function MapView({
   const markers = useRef(new globalThis.Map<string, Marker>())
   const overlay = useRef<MapLibreOverlay>(null)
   const [hover, setHover] = useState<Hover | null>(null)
+  // Bumped on every map move so the far-side culling of the surfaces follows the camera even while paused.
+  const [viewSeq, setViewSeq] = useState(0)
 
   // The map and overlay are created once; their callbacks read the latest props through these.
   const placeSelect = useLatest(onPlaceSelect)
@@ -128,12 +129,9 @@ export function MapView({
     [satellites, trackMinute, span],
   )
   const currentTracks = useLatest(tracks)
+  // The terminator moves a quarter degree a minute; rebuilding sixty strips per frame would be waste.
+  const night = useMemo(() => nightStrips(new Date(trackMinute * 60_000)), [trackMinute])
 
-  const nightData = useMemo(() => nightFeature(new Date(trackMinute * 60_000)), [trackMinute])
-  const reachTrack = reach && selected !== null ? tracks.find((t) => t.noradId === selected) : undefined
-  const reachData = useMemo(() => (reachTrack ? reachFeature(reachTrack.samples) : EMPTY), [reachTrack])
-  const reachColor = reachFill(reachTrack?.family ?? 'sun-synchronous')
-  const surfaces = useLatest({ nightData, reachData, reachColor })
   const projection = useLatest(globe)
   const styleReady = useRef(false)
   const applyProjection = useCallback(() => {
@@ -148,7 +146,7 @@ export function MapView({
       container: container.current!,
       style: BASEMAP,
       center: [139.7, 35.7],
-      zoom: 1.5,
+      zoom: fitZoom(container.current!.clientWidth, container.current!.clientHeight, projection.current),
       doubleClickZoom: false,
     })
     const addAt = (e: { point: { x: number; y: number }; lngLat: { lat: number; lng: number } }) =>
@@ -167,17 +165,9 @@ export function MapView({
       if (!m) return
       styleReady.current = true
       applyProjection()
-      m.addSource(NIGHT_LAYER, { type: 'geojson', data: surfaces.current.nightData })
-      m.addSource(REACH_LAYER, { type: 'geojson', data: surfaces.current.reachData })
-      m.addLayer({ id: NIGHT_LAYER, type: 'fill', source: NIGHT_LAYER, paint: NIGHT_PAINT })
-      m.addLayer({
-        id: REACH_LAYER,
-        type: 'fill',
-        source: REACH_LAYER,
-        paint: { 'fill-color': surfaces.current.reachColor, 'fill-opacity': REACH_OPACITY },
-      })
     })
     map.current.on('zoom', applyProjection)
+    map.current.on('move', () => setViewSeq((n) => n + 1))
     // The interleaved overlay (deck.gl 9.4 beta) registers no resize listener and would keep its first size.
     map.current.on('resize', () => {
       const canvas = map.current?.getCanvas()
@@ -250,15 +240,6 @@ export function MapView({
     if (flyTo) map.current?.easeTo({ center: [flyTo.lon, flyTo.lat], duration: 600 })
   }, [flyTo])
 
-  // Until the style has loaded the sources do not exist; the load handler above then takes the latest data.
-  useEffect(() => {
-    ;(map.current?.getSource(NIGHT_LAYER) as GeoJSONSource | undefined)?.setData(nightData)
-  }, [nightData])
-  useEffect(() => {
-    ;(map.current?.getSource(REACH_LAYER) as GeoJSONSource | undefined)?.setData(reachData)
-    if (map.current?.getLayer(REACH_LAYER)) map.current.setPaintProperty(REACH_LAYER, 'fill-color', reachColor)
-  }, [reachData, reachColor])
-
   // The projection is part of the style; before the style has loaded, the load handler above applies it.
   useEffect(applyProjection, [globe, applyProjection])
 
@@ -271,10 +252,21 @@ export function MapView({
   }, [focus, satellites, currentTime])
 
   useEffect(() => {
+    const m = map.current
+    const view: GlobeView | null =
+      globe && m
+        ? {
+            lon: m.getCenter().lng,
+            lat: m.getCenter().lat,
+            horizonDeg: horizonDeg(m.getZoom(), container.current?.clientHeight || 900),
+          }
+        : null
     overlay.current?.setProps({
-      layers: buildLayers(satellites, tracks, now, selected, hover ?? probe, ghost, span, globe),
+      layers: buildLayers(satellites, tracks, now, selected, hover ?? probe, ghost, span, globe, reach, night, view),
     })
-  }, [satellites, tracks, now, selected, hover, probe, ghost, span, globe])
+    // viewSeq stands in for the map's center and zoom, read from the map itself.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [satellites, tracks, now, selected, hover, probe, ghost, span, globe, reach, night, viewSeq])
 
   return <div ref={container} className="map" />
 }

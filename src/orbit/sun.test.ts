@@ -1,4 +1,4 @@
-import { nightPolygon, subsolarPoint } from './sun'
+import { nightStrips, subsolarPoint } from './sun'
 
 test('the subsolar point sits near the equator at equinox and under the noon meridian', () => {
   const equinoxNoon = new Date('2026-03-20T12:00:00Z')
@@ -13,27 +13,27 @@ test('the subsolar point sits near the equator at equinox and under the noon mer
   expect(june.lon).toBeLessThan(140)
 })
 
-test('the night polygon covers the antisolar point and leaves the subsolar point out', () => {
-  const date = new Date('2026-09-04T04:00:00Z')
-  const sun = subsolarPoint(date)
-  const polygon = nightPolygon(date)
-  const inside = (lon: number, lat: number) => {
-    let hit = false
-    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-      const [xi, yi] = polygon[i]
-      const [xj, yj] = polygon[j]
-      if (yi > lat !== yj > lat && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) hit = !hit
-    }
-    return hit
+test('night strips: the dark pole is a full ring, the lit pole has none, and the antisolar point is inside', () => {
+  const june = new Date('2026-06-21T12:00:00Z')
+  const strips = nightStrips(june)
+  const southern = strips.find((ring) => ring[0][1] === -89.9)!
+  expect(southern).toBeDefined()
+  const lons = southern.map(([lon]) => lon)
+  expect(Math.max(...lons) - Math.min(...lons)).toBeCloseTo(360, 6)
+  expect(strips.some((ring) => ring.some(([, lat]) => lat > 89))).toBe(false)
+  for (const ring of strips) {
+    for (let i = 1; i < ring.length; i++) expect(Math.abs(ring[i][0] - ring[i - 1][0])).toBeLessThan(180)
+    expect(new Set(ring.map(([, lat]) => lat)).size).toBe(2)
   }
-  const antisolarLon = sun.lon > 0 ? sun.lon - 180 : sun.lon + 180
-  expect(inside(antisolarLon, -sun.lat)).toBe(true)
-  expect(inside(sun.lon, sun.lat)).toBe(false)
-  expect(polygon[0]).toEqual(polygon[polygon.length - 1])
-})
-
-test('the night polygon closes over whichever pole is dark: south in June, north in December', () => {
-  const closing = (iso: string) => nightPolygon(new Date(iso)).at(-2)![1]
-  expect(closing('2026-06-21T12:00:00Z')).toBe(-85)
-  expect(closing('2026-12-21T12:00:00Z')).toBe(85)
+  const { lon, lat } = subsolarPoint(june)
+  const covers = (x: number, y: number) =>
+    strips.some((ring) => {
+      const lats = ring.map(([, l]) => l)
+      const lo = Math.min(...ring.map(([l]) => l))
+      const hi = Math.max(...ring.map(([l]) => l))
+      const within = (v: number) => v >= lo && v <= hi
+      return y >= Math.min(...lats) && y <= Math.max(...lats) && (within(x) || within(x + 360) || within(x - 360))
+    })
+  expect(covers(lon + 180, -lat)).toBe(true)
+  expect(covers(lon, lat)).toBe(false)
 })

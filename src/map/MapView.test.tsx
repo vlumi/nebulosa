@@ -6,6 +6,7 @@ import { strix1, strix9 } from '../test/fixtures'
 
 const tokyo = { lat: 35.68, lon: 139.69 }
 const tokyoPlace = { id: 'tokyo', name: 'Tokyo', ...tokyo }
+import { fitZoom, horizonDeg } from './fit'
 import { MapView } from './MapView'
 import { positionAt, satelliteFrom } from '../orbit/orbit'
 
@@ -48,6 +49,7 @@ const { mapInstance, overlayInstance, markerInstance } = vi.hoisted(() => {
       zoom: 1.5,
       getZoom: vi.fn(() => mapInstance.zoom),
       getCanvas: vi.fn(() => ({ clientWidth: 640, clientHeight: 480 })),
+      getCenter: vi.fn(() => ({ lng: 139.7, lat: 35.7 })),
       labels: [] as unknown[],
       queryRenderedFeatures: vi.fn(() => mapInstance.labels),
       project: vi.fn(([lon, lat]: [number, number]) => ({ x: lon, y: lat })),
@@ -103,7 +105,7 @@ test('mounts a MapLibre map with a deck.gl overlay and feeds it the layers', () 
   )
   expect(mapInstance.addControl).toHaveBeenCalledWith(overlayInstance)
   const layers = overlayInstance.setProps.mock.lastCall![0].layers
-  expect(layers.map((l: { id: string }) => l.id)).toEqual(['tracks', 'positions', 'labels'])
+  expect(layers.map((l: { id: string }) => l.id)).toEqual(['night', 'tracks', 'positions', 'labels'])
 
   const overlayProps = vi.mocked(MapLibreOverlay).mock.calls[0][0] as {
     onClick: (info: unknown) => void
@@ -286,9 +288,9 @@ test('a focus request with a time centers on the position at that time, not the 
   expect(center[1]).toBeCloseTo(expected.lat, 6)
 })
 
-test('night and reach are MapLibre fill layers fed once the style loads; the globe toggles the projection and yields to flat past zoom 5.5', () => {
+test('the projection follows the toggle once the style has loaded and yields to flat past zoom 5.5; the globe lifts deck geometry', () => {
   const sats = [strix1, strix9].map(satelliteFrom)
-  const { rerender } = render(
+  const view = (globe: boolean) => (
     <MapView
       satellites={sats}
       now={epochOf(strix1)}
@@ -300,38 +302,15 @@ test('night and reach are MapLibre fill layers fed once the style loads; the glo
       onPlaceMove={vi.fn()}
       onPlaceAdd={vi.fn()}
       reach
-    />,
+      globe={globe}
+    />
   )
-  expect(mapInstance.addSource).not.toHaveBeenCalled()
+  const { rerender } = render(view(false))
   act(() => mapInstance.handlers['style.load']())
   expect(mapInstance.setProjection).toHaveBeenLastCalledWith({ type: 'mercator' })
-  const added = mapInstance.addLayer.mock.calls as unknown as [{ id: string; type: string }][]
-  expect(added.map(([layer]) => [layer.id, layer.type])).toEqual([
-    ['night', 'fill'],
-    ['reach', 'fill'],
-  ])
-  const sources = mapInstance.addSource.mock.calls as unknown as [
-    string,
-    { data: { geometry: { coordinates: unknown[] } } },
-  ][]
-  const reachData = sources[1][1].data
-  expect(reachData.geometry.coordinates.length).toBeGreaterThan(10)
+  expect(mapInstance.addSource).not.toHaveBeenCalled()
 
-  rerender(
-    <MapView
-      satellites={sats}
-      now={epochOf(strix1)}
-      selected={strix1.NORAD_CAT_ID}
-      onSelect={vi.fn()}
-      places={[tokyoPlace]}
-      placeId="tokyo"
-      onPlaceSelect={vi.fn()}
-      onPlaceMove={vi.fn()}
-      onPlaceAdd={vi.fn()}
-      reach
-      globe
-    />,
-  )
+  rerender(view(true))
   expect(mapInstance.setProjection).toHaveBeenLastCalledWith({ type: 'globe' })
   mapInstance.zoom = 7
   act(() => mapInstance.handlers['zoom']())
@@ -340,8 +319,24 @@ test('night and reach are MapLibre fill layers fed once the style loads; the glo
   act(() => mapInstance.handlers['zoom']())
   expect(mapInstance.setProjection).toHaveBeenLastCalledWith({ type: 'globe' })
   const layers = overlayInstance.setProps.mock.lastCall![0].layers
+  expect(layers.map((l: { id: string }) => l.id).slice(0, 3)).toEqual(['night', 'reach', 'tracks'])
   const tracks = layers.find((l: { id: string }) => l.id === 'tracks')
   expect(tracks.props.modelMatrix[14]).toBe(30_000)
+})
+
+test('the initial zoom fits the container: the globe to the shorter side, the flat world to the width', () => {
+  expect(fitZoom(1400, 900, true)).toBeCloseTo(2.23, 1)
+  expect(fitZoom(390, 844, true)).toBeCloseTo(1.02, 1)
+  expect(fitZoom(1400, 900, false)).toBeCloseTo(1.22, 1)
+  expect(fitZoom(100, 100, true)).toBe(0.5)
+  expect(fitZoom(4000, 4000, true)).toBeCloseTo(4.38, 1)
+  expect(fitZoom(8000, 8000, true)).toBe(5)
+})
+
+test('the visible cap of the globe shrinks as the camera comes closer', () => {
+  expect(horizonDeg(2.23, 900)).toBeCloseTo(77, 0)
+  expect(horizonDeg(1, 844)).toBeCloseTo(83, 0)
+  expect(horizonDeg(5, 900)).toBeLessThan(50)
 })
 
 test('a map resize hands the overlay the new canvas size', () => {

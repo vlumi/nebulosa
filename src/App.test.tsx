@@ -16,6 +16,11 @@ vi.mock('maplibre-gl', () => ({
       getSource: vi.fn(),
       getLayer: vi.fn(),
       setProjection: vi.fn(),
+      getCenter: () => ({ lng: 139.7, lat: 35.7 }),
+      getZoom: () => 1.5,
+      getCanvas: () => ({ clientWidth: 1400, clientHeight: 900 }),
+      queryRenderedFeatures: () => [],
+      project: () => ({ x: 0, y: 0 }),
     }
   }),
   Marker: vi.fn(function () {
