@@ -342,7 +342,7 @@ test('the initial zoom fits the container: the globe to the shorter side, the fl
   expect(fitZoom(8000, 8000, true)).toBe(5)
 })
 
-test('a map resize sets the deck viewport to the canvas size without touching the canvas', () => {
+test('a map resize refreshes the framebuffer luma keeps for the canvas without touching the canvas', () => {
   const sats = [strix1, strix9].map(satelliteFrom)
   render(
     <MapView
@@ -358,31 +358,10 @@ test('a map resize sets the deck viewport to the canvas size without touching th
     />,
   )
   const framebuffer = { resize: vi.fn() }
-  const surface = {
-    cssWidth: 0,
-    cssHeight: 0,
-    setDrawingBufferSize: vi.fn(),
-    getCurrentFramebuffer: () => framebuffer,
-  }
-  const deck = {
-    width: 0,
-    height: 0,
-    viewManager: { setProps: vi.fn() },
-    layerManager: { activateViewport: vi.fn() },
-    getViewports: () => ['viewport'],
-    userData: { currentViewport: 'stale' } as { currentViewport?: unknown },
-    device: { getDefaultCanvasContext: () => surface },
-  }
+  const deck = { device: { getDefaultCanvasContext: () => ({ getCurrentFramebuffer: () => framebuffer }) } }
   ;(overlayInstance as unknown as { _deck: unknown })._deck = deck
   act(() => mapInstance.handlers['resize']())
-  expect(deck.width).toBe(640)
-  expect(deck.height).toBe(480)
-  expect(deck.viewManager.setProps).toHaveBeenCalledWith({ width: 640, height: 480 })
-  expect(deck.layerManager.activateViewport).toHaveBeenCalledWith('viewport')
-  expect([surface.cssWidth, surface.cssHeight]).toEqual([640, 480])
-  expect(surface.setDrawingBufferSize).toHaveBeenCalledWith(1280, 960)
   expect(framebuffer.resize).toHaveBeenCalledWith([1280, 960])
-  expect(deck.userData.currentViewport).toBeUndefined()
   expect(overlayInstance.setProps).not.toHaveBeenCalledWith(expect.objectContaining({ width: expect.anything() }))
 })
 
