@@ -1,24 +1,25 @@
 import { MapLibreOverlay } from '@deck.gl/maplibre'
-import { Map as MapLibre, Marker, NavigationControl, setWorkerUrl } from 'maplibre-gl'
+import { Map as MapLibre, Marker, NavigationControl, setWorkerUrl, type GeoJSONSource } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { buildLayers, hoverAt, trackData, type Ghost, type Hover, type SatelliteDatum, type TrackDatum } from './layers'
 import {
-  buildLayers,
-  hoverAt,
-  trackData,
-  type Ghost,
-  type GlobeView,
-  type Hover,
-  type SatelliteDatum,
-  type TrackDatum,
-} from './layers'
+  EMPTY,
+  NIGHT_LAYER,
+  NIGHT_PAINT,
+  nightFeature,
+  REACH_LAYER,
+  REACH_OPACITY,
+  reachFeature,
+  reachFill,
+} from './surface'
 import { DEFAULT_SPAN, positionAt, type Satellite, type TrackSpan } from '../orbit/orbit'
 import type { Location } from '../orbit/passes'
 import type { Place } from '../places/places'
 import type { FlyTo } from '../store'
-import { fitZoom, GLOBE_MAX_ZOOM, horizonDeg, measureHorizonDeg } from './fit'
-import { nightCells } from '../orbit/sun'
+import { fitZoom, GLOBE_MAX_ZOOM } from './fit'
+import { polarNightCells } from '../orbit/sun'
 import { useLatest } from '../shared/useLatest'
 import { useThrottled } from '../shared/useThrottled'
 
@@ -141,8 +142,6 @@ export function MapView({
   const markers = useRef(new globalThis.Map<string, Marker>())
   const overlay = useRef<MapLibreOverlay>(null)
   const [hover, setHover] = useState<Hover | null>(null)
-  // Bumped on every map move so the far-side culling of the surfaces follows the camera even while paused.
-  const [viewSeq, setViewSeq] = useState(0)
 
   // The map and overlay are created once; their callbacks read the latest props through these.
   const placeSelect = useLatest(onPlaceSelect)
@@ -160,7 +159,12 @@ export function MapView({
   )
   const currentTracks = useLatest(tracks)
   // The terminator moves a quarter degree a minute; rebuilding sixty strips per frame would be waste.
-  const night = useMemo(() => nightCells(new Date(trackMinute * 60_000)), [trackMinute])
+  const nightData = useMemo(() => nightFeature(new Date(trackMinute * 60_000)), [trackMinute])
+  const polarNight = useMemo(() => polarNightCells(new Date(trackMinute * 60_000)), [trackMinute])
+  const reachTrack = reach && selected !== null ? tracks.find((t) => t.noradId === selected) : undefined
+  const reachData = useMemo(() => (reachTrack ? reachFeature(reachTrack.samples) : EMPTY), [reachTrack])
+  const reachColor = reachFill(reachTrack?.family ?? 'sun-synchronous')
+  const surfaces = useLatest({ nightData, reachData, reachColor })
 
   const projection = useLatest(globe)
   const styleReady = useRef(false)
@@ -195,9 +199,24 @@ export function MapView({
       if (!m) return
       styleReady.current = true
       applyProjection()
+      m.addSource(NIGHT_LAYER, { type: 'geojson', data: surfaces.current.nightData })
+      m.addSource(REACH_LAYER, { type: 'geojson', data: surfaces.current.reachData })
+      m.addLayer({ id: NIGHT_LAYER, type: 'fill', source: NIGHT_LAYER, paint: NIGHT_PAINT })
+      m.addLayer({
+        id: REACH_LAYER,
+        type: 'fill',
+        source: REACH_LAYER,
+        paint: { 'fill-color': surfaces.current.reachColor, 'fill-opacity': REACH_OPACITY },
+      })
     })
     map.current.on('zoom', applyProjection)
-    map.current.on('move', () => setViewSeq((n) => n + 1))
+    // deck draws with its own depth and culling settings, and MapLibre caches GL state, so after each frame
+    // MapLibre is told to re-apply everything; otherwise its far-side tiles can come through as dark wedges.
+    map.current.on('render', () => {
+      ;(
+        map.current as unknown as { painter?: { context?: { setDirty?: () => void } } } | null
+      )?.painter?.context?.setDirty?.()
+    })
     // The interleaved overlay (deck.gl 9.4 beta) registers no resize listener and would keep its first size.
     // Handing it a width and height makes deck restyle the canvas, which is MapLibre's own, and stretches
     // the map; its own re-measure reads sizes the shared canvas context does not update, and luma even forces
@@ -304,22 +323,20 @@ export function MapView({
     if (p) map.current?.easeTo({ center: [p.lon, p.lat], duration: 600 })
   }, [focus, satellites, currentTime])
 
+  // Until the style has loaded the sources do not exist; the load handler above then takes the latest data.
   useEffect(() => {
-    const m = map.current
-    const view: GlobeView | null =
-      globe && m
-        ? {
-            lon: m.getCenter().lng,
-            lat: m.getCenter().lat,
-            horizonDeg: measureHorizonDeg(m, horizonDeg(m.getZoom(), container.current?.clientHeight || 900)),
-          }
-        : null
+    ;(map.current?.getSource(NIGHT_LAYER) as GeoJSONSource | undefined)?.setData(nightData)
+  }, [nightData])
+  useEffect(() => {
+    ;(map.current?.getSource(REACH_LAYER) as GeoJSONSource | undefined)?.setData(reachData)
+    if (map.current?.getLayer(REACH_LAYER)) map.current.setPaintProperty(REACH_LAYER, 'fill-color', reachColor)
+  }, [reachData, reachColor])
+
+  useEffect(() => {
     overlay.current?.setProps({
-      layers: buildLayers(satellites, tracks, now, selected, hover ?? probe, ghost, span, globe, reach, night, view),
+      layers: buildLayers(satellites, tracks, now, selected, hover ?? probe, ghost, span, globe, reach, polarNight),
     })
-    // viewSeq stands in for the map's center and zoom, read from the map itself.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [satellites, tracks, now, selected, hover, probe, ghost, span, globe, reach, night, viewSeq])
+  }, [satellites, tracks, now, selected, hover, probe, ghost, span, globe, reach, polarNight])
 
   return <div ref={container} className="map" />
 }

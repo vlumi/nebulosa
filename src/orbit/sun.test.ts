@@ -1,5 +1,5 @@
 import type { LonLat } from './orbit'
-import { nightCells, subsolarPoint } from './sun'
+import { nightCells, polarNightCells, subsolarPoint } from './sun'
 
 test('the subsolar point sits near the equator at equinox and under the noon meridian', () => {
   const equinoxNoon = new Date('2026-03-20T12:00:00Z')
@@ -95,4 +95,13 @@ test('every cell is a simple polygon: three to five distinct vertices, positive 
       expect(Math.abs(area)).toBeGreaterThan(1e-9)
     }
   }
+})
+
+test('polar night cells lie beyond 85° only, and the dark pole is fully ringed', () => {
+  const cells = polarNightCells(new Date('2026-06-21T12:00:00Z'))
+  expect(cells.length).toBeGreaterThan(100)
+  for (const ring of cells) for (const [, lat] of ring) expect(Math.abs(lat)).toBeGreaterThanOrEqual(85 - 1e-9)
+  const south = cells.filter((ring) => ring[0][1] < 0).flatMap((ring) => ring.map(([lon]) => lon))
+  expect(Math.max(...south) - Math.min(...south)).toBeCloseTo(360, 6)
+  expect(cells.some((ring) => ring[0][1] > 0)).toBe(false)
 })

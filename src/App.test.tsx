@@ -21,6 +21,7 @@ vi.mock('maplibre-gl', () => ({
       getCanvas: () => ({ clientWidth: 1400, clientHeight: 900 }),
       queryRenderedFeatures: () => [],
       project: () => ({ x: 0, y: 0 }),
+      unproject: () => ({ lng: 139.7, lat: 35.7 }),
     }
   }),
   Marker: vi.fn(function () {

@@ -1,7 +1,7 @@
 import { epochOf } from '../orbit/elements'
 import { strix1, strix9 } from '../test/fixtures'
 import { FAMILY_COLORS } from '../shared/palette'
-import { buildLayers, hoverAt, trackData, withinHorizon } from './layers'
+import { buildLayers, hoverAt, trackData } from './layers'
 import { satelliteFrom } from '../orbit/orbit'
 
 test('builds tracks, positions and labels for every satellite, colored by family', () => {
@@ -159,7 +159,7 @@ test('ghost layers draw in the family color and the dashed path follows the samp
   expect(getLineColor((ghost.props.data as unknown[])[0])).toEqual(FAMILY_COLORS['mid-inclination'])
 })
 
-test('the reach ribbons draw for the selected satellite when asked, under the tracks and above the night', () => {
+test('the polar part of the reach draws for the selected satellite when asked, under the tracks and above the night', () => {
   const sats = [strix1, strix9].map(satelliteFrom)
   const at = epochOf(strix1)
   const tracks = trackData(sats, at)
@@ -169,36 +169,10 @@ test('the reach ribbons draw for the selected satellite when asked, under the tr
   const layers = buildLayers(sats, tracks, at, strix1.NORAD_CAT_ID, null, null, undefined, true, true)
   expect(ids(layers).slice(0, 3)).toEqual(['night', 'reach', 'tracks'])
   const rings = layers[1].props.data as [number, number][][]
-  expect(rings.length).toBeGreaterThan(10)
-  for (const ring of rings)
+  expect(rings.length).toBeGreaterThan(0)
+  for (const ring of rings) {
+    expect(ring.some(([, lat]) => Math.abs(lat) > 84.5)).toBe(true)
     for (let i = 1; i < ring.length; i++) expect(Math.abs(ring[i][0] - ring[i - 1][0])).toBeLessThan(180)
-  expect(layers[1].props.modelMatrix).toBeFalsy()
-  const tracksLayer = layers[2]
-  expect((tracksLayer.props.modelMatrix as number[])[14]).toBe(30_000)
-})
-
-test('withinHorizon keeps the pieces on the visible side of the globe and all of them on the flat map', () => {
-  const pieces: [number, number][][] = [
-    [
-      [139, 35],
-      [141, 35],
-      [141, 37],
-      [139, 37],
-    ],
-    [
-      [-41, -35],
-      [-39, -35],
-      [-39, -37],
-      [-41, -37],
-    ],
-    [
-      [220, 35],
-      [222, 35],
-      [222, 37],
-      [220, 37],
-    ],
-  ]
-  expect(withinHorizon(pieces, null)).toBe(pieces)
-  const kept = withinHorizon(pieces, { lon: 140, lat: 36, horizonDeg: 77 })
-  expect(kept).toEqual([pieces[0], pieces[2]])
+  }
+  expect((layers[1].props.modelMatrix as number[])[14]).toBe(30_000)
 })

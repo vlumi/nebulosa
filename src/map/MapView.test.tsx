@@ -6,7 +6,7 @@ import { strix1, strix9 } from '../test/fixtures'
 
 const tokyo = { lat: 35.68, lon: 139.69 }
 const tokyoPlace = { id: 'tokyo', name: 'Tokyo', ...tokyo }
-import { fitZoom, horizonDeg, measureHorizonDeg } from './fit'
+import { fitZoom } from './fit'
 import { MapView } from './MapView'
 import { positionAt, satelliteFrom } from '../orbit/orbit'
 
@@ -289,7 +289,7 @@ test('a focus request with a time centers on the position at that time, not the 
   expect(center[1]).toBeCloseTo(expected.lat, 6)
 })
 
-test('the projection follows the toggle once the style has loaded and yields to flat past zoom 5.5; the globe lifts deck geometry', () => {
+test('night and reach are MapLibre fills fed once the style loads; the projection follows the toggle, yields to flat past zoom 5.5, and lifts deck geometry on the globe', () => {
   const sats = [strix1, strix9].map(satelliteFrom)
   const view = (globe: boolean) => (
     <MapView
@@ -309,7 +309,16 @@ test('the projection follows the toggle once the style has loaded and yields to 
   const { rerender } = render(view(false))
   act(() => mapInstance.handlers['style.load']())
   expect(mapInstance.setProjection).toHaveBeenLastCalledWith({ type: 'mercator' })
-  expect(mapInstance.addSource).not.toHaveBeenCalled()
+  const added = mapInstance.addLayer.mock.calls as unknown as [{ id: string; type: string }][]
+  expect(added.map(([layer]) => [layer.id, layer.type])).toEqual([
+    ['night', 'fill'],
+    ['reach', 'fill'],
+  ])
+  const sources = mapInstance.addSource.mock.calls as unknown as [
+    string,
+    { data: { geometry: { coordinates: unknown[] } } },
+  ][]
+  expect(sources[1][1].data.geometry.coordinates.length).toBeGreaterThan(10)
 
   rerender(view(true))
   expect(mapInstance.setProjection).toHaveBeenLastCalledWith({ type: 'globe' })
@@ -332,12 +341,6 @@ test('the initial zoom fits the container: the globe to the shorter side, the fl
   expect(fitZoom(100, 100, true)).toBe(0.5)
   expect(fitZoom(4000, 4000, true)).toBeCloseTo(4.38, 1)
   expect(fitZoom(8000, 8000, true)).toBe(5)
-})
-
-test('the visible cap of the globe shrinks as the camera comes closer', () => {
-  expect(horizonDeg(2.23, 900)).toBeCloseTo(77, 0)
-  expect(horizonDeg(1, 844)).toBeCloseTo(83, 0)
-  expect(horizonDeg(5, 900)).toBeLessThan(50)
 })
 
 test('a map resize sets the deck viewport to the canvas size without touching the canvas', () => {
@@ -382,29 +385,4 @@ test('a map resize sets the deck viewport to the canvas size without touching th
   expect(framebuffer.resize).toHaveBeenCalledWith([1280, 960])
   expect(deck.userData.currentViewport).toBeUndefined()
   expect(overlayInstance.setProps).not.toHaveBeenCalledWith(expect.objectContaining({ width: expect.anything() }))
-})
-
-test('the horizon is measured on the map: the farthest screen point that round-trips through the projection', () => {
-  // A toy globe: orthographic, radius 300 px around the screen center (400, 300), center at 0°N 0°E.
-  const R = 300
-  const toy = {
-    getCenter: () => ({ lng: 0, lat: 0 }),
-    getCanvas: () => ({ clientWidth: 800, clientHeight: 600 }),
-    project: ([lng, lat]: [number, number]) => ({
-      x: 400 + R * Math.sin((lng * Math.PI) / 180) * Math.cos((lat * Math.PI) / 180),
-      y: 300 - R * Math.sin((lat * Math.PI) / 180),
-    }),
-    unproject: ([x, y]: [number, number]) => {
-      const nx = Math.max(-1, Math.min(1, (x - 400) / R))
-      const ny = Math.max(-1, Math.min(1, (300 - y) / R))
-      const lat = Math.asin(ny)
-      const lng = Math.asin(Math.max(-1, Math.min(1, nx / Math.cos(lat))))
-      return { lng: (lng * 180) / Math.PI, lat: (lat * 180) / Math.PI }
-    },
-  }
-  // An orthographic globe shows exactly 90°; the bisection gets within a fraction of a degree of it.
-  expect(measureHorizonDeg(toy, 50)).toBeGreaterThan(85)
-  expect(measureHorizonDeg(toy, 50)).toBeLessThanOrEqual(90)
-  const flat = { ...toy, project: () => ({ x: NaN, y: NaN }) }
-  expect(measureHorizonDeg(flat, 50)).toBe(50)
 })

@@ -16,7 +16,7 @@ import {
   type TrackSample,
   type TrackSpan,
 } from '../orbit/orbit'
-import { nightCells } from '../orbit/sun'
+import { POLE_CAP, polarNightCells } from '../orbit/sun'
 import { reachRibbons } from '../orbit/swath'
 import { FAMILY_COLORS, type Rgba } from '../shared/palette'
 
@@ -80,39 +80,6 @@ function ghostReach(sat: Satellite, ghostMs: number, nowMs: number, span: TrackS
   if (ghostMs > drawnEnd) return [drawnEnd, ghostMs + GHOST_MARGIN_MS]
   if (ghostMs < drawnStart) return [ghostMs - GHOST_MARGIN_MS, drawnStart]
   return null
-}
-
-/** What the globe shows: its center and how far from it, in degrees along the surface, the limb lies. */
-export interface GlobeView {
-  lon: number
-  lat: number
-  horizonDeg: number
-}
-
-const RAD = Math.PI / 180
-
-function angularDistanceDeg([lon1, lat1]: LonLat, [lon2, lat2]: LonLat): number {
-  const a = lat1 * RAD
-  const b = lat2 * RAD
-  const cosine = Math.sin(a) * Math.sin(b) + Math.cos(a) * Math.cos(b) * Math.cos((lon2 - lon1) * RAD)
-  return Math.acos(Math.max(-1, Math.min(1, cosine))) / RAD
-}
-
-/**
- * The pieces whose middle is on the visible side of the globe. The surfaces are drawn without a depth test,
- * because at the limb no lift can separate them from the basemap's sphere, so the far side is left out here
- * instead; pieces are small enough that one straddling the limb overshoots by a pixel or two.
- */
-export function withinHorizon(pieces: LonLat[][], view: GlobeView | null): LonLat[][] {
-  if (!view) return pieces
-  const center: LonLat = [view.lon, view.lat]
-  return pieces.filter((ring) => {
-    const middle: LonLat = [
-      ring.reduce((sum, [lon]) => sum + lon, 0) / ring.length,
-      ring.reduce((sum, [, lat]) => sum + lat, 0) / ring.length,
-    ]
-    return angularDistanceDeg(middle, center) <= view.horizonDeg
-  })
 }
 
 /** A ring that crosses the antimeridian, rewritten to continue past ±180° instead of jumping back. */
@@ -183,8 +150,7 @@ export function buildLayers(
   span: TrackSpan = DEFAULT_SPAN,
   globe = false,
   reach = false,
-  night: LonLat[][] = nightCells(now),
-  view: GlobeView | null = null,
+  polarNight: LonLat[][] = polarNightCells(now),
 ): Layer[] {
   const nowMs = now.getTime()
   // Depth hides the far side of the globe; on the flat map nothing needs hiding and the test only causes z-fighting.
@@ -192,8 +158,9 @@ export function buildLayers(
   // A translation applied after tessellation: deck's globe grid cutter mangles paths given a third coordinate.
   const modelMatrix = globe ? new Matrix4().translate([0, 0, GLOBE_LIFT_M]) : undefined
   const surface = { modelMatrix, parameters: depth } as const
-  // Filled surfaces skip the depth test; withinHorizon leaves out the far side instead.
-  const filled = { parameters: { depthCompare: 'always', cullMode: 'none' } } as const
+  // Only the polar caps are drawn here; MapLibre fills the night and the reach up to ±85° itself, with its own
+  // occlusion, and cannot reach farther. The caps are small enough to be treated like the lines.
+  const polar = (ring: LonLat[]) => ring.some(([, lat]) => Math.abs(lat) > POLE_CAP - 0.5)
   const segments = tracks.flatMap((track) => segmentsOf(track, nowMs))
   const positions: PositionDatum[] = satellites.flatMap((sat) => {
     const p = positionAt(sat, now)
@@ -215,24 +182,24 @@ export function buildLayers(
   const layers: Layer[] = [
     new SolidPolygonLayer<LonLat[]>({
       id: 'night',
-      data: withinHorizon(night, view),
+      data: polarNight,
       wrapLongitude: !globe,
       getPolygon: (d) => d,
       getFillColor: [0, 4, 20, 90],
       pickable: false,
-      ...filled,
+      ...surface,
     }),
     ...(reachTrack
       ? [
           new SolidPolygonLayer<LonLat[]>({
             id: 'reach',
             // Rings continue past ±180° rather than jump, so the globe's grid cutter reads them the short way round.
-            data: withinHorizon(reachRibbons(reachTrack.samples).map(unwrapped), view),
+            data: reachRibbons(reachTrack.samples).filter(polar).map(unwrapped),
             getPolygon: (d) => d,
             getFillColor: color(reachTrack, 45),
             wrapLongitude: !globe,
             pickable: false,
-            ...filled,
+            ...surface,
           }),
         ]
       : []),

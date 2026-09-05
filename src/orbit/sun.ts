@@ -16,8 +16,11 @@ export function subsolarPoint(date: Date): SubsolarPoint {
   return { lon, lat: decl * DEG }
 }
 
+/** Web Mercator, and so MapLibre's fills, end here; the polar caps beyond are drawn by deck.gl. */
+export const POLE_CAP = 85
 /** Deck's Mercator view has no projection for exactly 90°; the globe cannot tell the difference. */
 const POLE = 89.9
+const SEAM = 0.5
 
 /**
  * The latitude of the terminator at a longitude `deltaDeg` away from the antisolar meridian: the Sun is on the
@@ -60,7 +63,7 @@ function nightInCell(lon0: number, lon1: number, a: number, b: number, lat0: num
  * terminator where it passes through. Small pieces follow a sphere closely and can each be judged visible or
  * hidden on their own; anything wider than half the world confuses the globe renderer's grid cutter.
  */
-export function nightCells(date: Date, bandDeg = 3, stepDeg = 3): LonLat[][] {
+export function nightCells(date: Date, bandDeg = 3, stepDeg = 3, fromLat = -POLE, toLat = POLE): LonLat[][] {
   const sun = subsolarPoint(date)
   const decl = sun.lat * RAD
   const north = decl >= 0
@@ -71,10 +74,34 @@ export function nightCells(date: Date, bandDeg = 3, stepDeg = 3): LonLat[][] {
     // Longitudes of this column, brought back to within a turn of the antimeridian.
     const lon = edge.map((d) => ((sun.lon + 180 + d + 540) % 360) - 180)
     if (lon[1] < lon[0]) lon[1] += 360
-    for (let lat0 = -POLE; lat0 < POLE; lat0 += bandDeg) {
-      const cell = nightInCell(lon[0], lon[1], a, b, lat0, Math.min(POLE, lat0 + bandDeg), north)
+    for (let lat0 = fromLat; lat0 < toLat; lat0 += bandDeg) {
+      const cell = nightInCell(lon[0], lon[1], a, b, lat0, Math.min(toLat, lat0 + bandDeg), north)
       if (cell && cell.length >= 3) cells.push(cell)
     }
   }
   return cells
+}
+
+/**
+ * The night side as a polygon: the terminator curve sampled per degree of longitude, closed
+ * over the pole that is in darkness. tan(lat) = -cos(lon - lon_sun) / tan(decl).
+ */
+export function nightPolygon(date: Date, stepDeg = 1): LonLat[] {
+  const sun = subsolarPoint(date)
+  const decl = sun.lat * RAD
+  const darkPole = sun.lat >= 0 ? -POLE_CAP : POLE_CAP
+  const curve: LonLat[] = []
+  // Half a degree past the antimeridian on each side, so the fill's two halves overlap instead of meeting at a
+  // hairline seam between tiles.
+  for (let lon = -180 - SEAM; lon <= 180 + SEAM; lon += stepDeg) {
+    const lat = Math.atan(-Math.cos((lon - sun.lon) * RAD) / Math.tan(decl)) * DEG
+    curve.push([lon, Math.max(-POLE_CAP, Math.min(POLE_CAP, lat))])
+  }
+  return [...curve, [180 + SEAM, darkPole], [-180 - SEAM, darkPole], curve[0]]
+}
+
+/** The night in the two polar caps, beyond what MapLibre's Mercator fills can reach, as cells for deck.gl. */
+export function polarNightCells(date: Date): LonLat[][] {
+  const band = (POLE - POLE_CAP) / 2
+  return [...nightCells(date, band, 3, POLE_CAP, POLE), ...nightCells(date, band, 3, -POLE, -POLE_CAP)]
 }
