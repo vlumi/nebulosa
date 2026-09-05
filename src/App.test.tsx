@@ -1,8 +1,9 @@
 import { render, screen, within } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import App from './App'
-import { resetApp } from './store'
+import { resetApp, useApp } from './store'
 import { strix1, strix9 } from './test/fixtures'
+import { TOKYO } from './places/places'
 
 vi.mock('maplibre-gl', () => ({
   Map: vi.fn(function () {
@@ -169,7 +170,7 @@ test('on a phone the map comes first: one sheet at a time, and choosing somethin
   expect(screen.getByRole('button', { name: /^Satellites STRIX-/ })).toBeInTheDocument()
 })
 
-test('keyboard: arrows pick satellites, Shift-arrows pick passes, Enter goes there, Space pauses, S and P switch sheets, Esc clears', async () => {
+test('keyboard: arrows step through the open sheet, Enter goes to the pass, Space pauses, S and P switch sheets, Esc clears', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
   render(<App />)
   const panel = within(screen.getByRole('complementary', { name: 'Constellation' }))
@@ -186,7 +187,7 @@ test('keyboard: arrows pick satellites, Shift-arrows pick passes, Enter goes the
   await userEvent.keyboard('p')
   expect(screen.queryByRole('complementary', { name: 'Constellation' })).toBeNull()
   const passes = within(screen.getByRole('complementary', { name: 'Passes' }))
-  await userEvent.keyboard('{Shift>}{ArrowDown}{/Shift}')
+  await userEvent.keyboard('{ArrowDown}')
   const rows = passes.getAllByRole('listitem')
   expect(rows[0].querySelector('button')).toHaveAttribute('aria-current', 'true')
   expect(screen.getByRole('button', { name: 'Live' })).toBeDisabled()
@@ -250,4 +251,26 @@ test('places: the pill names the selected place; with none, passes wait for one;
     within(screen.getByRole('complementary', { name: 'Places' })).getByRole('button', { name: 'Remove Tokyo' }),
   )
   expect(screen.getByRole('button', { name: /^Places · none$/ })).toBeInTheDocument()
+})
+
+test('keyboard: W opens the places sheet and the arrows then step through the places, flying to each', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
+  render(<App />)
+  useApp.setState({ places: [TOKYO, { id: 'helsinki', name: 'Helsinki', lat: 60.17, lon: 24.94 }] })
+  await screen.findByRole('button', { name: /^Passes · / })
+
+  await userEvent.keyboard('w')
+  const places = within(screen.getByRole('complementary', { name: 'Places' }))
+  await userEvent.keyboard('{ArrowDown}')
+  expect(places.getByRole('button', { name: /^Helsinki/ })).toHaveAttribute('aria-pressed', 'true')
+  expect(useApp.getState().flyTo).toMatchObject({ lat: 60.17, lon: 24.94 })
+  expect(screen.getByRole('button', { name: /^Places Helsinki/ })).toBeInTheDocument()
+  await userEvent.keyboard('{ArrowUp}')
+  expect(places.getByRole('button', { name: /^Tokyo/ })).toHaveAttribute('aria-pressed', 'true')
+
+  await userEvent.keyboard('w')
+  expect(screen.queryByRole('complementary')).toBeNull()
+  await userEvent.keyboard('{ArrowDown}')
+  expect(useApp.getState().selection.noradId).toBe(strix1.NORAD_CAT_ID)
+  expect(screen.queryByRole('complementary')).toBeNull()
 })
