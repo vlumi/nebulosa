@@ -91,6 +91,8 @@ function App() {
           if (s.sheet === 'passes') {
             const i = stepIndex(passIndex, delta, passes.length)
             if (i >= 0) s.showPass(passes[i])
+          } else if (s.sheet === 'places' && e.shiftKey) {
+            if (s.placeId !== null) s.reorderPlace(s.placeId, delta)
           } else if (s.sheet === 'places') {
             const i = stepIndex(placeIndex, delta, s.places.length)
             if (i >= 0) s.selectPlace(s.places[i].id, true)

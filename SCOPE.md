@@ -106,7 +106,6 @@ Where a satellite is, has been and will be, beyond a highlighted track.
 ### Small things noticed along the way
 
 - The last two quads at either end of a reach ribbon render more saturated than the rest; the geometry is verified clean, so it is a rendering effect.
-- Places keep the order they were added in. They should be reorderable: dragging a row in the sheet, or Shift ↑ ↓ on the selected one, or both.
 
 ### M10 — theme
 
