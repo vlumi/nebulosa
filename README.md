@@ -17,7 +17,7 @@ Every capture, one per milestone, is shown in [docs/screenshots](docs/screenshot
 ## What it shows
 
 - Every StriX satellite's current position and ground track, propagated with SGP4 from the latest mean elements, colored by orbit family: sun-synchronous in yellow, mid-inclination in cyan. The flown part of a track fades behind the satellite, so the direction of travel is readable at a glance.
-- A clock: live, paused, or playing at up to 600×, with a slider over ±12 hours and a date picker. Positions, tracks and the day/night terminator follow it.
+- A clock: live, paused, or playing at up to 600×, with a slider over the displayed day and a date picker. Positions, tracks and the day/night terminator follow it.
 - Hover a track to see when the satellite is at that point. Tap a satellite, its label, its track, or its row in the list to select it; the list shows launch, orbit, altitude, period, eccentricity and element epoch, and the rest dims.
 - Places: several pins, added with a double click or a long press on the map and named after the nearest place label the map is showing, dragged to move, renamed or removed in their sheet, kept in the browser. One is selected at a time, or none.
 - Passes over the selected place: the passes sheet lists every line-of-sight pass over the next 6 to 48 hours with rise, set and peak elevation, narrowed to the passes the radar can steer to or to the selected satellite. Show a pass to see where the satellite will be at its peak, or jump the clock to it.

@@ -3,7 +3,7 @@ import { formatOffset, utcDate, utcSecond } from '../shared/format'
 import { Segmented } from '../shared/Segmented'
 import styles from './TimeBar.module.css'
 
-const RANGE_MS = 12 * 3_600_000
+const DAY_MS = 86_400_000
 const STEP_MS = 60_000
 
 interface Props {
@@ -15,7 +15,8 @@ interface Props {
 export function TimeBar({ clock, now, onChange }: Props) {
   const realMs = now.getTime()
   const simMs = simTime(clock, realMs)
-  const offset = Math.max(-RANGE_MS, Math.min(RANGE_MS, simMs - realMs))
+  // The slider spans the displayed UTC day; the date picker beside it moves between days.
+  const dayStartMs = simMs - (((simMs % DAY_MS) + DAY_MS) % DAY_MS)
   const playing = !clock.paused
 
   return (
@@ -39,12 +40,12 @@ export function TimeBar({ clock, now, onChange }: Props) {
       />
       <input
         type="range"
-        aria-label="Time offset"
-        min={-RANGE_MS}
-        max={RANGE_MS}
+        aria-label="Time of day (UTC)"
+        min={0}
+        max={DAY_MS - STEP_MS}
         step={STEP_MS}
-        value={offset}
-        onChange={(e) => onChange(scrubbedTo(clock, realMs + Number(e.target.value), realMs))}
+        value={simMs - dayStartMs}
+        onChange={(e) => onChange(scrubbedTo(clock, dayStartMs + Number(e.target.value), realMs))}
       />
       <input
         type="date"
@@ -53,8 +54,7 @@ export function TimeBar({ clock, now, onChange }: Props) {
         onChange={(e) => {
           if (!e.target.value) return
           const dayMs = Date.parse(`${e.target.value}T00:00:00Z`)
-          const timeOfDayMs = simMs % 86_400_000
-          onChange(withPaused(scrubbedTo(clock, dayMs + timeOfDayMs, realMs), true, realMs))
+          onChange(withPaused(scrubbedTo(clock, dayMs + (simMs - dayStartMs), realMs), true, realMs))
         }}
       />
       <output>
