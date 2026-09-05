@@ -132,7 +132,7 @@ test('selection emphasis reaches dots and labels: bigger and brighter when selec
   expect(getColor(other)[3]).toBe(90)
 })
 
-test('ghost layers draw in the family colour and the dashed path follows the samples', () => {
+test('ghost layers draw in the family color and the dashed path follows the samples', () => {
   const sats = [strix9].map(satelliteFrom)
   const at = epochOf(strix9)
   const farAhead = at.getTime() + 3 * 3_600_000

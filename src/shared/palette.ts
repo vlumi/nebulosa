@@ -8,5 +8,5 @@ export const FAMILY_COLORS: Record<OrbitFamily, Rgb> = {
   'mid-inclination': [102, 204, 238],
 }
 
-/** CSS colour for a family swatch. */
+/** CSS color for a family swatch. */
 export const familyCss = (family: OrbitFamily) => `rgb(${FAMILY_COLORS[family].join(' ')})`
