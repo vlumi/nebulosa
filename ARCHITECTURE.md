@@ -8,7 +8,7 @@ A static single-page app. Once a day a cron job on the host fetches the orbital 
 
 ## Layout of `src`
 
-Grouped by domain, not by kind of file. `orbit/` is everything about the satellites and the sky: elements, propagation and tracks, passes, the Sun, human-readable orbit descriptions. `time/` is the clock model, its easing, and the time bar. `map/` is the MapLibre and deck.gl wiring and the layer builders. `panels/` is the two side panels and their disclosure. `shared/` is what several domains use: formatting, the color palette, two small hooks. `App.tsx` at the root holds the state and wires the domains together. Tests sit next to what they test; fixtures live in `test/`. Dependencies point inward: panels and map use orbit and shared, time and orbit use only shared, shared uses nothing but a type from orbit.
+Grouped by domain, not by kind of file. `orbit/` is everything about the satellites and the sky: elements, propagation and tracks, passes, the Sun, human-readable orbit descriptions. `time/` is the clock model, its easing, and the time bar. `map/` is the MapLibre and deck.gl wiring and the layer builders. `panels/` is the toolbar, the two sheets it opens and the corner toggles. `shared/` is what several domains use: formatting, the color palette, two small hooks. `App.tsx` at the root holds the state and wires the domains together. Tests sit next to what they test; fixtures live in `test/`. Dependencies point inward: panels and map use orbit and shared, time and orbit use only shared, shared uses nothing but a type from orbit.
 
 ## State
 
@@ -70,7 +70,7 @@ Layer order is tracks, positions, labels, then the ghost's dashed track, marker 
 
 ## Layout
 
-Both panels share one column at the top-left of the map, satellites above passes. Each is a header plus a scrolling list; the satellite list has priority for the column's height, and the passes panel yields first down to a minimum of header, controls and a few rows. On viewports up to 720 px wide the panels are collapsible bars and opening one closes the other, so the column always fits.
+A toolbar of pills sits above the time bar, one per list, and each pill shows what is chosen in its list while the list is closed: the satellite's name and family swatch, the active pass and its peak time. Tapping a pill opens that list as a sheet above the toolbar, one sheet at a time; the sheet grows upward as far as the top of the map, and its list scrolls. On desktop the satellites sheet is open at the start and choosing something leaves it open, since there is room. On viewports up to 720 px wide the map comes first: no sheet is open at the start, the sheet is capped at just over half the screen, and choosing a satellite or a pass closes it, so the screen goes back to the map with the choice still readable on the pill.
 
 ## Testing
 

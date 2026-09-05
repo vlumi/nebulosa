@@ -57,13 +57,16 @@ test('the probe needs a selected satellite and walks from the given start', () =
   expect(useApp.getState().selection.probeMs).toBe(1_060_000)
 })
 
-test('on a phone, opening one panel closes the other; on desktop both stay', () => {
-  const { toggleSatellites, togglePasses } = useApp.getState()
-  toggleSatellites(true, true)
-  togglePasses(true, true)
-  expect(useApp.getState().satellitesOpen).toBe(false)
-  toggleSatellites(true, false)
-  expect(useApp.getState().passesOpen).toBe(true)
+test('one sheet at a time: toggling another replaces it, toggling the same closes it', () => {
+  const { toggleSheet, closeSheet } = useApp.getState()
+  expect(useApp.getState().sheet).toBe('satellites')
+  toggleSheet('passes')
+  expect(useApp.getState().sheet).toBe('passes')
+  toggleSheet('passes')
+  expect(useApp.getState().sheet).toBeNull()
+  toggleSheet('satellites')
+  closeSheet()
+  expect(useApp.getState().sheet).toBeNull()
 })
 
 test('play toggles between paused and real speed; live resets the clock', () => {

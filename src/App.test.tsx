@@ -47,7 +47,7 @@ test('lists the constellation from /data/elements.json with the epoch age', asyn
   expect(await panel.findByText('STRIX-1')).toBeInTheDocument()
   expect(panel.getByText('STRIX-9')).toBeInTheDocument()
   expect(panel.getByText(/Elements from 2026-09-03 20:40 UTC/)).toBeInTheDocument()
-  expect(panel.getByText(/· 2 · elements/)).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /^Satellites · 2/ })).toBeInTheDocument()
   expect(fetch).toHaveBeenCalledWith('/data/elements.json')
 })
 
@@ -78,16 +78,20 @@ test('reports a failed load', async () => {
   expect(await screen.findByRole('alert')).toHaveTextContent('503')
 })
 
+const openPasses = async () => {
+  await userEvent.click(await screen.findByRole('button', { name: /^Passes/ }))
+  return within(await screen.findByRole('complementary', { name: 'Passes' }))
+}
+
 test('showing a pass selects the satellite without touching the clock; going to it pauses at the peak', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
   render(<App />)
-  const passes = within(await screen.findByRole('complementary', { name: 'Passes' }))
-  expect(passes.getByText(/Passes over 35.68°N 139.69°E/)).toBeInTheDocument()
+  const passes = await openPasses()
+  expect(passes.getByText(/over 35.68°N 139.69°E/)).toBeInTheDocument()
   const firstRow = (await passes.findAllByRole('listitem'))[0]
 
   await userEvent.click(firstRow.querySelector('button')!)
-  const constellation = within(screen.getByRole('complementary', { name: 'Constellation' }))
-  expect(constellation.getAllByRole('button', { pressed: true })).toHaveLength(1)
+  expect(screen.getByRole('button', { name: /^Satellites STRIX-/ })).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Live' })).toBeDisabled()
   expect(firstRow.querySelector('button')).toHaveAttribute('aria-current', 'true')
   expect(firstRow).not.toHaveAttribute('data-dimmed')
@@ -104,13 +108,16 @@ test('showing a pass selects the satellite without touching the clock; going to 
 test('selecting a satellite narrows the pass list to it until the filter is turned off', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
   render(<App />)
-  const panel = within(screen.getByRole('complementary', { name: 'Constellation' }))
-  const passes = within(await screen.findByRole('complementary', { name: 'Passes' }))
+  let passes = await openPasses()
   const all = (await passes.findAllByRole('listitem')).length
   expect(all).toBeGreaterThan(1)
   expect(passes.queryByRole('checkbox', { name: /only / })).toBeNull()
 
+  await userEvent.click(screen.getByRole('button', { name: /^Satellites/ }))
+  const panel = within(screen.getByRole('complementary', { name: 'Constellation' }))
   await userEvent.click(panel.getByRole('button', { name: /STRIX-9/ }))
+  expect(screen.getByRole('button', { name: /^Satellites STRIX-9/ })).toBeInTheDocument()
+  passes = await openPasses()
   const narrowed = passes.getAllByRole('listitem')
   expect(narrowed.length).toBeLessThan(all)
   expect(narrowed.every((li) => li.textContent!.includes('STRIX-9'))).toBe(true)
@@ -122,7 +129,7 @@ test('selecting a satellite narrows the pass list to it until the filter is turn
 test('the minimum-elevation filter drops low passes', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
   render(<App />)
-  const passes = within(await screen.findByRole('complementary', { name: 'Passes' }))
+  const passes = await openPasses()
   const all = (await passes.findAllByRole('listitem')).length
   await userEvent.click(passes.getByRole('radio', { name: '45°' }))
   const high = passes.queryAllByRole('listitem')
@@ -130,37 +137,36 @@ test('the minimum-elevation filter drops low passes', async () => {
   expect(high.every((li) => Number(li.textContent!.match(/(\d+)° [NESW]/)![1]) >= 45)).toBe(true)
 })
 
-test('on a phone, opening one panel closes the other', async () => {
+test('on a phone the map comes first: one sheet at a time, and choosing something closes it', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
-  const listeners: Array<() => void> = []
   vi.stubGlobal('matchMedia', () => ({
     matches: true,
-    addEventListener: (_: string, fn: () => void) => listeners.push(fn),
+    addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
   }))
   render(<App />)
-  const satellites = within(screen.getByRole('complementary', { name: 'Constellation' }))
-  const satellitesToggle = satellites.getByRole('button', { name: /^Satellites/ })
-  expect(satellitesToggle).toHaveAttribute('aria-expanded', 'false')
+  await screen.findByRole('button', { name: /^Passes/ })
+  expect(screen.queryByRole('complementary')).toBeNull()
 
-  await userEvent.click(satellitesToggle)
-  expect(satellitesToggle).toHaveAttribute('aria-expanded', 'true')
-  const passes = within(await screen.findByRole('complementary', { name: 'Passes' }))
-  const passesToggle = passes.getByRole('button', { name: /^Passes over/ })
-  expect(passesToggle).toHaveAttribute('aria-expanded', 'false')
+  await userEvent.click(screen.getByRole('button', { name: /^Satellites/ }))
+  expect(screen.getByRole('complementary', { name: 'Constellation' })).toBeInTheDocument()
+  await userEvent.click(screen.getByRole('button', { name: /^Passes/ }))
+  expect(screen.queryByRole('complementary', { name: 'Constellation' })).toBeNull()
+  const passes = within(screen.getByRole('complementary', { name: 'Passes' }))
 
-  await userEvent.click(passesToggle)
-  expect(passesToggle).toHaveAttribute('aria-expanded', 'true')
-  expect(satellitesToggle).toHaveAttribute('aria-expanded', 'false')
+  const firstRow = (await passes.findAllByRole('listitem'))[0]
+  await userEvent.click(firstRow.querySelector('button')!)
+  expect(screen.queryByRole('complementary')).toBeNull()
+  expect(screen.getByRole('button', { name: /^Passes STRIX-\d \d\d:\d\d/ })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /^Satellites STRIX-/ })).toBeInTheDocument()
 })
 
-test('keyboard: arrows pick satellites, Shift-arrows pick passes, Enter goes there, Space pauses, S folds the panel, Esc clears', async () => {
+test('keyboard: arrows pick satellites, Shift-arrows pick passes, Enter goes there, Space pauses, S and P switch sheets, Esc clears', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
   render(<App />)
   const panel = within(screen.getByRole('complementary', { name: 'Constellation' }))
   await panel.findByText('STRIX-1')
-  const passes = within(screen.getByRole('complementary', { name: 'Passes' }))
-  await passes.findAllByRole('listitem')
+  await screen.findByRole('button', { name: /^Passes · / })
 
   await userEvent.keyboard('{ArrowDown}')
   expect(panel.getByRole('button', { name: /STRIX-1/ })).toHaveAttribute('aria-pressed', 'true')
@@ -169,6 +175,9 @@ test('keyboard: arrows pick satellites, Shift-arrows pick passes, Enter goes the
   await userEvent.keyboard('{ArrowUp}')
   expect(panel.getByRole('button', { name: /STRIX-1/ })).toHaveAttribute('aria-pressed', 'true')
 
+  await userEvent.keyboard('p')
+  expect(screen.queryByRole('complementary', { name: 'Constellation' })).toBeNull()
+  const passes = within(screen.getByRole('complementary', { name: 'Passes' }))
   await userEvent.keyboard('{Shift>}{ArrowDown}{/Shift}')
   const rows = passes.getAllByRole('listitem')
   expect(rows[0].querySelector('button')).toHaveAttribute('aria-current', 'true')
@@ -182,14 +191,17 @@ test('keyboard: arrows pick satellites, Shift-arrows pick passes, Enter goes the
   expect(screen.getByRole('button', { name: 'Live' })).toBeDisabled()
 
   await userEvent.keyboard('s')
-  expect(panel.getByRole('button', { name: /^Satellites/ })).toHaveAttribute('aria-expanded', 'false')
+  expect(screen.getByRole('complementary', { name: 'Constellation' })).toBeInTheDocument()
+  expect(screen.queryByRole('complementary', { name: 'Passes' })).toBeNull()
   await userEvent.keyboard('s')
-  expect(panel.getByRole('button', { name: /^Satellites/ })).toHaveAttribute('aria-expanded', 'true')
+  expect(screen.queryByRole('complementary')).toBeNull()
+  await userEvent.keyboard('p')
+  const reopened = within(screen.getByRole('complementary', { name: 'Passes' }))
 
   await userEvent.keyboard('o')
-  expect(passes.getByRole('checkbox', { name: /only STRIX-1/ })).not.toBeChecked()
+  expect(reopened.getByRole('checkbox', { name: /only STRIX-1/ })).not.toBeChecked()
   await userEvent.keyboard('o')
-  expect(passes.getByRole('checkbox', { name: /only STRIX-1/ })).toBeChecked()
+  expect(reopened.getByRole('checkbox', { name: /only STRIX-1/ })).toBeChecked()
 
   await userEvent.keyboard('?')
   expect(screen.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBeInTheDocument()
@@ -197,10 +209,12 @@ test('keyboard: arrows pick satellites, Shift-arrows pick passes, Enter goes the
   expect(screen.queryByRole('dialog')).toBeNull()
 
   await userEvent.keyboard('{Escape}')
-  expect(passes.queryByRole('button', { current: true })).toBeNull()
-  expect(panel.getByRole('button', { name: /STRIX-1/ })).toHaveAttribute('aria-pressed', 'true')
+  expect(reopened.queryByRole('button', { current: true })).toBeNull()
+  await userEvent.keyboard('s')
+  const constellation = within(screen.getByRole('complementary', { name: 'Constellation' }))
+  expect(constellation.getByRole('button', { name: /STRIX-1/ })).toHaveAttribute('aria-pressed', 'true')
   await userEvent.keyboard('{Escape}')
-  expect(panel.queryAllByRole('button', { pressed: true })).toHaveLength(0)
+  expect(constellation.queryAllByRole('button', { pressed: true })).toHaveLength(0)
 })
 
 test('shortcuts keep working after clicking a button with the mouse', async () => {

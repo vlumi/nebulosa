@@ -17,6 +17,8 @@ export interface Selection {
 export const NOTHING: Selection = { noradId: null, ghost: null, activePass: null, probeMs: null }
 export const TOKYO: Location = { lat: 35.68, lon: 139.69 }
 
+export type Sheet = 'satellites' | 'passes'
+
 interface State {
   selection: Selection
   focus: Focus | null
@@ -24,9 +26,8 @@ interface State {
   filters: PassFilters
   span: TrackSpan
   clock: Clock
-  /** null: open on desktop, closed on phones, until the reader toggles. */
-  satellitesOpen: boolean | null
-  passesOpen: boolean | null
+  /** The one list open above the toolbar, if any. */
+  sheet: Sheet | null
   helpOpen: boolean
   /** The radar's reach drawn beside the selected satellite's track. */
   reachVisible: boolean
@@ -50,9 +51,8 @@ interface Actions {
   setClock: (clock: Clock) => void
   togglePlay: (realMs?: number) => void
   goLive: (realMs?: number) => void
-  /** On a phone only one panel is open at a time, so the column fits the screen. */
-  toggleSatellites: (open: boolean, narrow: boolean) => void
-  togglePasses: (open: boolean, narrow: boolean) => void
+  toggleSheet: (sheet: Sheet) => void
+  closeSheet: () => void
   setHelpOpen: (open: boolean) => void
   toggleReach: () => void
   toggleGlobe: () => void
@@ -65,8 +65,7 @@ const initial = (): State => ({
   filters: DEFAULT_FILTERS,
   span: DEFAULT_SPAN,
   clock: liveClock(Date.now()),
-  satellitesOpen: null,
-  passesOpen: null,
+  sheet: 'satellites',
   helpOpen: false,
   reachVisible: true,
   globe: true,
@@ -114,10 +113,8 @@ export const useApp = create<State & Actions>((set, get) => ({
   setClock: (clock) => set({ clock }),
   togglePlay: (realMs = Date.now()) => set((s) => ({ clock: withRate(s.clock, s.clock.rate > 0 ? 0 : 1, realMs) })),
   goLive: (realMs = Date.now()) => set({ clock: liveClock(realMs) }),
-  toggleSatellites: (open, narrow) =>
-    set((s) => ({ satellitesOpen: open, passesOpen: open && narrow ? false : s.passesOpen })),
-  togglePasses: (open, narrow) =>
-    set((s) => ({ passesOpen: open, satellitesOpen: open && narrow ? false : s.satellitesOpen })),
+  toggleSheet: (sheet) => set((s) => ({ sheet: s.sheet === sheet ? null : sheet })),
+  closeSheet: () => set({ sheet: null }),
   setHelpOpen: (helpOpen) => set({ helpOpen }),
   toggleReach: () => set((s) => ({ reachVisible: !s.reachVisible })),
   toggleGlobe: () => set((s) => ({ globe: !s.globe })),
