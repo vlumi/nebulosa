@@ -1,6 +1,6 @@
 import { act, render } from '@testing-library/react'
 import { MapLibreOverlay } from '@deck.gl/maplibre'
-import { Map as MapLibre } from 'maplibre-gl'
+import { Map as MapLibre, Marker } from 'maplibre-gl'
 import { epochOf } from '../orbit/elements'
 import { strix1, strix9 } from '../test/fixtures'
 
@@ -385,4 +385,27 @@ test('a map resize sets the deck viewport to the canvas size without touching th
   expect(framebuffer.resize).toHaveBeenCalledWith([1280, 960])
   expect(deck.userData.currentViewport).toBeUndefined()
   expect(overlayInstance.setProps).not.toHaveBeenCalledWith(expect.objectContaining({ width: expect.anything() }))
+})
+
+test('a pin behind the globe is invisible and cannot be grabbed', () => {
+  render(
+    <MapView
+      satellites={[]}
+      now={epochOf(strix1)}
+      selected={null}
+      onSelect={vi.fn()}
+      places={[tokyoPlace]}
+      placeId="tokyo"
+      onPlaceSelect={vi.fn()}
+      onPlaceMove={vi.fn()}
+      onPlaceAdd={vi.fn()}
+    />,
+  )
+  expect(vi.mocked(Marker).mock.calls.at(-1)![0]).toMatchObject({ opacityWhenCovered: '0' })
+  markerInstance.element.style.opacity = '0'
+  act(() => mapInstance.handlers['render']())
+  expect(markerInstance.element.style.pointerEvents).toBe('none')
+  markerInstance.element.style.opacity = '1'
+  act(() => mapInstance.handlers['render']())
+  expect(markerInstance.element.style.pointerEvents).toBe('')
 })

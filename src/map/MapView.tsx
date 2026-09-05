@@ -217,6 +217,10 @@ export function MapView({
       ;(
         map.current as unknown as { painter?: { context?: { setDirty?: () => void } } } | null
       )?.painter?.context?.setDirty?.()
+      for (const marker of markers.current.values()) {
+        const element = marker.getElement()
+        element.style.pointerEvents = element.style.opacity === '0' ? 'none' : ''
+      }
     })
     // The interleaved overlay (deck.gl 9.4 beta) registers no resize listener and would keep its first size.
     // Handing it a width and height makes deck restyle the canvas, which is MapLibre's own, and stretches
@@ -292,7 +296,11 @@ export function MapView({
       let marker = markers.current.get(place.id)
       if (!marker || marker.getElement().dataset.color !== color) {
         marker?.remove()
-        marker = new Marker({ draggable: true, color }).setLngLat([place.lon, place.lat]).addTo(m)
+        // MapLibre only dims a pin behind the globe; here it vanishes, and the render hook below also stops it
+        // taking the pointer, or a hidden pin could be grabbed and dragged onto the near side.
+        marker = new Marker({ draggable: true, color, opacityWhenCovered: '0' })
+          .setLngLat([place.lon, place.lat])
+          .addTo(m)
         marker.getElement().dataset.color = color
         marker.getElement().addEventListener('click', (e) => {
           e.stopPropagation()
