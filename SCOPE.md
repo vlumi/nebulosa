@@ -114,6 +114,16 @@ Where a satellite is, has been and will be, beyond a highlighted track.
 - OpenFreeMap serves five styles without a key: `fiord` (the current dark blue), `dark`, `positron` (light grey), `bright` and `liberty` (light, colored). Dark stays on fiord; light goes to positron, with bright as the alternative to compare. The night shading, the reach band, the track palette and the panel tokens each need a light variant; the family colors and the accent darken on the light ground to clear the contrast guidelines.
 - Conflicts: CSS tokens, `palette.ts`, `MapView`'s basemap and the surface paints. Small, and last.
 
+### M11 — Japanese
+
+The constellation is Japanese and so is much of its audience; the interface should read in Japanese as well as English.
+
+- **Two languages**, English and Japanese, following the browser's language until a toggle beside Light chooses; the choice kept in the browser like the theme.
+- **Strings, not layouts.** Every visible string, the legend, the titles and the readout's phrasing, comes from one dictionary per language, with the same keys; dates and times stay UTC and numeric, so only words change. Satellite names, NORAD numbers and units stay as they are.
+- **Place names** already come from the basemap in the local script; the seed place gets both names.
+- **Typography:** the system font stack already covers Japanese; check line lengths in the pills, the readout labels and the pass list, where Japanese is shorter and the CJK glyphs taller.
+- Conflicts: every panel, so land it when nothing else is in flight against them.
+
 ## Non-goals
 
 - No backend, no accounts; places live in the browser and nothing else persists beyond the fetched element set
