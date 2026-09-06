@@ -7,7 +7,7 @@ import type { OrbitFamily } from '../orbit/orbit'
 import { compassPoint, dayLabel, hhmm, utcDayIndex } from '../shared/format'
 import { HORIZONS_H, PASS_SCOPES, type Pass, type PassFilters } from '../orbit/passes'
 import type { Place } from '../places/places'
-import { inReach, STEERING } from '../orbit/swath'
+import { inReach } from '../orbit/swath'
 
 interface Props {
   place: Place
@@ -43,7 +43,7 @@ export function PassList({
   return (
     <>
       <div className={styles.header}>
-        <p className="muted">{t.passes.header(place.name, STEERING.minDeg, STEERING.maxDeg)}</p>
+        <p className="muted">{t.passes.header(place.name)}</p>
         <div className={styles.controls}>
           <span>
             {t.passes.next}{' '}
@@ -55,7 +55,7 @@ export function PassList({
               format={t.passes.hours}
             />
           </span>
-          <span title={t.passes.scopeTitle}>
+          <span>
             {t.passes.show}{' '}
             <Segmented
               label={t.passes.scope}

@@ -75,13 +75,12 @@ export interface Strings {
     none: string
   }
   passes: {
-    header: (place: string, min: number, max: number) => string
+    header: (place: string) => string
     next: string
     hoursAhead: string
     hours: (h: number) => string
     show: string
     scope: string
-    scopeTitle: string
     aboveHorizon: string
     inReach: string
     only: (name: string) => string
@@ -143,10 +142,9 @@ export const en: Strings = {
   close: (sheet) => `Close ${sheet.toLowerCase()}`,
   toggles: {
     globe: 'Globe or flat map',
-    theme: 'Light or dark; follows the system until chosen',
+    theme: 'Light or dark',
     reach: 'SAR',
-    reachTitle: (min, max) =>
-      `Ground the radar can reach from the selected satellite's track: ${min}° to ${max}° off nadir, either side`,
+    reachTitle: (min, max) => `SAR reach: ${min}° to ${max}° off nadir`,
     language: 'Language',
   },
   toolbar: {
@@ -194,7 +192,7 @@ export const en: Strings = {
   },
   places: {
     header:
-      'Passes are computed for the selected place. Double-click the map, or press and hold on a phone, to add one; drag a pin to move it.',
+      'Double-click the map, or press and hold on a phone, to add a place. Passes are computed for the selected one.',
     lockPins: 'Lock pins',
     placeName: 'Place name',
     save: 'Save',
@@ -203,20 +201,17 @@ export const en: Strings = {
     none: 'No places yet.',
   },
   passes: {
-    header: (place, min, max) =>
-      `Line of sight above the horizon over ${place}. Drag the pin to move. Accent peaks are within the radar's ${min}–${max}° steering range.`,
+    header: (place) => `Line-of-sight passes over ${place}.`,
     next: 'Next',
     hoursAhead: 'Hours ahead',
     hours: (h) => `${h} h`,
     show: 'Show',
     scope: 'Passes',
-    scopeTitle:
-      'Every pass in line of sight, or only those the radar can steer to; straight overhead is too close for a side-looking radar',
     aboveHorizon: 'above horizon',
     inReach: 'in SAR reach',
     only: (name) => `only ${name}`,
     none: 'None.',
-    showTitle: 'Show where the satellite will be at the peak',
+    showTitle: 'Show the peak on the map',
     offNadir: (deg, inReach) => `${deg}° off nadir at the peak${inReach ? ', within SAR reach' : ''}`,
     goTo: (name, at) => `Go to ${name} pass at ${at}`,
   },
@@ -272,9 +267,9 @@ export const ja: Strings = {
   close: (sheet) => `${sheet}を閉じる`,
   toggles: {
     globe: '地球儀と平面地図の切り替え',
-    theme: 'ライトかダーク。選ぶまではシステム設定に従います',
+    theme: 'ライト / ダーク',
     reach: 'SAR',
-    reachTitle: (min, max) => `レーダーの撮像可能範囲: 選択中の衛星の軌跡の両側、オフナディア角${min}°〜${max}°`,
+    reachTitle: (min, max) => `SAR撮像範囲: オフナディア角${min}°〜${max}°`,
     language: '言語',
   },
   toolbar: {
@@ -321,8 +316,7 @@ export const ja: Strings = {
     passTitle: (start, end, peakDeg) => `パス ${start}–${end} UTC、最大仰角${peakDeg}°`,
   },
   places: {
-    header:
-      'パスは選択した地点について計算されます。地図をダブルクリック（スマートフォンでは長押し）して地点を追加、ピンをドラッグして移動します。',
+    header: '地図をダブルクリック（スマートフォンでは長押し）して地点を追加。パスは選択中の地点について計算されます。',
     lockPins: 'ピンを固定',
     placeName: '地点名',
     save: '保存',
@@ -331,20 +325,17 @@ export const ja: Strings = {
     none: '地点はまだありません。',
   },
   passes: {
-    header: (place, min, max) =>
-      `${place}から地平線上に見える衛星の通過（パス）です。ピンはドラッグで移動できます。強調表示はピーク時にレーダーのオフナディア角${min}〜${max}°の範囲に入るパスです。`,
+    header: (place) => `${place}から地平線上に見える衛星の通過（パス）。`,
     next: '今後',
     hoursAhead: '表示する時間範囲',
     hours: (h) => `${h}時間`,
     show: '表示',
     scope: 'パス',
-    scopeTitle:
-      '地平線上のすべてのパスか、レーダーが向けられるものだけか。真上を通る衛星は側視レーダーでは撮像できません',
     aboveHorizon: '地平線上のすべて',
     inReach: 'SAR撮像範囲内',
     only: (name) => `${name}のみ`,
     none: 'ありません。',
-    showTitle: 'ピーク時の衛星の位置を表示',
+    showTitle: 'ピークの位置を地図に表示',
     offNadir: (deg, inReach) => `ピーク時のオフナディア角${deg}°${inReach ? '、SAR撮像範囲内' : ''}`,
     goTo: (name, at) => `${at}の${name}のパスの時刻へ移動`,
   },
