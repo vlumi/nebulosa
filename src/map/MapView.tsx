@@ -206,12 +206,12 @@ export function MapView({
         element.style.pointerEvents = element.style.opacity === '0' ? 'none' : ''
       }
     })
-    // luma.gl (9.4 beta) keeps a framebuffer object for the canvas, and its height sets the y-flip of every
+    // luma.gl (9.4.0) keeps a framebuffer object for the canvas, and its height sets the y-flip of every
     // viewport drawn into it. luma's deferred resize refreshes that object only when luma itself has to change
     // the canvas size; MapLibre has already resized the canvas by then, so the object keeps the old height and
     // the overlay draws offset by exactly the resize. Everything else follows on its own: deck re-measures
     // through luma's ResizeObserver, and MapLibre's move event drops the module's cached viewport.
-    // Fix proposed upstream (visgl/luma.gl, CanvasSurface tracks the size it configured the device for). Once
+    // Reported as visgl/luma.gl#3177, fix in visgl/luma.gl#3178 (CanvasSurface tracks the configured size). Once
     // the lockfile's @luma.gl/core carries it, delete this handler, the InterleavedDeck type and their test.
     map.current.on('resize', () => {
       const canvas = map.current?.getCanvas()
@@ -234,7 +234,8 @@ export function MapView({
             : info.layer?.id === 'tracks'
               ? currentTracks.current.find((t) => t.noradId === over.noradId)
               : undefined
-        // deck's picked coordinate is wrong on the beta's globe; MapLibre's own unproject is right in both projections.
+        // deck's picked coordinate is wrong on the MapLibre module's globe; MapLibre's own unproject is right in
+        // both projections.
         const point = track && map.current && info.x !== undefined ? map.current.unproject([info.x, info.y]) : null
         setHover(track && point ? hoverAt(track, [point.lng, point.lat]) : null)
       },
