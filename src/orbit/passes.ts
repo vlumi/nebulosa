@@ -1,10 +1,8 @@
+import { DEG, RAD } from './geo'
 import { ecfToLookAngles, eciToEcf, gstime, propagate } from 'satellite.js'
 import type { Omm } from './elements'
 import { positionAt, satelliteFrom, type Satellite } from './orbit'
 import { offNadirForElevation } from './swath'
-
-const RAD = Math.PI / 180
-const DEG = 180 / Math.PI
 
 /** Choices for how far ahead the pass list looks. */
 export const HORIZONS_H = [6, 12, 24, 48] as const

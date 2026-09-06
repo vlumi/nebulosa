@@ -1,24 +1,12 @@
 import { eciToGeodetic, gstime, propagate } from 'satellite.js'
 import { positionAt, type GeoPoint, type Satellite } from './orbit'
+import { bearingDeg, DEG, RAD } from './geo'
 import { subsolarPoint } from './sun'
-
-const RAD = Math.PI / 180
-const DEG = 180 / Math.PI
 
 export interface SatelliteState extends GeoPoint {
   speedKmS: number
   /** Direction of travel over the ground, clockwise from north. */
   headingDeg: number
-}
-
-/** Initial bearing from one point to another, clockwise from north in [0, 360). */
-export function bearingDeg(from: { lat: number; lon: number }, to: { lat: number; lon: number }): number {
-  const φ1 = from.lat * RAD
-  const φ2 = to.lat * RAD
-  const Δλ = (to.lon - from.lon) * RAD
-  const y = Math.sin(Δλ) * Math.cos(φ2)
-  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ)
-  return (Math.atan2(y, x) * DEG + 360) % 360
 }
 
 /** Where the satellite is, how fast it moves and which way it heads, at one moment. */

@@ -151,7 +151,7 @@ test('mounts a MapLibre map with a deck.gl overlay and feeds it the layers', () 
   expect(mapInstance.remove).toHaveBeenCalled()
 })
 
-test("a focus request eases the map to the satellite's current position", () => {
+test("a camera request eases the map to the satellite's current position", () => {
   const sats = [strix1, strix9].map(satelliteFrom)
   const at = epochOf(strix9)
   const { rerender } = render(
@@ -160,7 +160,7 @@ test("a focus request eases the map to the satellite's current position", () => 
       now={at}
       selected={null}
       onSelect={vi.fn()}
-      focus={null}
+      camera={null}
       places={[tokyoPlace]}
       placeId="tokyo"
       onPlaceSelect={vi.fn()}
@@ -176,7 +176,7 @@ test("a focus request eases the map to the satellite's current position", () => 
       now={at}
       selected={strix9.NORAD_CAT_ID}
       onSelect={vi.fn()}
-      focus={{ noradId: strix9.NORAD_CAT_ID, seq: 1 }}
+      camera={{ kind: 'satellite', noradId: strix9.NORAD_CAT_ID, seq: 1 }}
       places={[tokyoPlace]}
       placeId="tokyo"
       onPlaceSelect={vi.fn()}
@@ -261,13 +261,13 @@ test('one pin per place: it reports drags, a tap selects it, a double click adds
       onPlaceSelect={onPlaceSelect}
       onPlaceMove={onPlaceMove}
       onPlaceAdd={onPlaceAdd}
-      flyTo={{ lat: 60.17, lon: 24.94, seq: 1 }}
+      camera={{ kind: 'point', lat: 60.17, lon: 24.94, seq: 1 }}
     />,
   )
   expect(mapInstance.easeTo).toHaveBeenLastCalledWith({ center: [24.94, 60.17], duration: 600 })
 })
 
-test('a focus request with a time centers on the position at that time, not the displayed one', () => {
+test('a camera request with a time centers on the position at that time, not the displayed one', () => {
   const sats = [strix1].map(satelliteFrom)
   const displayed = epochOf(strix1)
   const later = displayed.getTime() + 20 * 60_000
@@ -277,7 +277,7 @@ test('a focus request with a time centers on the position at that time, not the 
       now={displayed}
       selected={strix1.NORAD_CAT_ID}
       onSelect={vi.fn()}
-      focus={{ noradId: strix1.NORAD_CAT_ID, seq: 1, timeMs: later }}
+      camera={{ kind: 'satellite', noradId: strix1.NORAD_CAT_ID, seq: 1, timeMs: later }}
       places={[tokyoPlace]}
       placeId="tokyo"
       onPlaceSelect={vi.fn()}
@@ -460,7 +460,7 @@ test('following keeps the selected satellite centered as time moves, until the m
   start('dragstart', { originalEvent: {} })
   expect(onFollowBreak).toHaveBeenCalledTimes(4)
 })
-test('a focus flies once and never again when following stops; a new focus flies while not following', () => {
+test('a camera request flies once and never again when following stops; a new one flies while not following', () => {
   const sats = [strix1].map(satelliteFrom)
   const props = {
     satellites: sats,
@@ -474,12 +474,12 @@ test('a focus flies once and never again when following stops; a new focus flies
     onPlaceAdd: vi.fn(),
     onFollowBreak: vi.fn(),
   }
-  const focus = { noradId: strix1.NORAD_CAT_ID, seq: 1 }
-  const { rerender } = render(<MapView {...props} follow focus={focus} />)
+  const camera = { kind: 'satellite' as const, noradId: strix1.NORAD_CAT_ID, seq: 1 }
+  const { rerender } = render(<MapView {...props} follow camera={camera} />)
   expect(mapInstance.easeTo).not.toHaveBeenCalled()
-  rerender(<MapView {...props} follow={false} focus={focus} />)
+  rerender(<MapView {...props} follow={false} camera={camera} />)
   expect(mapInstance.easeTo).not.toHaveBeenCalled()
-  rerender(<MapView {...props} follow={false} focus={{ ...focus, seq: 2 }} />)
+  rerender(<MapView {...props} follow={false} camera={{ ...camera, seq: 2 }} />)
   expect(mapInstance.easeTo).toHaveBeenCalledTimes(1)
 })
 

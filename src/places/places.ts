@@ -1,5 +1,6 @@
 import type { Location } from '../orbit/passes'
 import { formatLocation } from '../shared/format'
+import { storage } from '../shared/storage'
 
 /** A pinned location; passes are computed for the selected one. */
 export interface Place extends Location {
@@ -19,14 +20,6 @@ export const TOKYO: Place = { id: 'tokyo', name: 'Tokyo', lat: 35.68, lon: 139.6
 export const SEED: PlacesState = { places: [TOKYO], placeId: TOKYO.id, pinsLocked: false }
 
 const KEY = 'nebulosa.places'
-
-function storage(): Storage | undefined {
-  try {
-    return window.localStorage
-  } catch {
-    return undefined
-  }
-}
 
 const isPlace = (p: unknown): p is Place =>
   typeof p === 'object' &&
