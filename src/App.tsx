@@ -7,7 +7,7 @@ import { inReach } from './orbit/swath'
 import { usePasses } from './orbit/usePasses'
 import { FollowButton } from './panels/FollowButton'
 import { Help } from './panels/Help'
-import { GlobeIcon, MoonIcon, SunIcon } from './panels/Icons'
+import { FlatMapIcon, GlobeIcon, MoonIcon, SunIcon } from './panels/Icons'
 import { LanguageSelect } from './panels/LanguageSelect'
 import { PassList } from './panels/PassList'
 import { PlaceList } from './panels/PlaceList'
@@ -117,7 +117,7 @@ function App() {
   const toggles = (
     <>
       <MapToggle on={app.globe} onToggle={app.toggleGlobe} label={s.toggles.globe}>
-        <GlobeIcon />
+        {app.globe ? <GlobeIcon /> : <FlatMapIcon />}
       </MapToggle>
       <MapToggle
         on={theme === 'light'}

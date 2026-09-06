@@ -9,6 +9,13 @@ export const GlobeIcon = () => (
   </svg>
 )
 
+export const FlatMapIcon = () => (
+  <svg {...size} aria-hidden="true">
+    <rect x="1.5" y="3" width="13" height="10" rx="1" />
+    <path d="M1.5 8h13M5.8 3v10M10.2 3v10" />
+  </svg>
+)
+
 export const SunIcon = () => (
   <svg {...size} aria-hidden="true">
     <circle cx="8" cy="8" r="3.2" />
