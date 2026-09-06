@@ -143,3 +143,14 @@ test('follow is a mode: toggled or set, and kept across selections', () => {
   setFollow(false)
   expect(useApp.getState().follow).toBe(false)
 })
+
+test('the probe can be put at a moment or cleared, with a satellite selected', () => {
+  const { setProbe, select } = useApp.getState()
+  setProbe(5000)
+  expect(useApp.getState().selection.probeMs).toBeNull()
+  select(65971)
+  setProbe(5000)
+  expect(useApp.getState().selection.probeMs).toBe(5000)
+  setProbe(null)
+  expect(useApp.getState().selection.probeMs).toBeNull()
+})

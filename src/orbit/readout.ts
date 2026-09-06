@@ -69,3 +69,23 @@ export function nextTerminatorCrossing(sat: Satellite, fromMs: number, stepSecon
   }
   return null
 }
+
+export interface Stretch {
+  fromMs: number
+  toMs: number
+  lit: boolean
+}
+
+/** Day and night along the ground track, one stretch per run of lit or unlit minutes. */
+export function daylightStretches(satellite: Satellite, fromMs: number, toMs: number, stepMs = 60_000): Stretch[] {
+  const stretches: Stretch[] = []
+  for (let t = fromMs; t < toMs; t += stepMs) {
+    const p = positionAt(satellite, new Date(t))
+    if (!p) continue
+    const lit = isDaylit(p, new Date(t))
+    const last = stretches[stretches.length - 1]
+    if (last && last.lit === lit) last.toMs = Math.min(t + stepMs, toMs)
+    else stretches.push({ fromMs: t, toMs: Math.min(t + stepMs, toMs), lit })
+  }
+  return stretches
+}

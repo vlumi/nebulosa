@@ -94,13 +94,13 @@ The two panels cover the whole screen on a phone, and choosing something should 
 - Places persist in the browser (`localStorage`), no account. Tokyo remains the seed on first visit.
 - Conflicts: store, `usePasses` and the pass worker request, `MapView` markers, and the places sheet from M7. Wait for M7.
 
-### M9 — focused satellite
+### M9 — focused satellite (done)
 
 Where a satellite is, has been and will be, beyond a highlighted track.
 
 - **Follow (done):** the map keeps the focused satellite centered as time plays, on the globe by rotating it. A toggle, off by default; a drag on the map turns it off.
 - **Readout (done):** sub-satellite point, altitude, speed, direction, time to the next pass over the selected place, and time to the next terminator crossing, in the satellite's sheet while selected.
-- **Own timeline:** the arrow-key probe becomes a visible strip under the readout, showing the next few passes and the day and night stretches along the track; dragging it moves the ghost.
+- **Own timeline (done):** the arrow-key probe is also a strip under the readout, spanning the drawn track: day and night along it, the passes over the selected place, the displayed moment in the middle; pointing at it moves the probe, a double click clears it.
 - Conflicts: store selection, `layers.ts`, the satellite sheet from M7. Wait for M7; independent of M8 except for the next-pass field.
 
 ### Small things noticed along the way
