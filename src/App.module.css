@@ -37,3 +37,11 @@
     max-height: 55vh;
   }
 }
+
+/* The map toggles in the title row, phones only; see App.tsx. */
+.headerToggles {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

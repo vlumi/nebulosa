@@ -12,59 +12,74 @@ interface Props {
   places: { count: number; selected?: string }
   /** Absent until the elements have loaded. */
   passes?: { count: number; active?: { name: string; peakMs: number } }
+  /** Unselect the satellite without opening its sheet. */
+  onClear: () => void
 }
 
 /** One pill per list. Each shows what is chosen in it while its sheet is closed, and opens the sheet on tap. */
-export function Toolbar({ sheet, onToggle, satellites, places, passes }: Props) {
+export function Toolbar({ sheet, onToggle, satellites, places, passes, onClear }: Props) {
   return (
     <div className={styles.toolbar} role="toolbar" aria-label="Lists">
-      <button
-        type="button"
-        className={styles.pill}
-        aria-pressed={sheet === 'satellites'}
-        aria-controls="sheet"
-        onClick={() => onToggle('satellites')}
-      >
-        Satellites{' '}
-        {satellites.selected ? (
-          <span className={styles.chosen}>
-            <span className={panel.swatch} style={{ background: familyCss(satellites.selected.family) }} />
-            {satellites.selected.name}
-          </span>
-        ) : (
-          satellites.count > 0 && <span className="muted">· {satellites.count}</span>
-        )}
-      </button>
-      <button
-        type="button"
-        className={styles.pill}
-        aria-pressed={sheet === 'places'}
-        aria-controls="sheet"
-        onClick={() => onToggle('places')}
-      >
-        Places{' '}
-        {places.selected ? (
-          <span className={styles.chosen}>{places.selected}</span>
-        ) : (
-          <span className="muted">· {places.count > 0 ? 'none picked' : 'none'}</span>
-        )}
-      </button>
-      {passes && (
+      <div className={styles.pills}>
         <button
           type="button"
           className={styles.pill}
-          aria-pressed={sheet === 'passes'}
+          aria-pressed={sheet === 'satellites'}
           aria-controls="sheet"
-          onClick={() => onToggle('passes')}
+          onClick={() => onToggle('satellites')}
         >
-          Passes{' '}
-          {passes.active ? (
+          Satellites{' '}
+          {satellites.selected ? (
             <span className={styles.chosen}>
-              {passes.active.name} {hhmm(passes.active.peakMs)}
+              <span className={panel.swatch} style={{ background: familyCss(satellites.selected.family) }} />
+              {satellites.selected.name}
             </span>
           ) : (
-            <span className="muted">· {passes.count}</span>
+            satellites.count > 0 && <span className="muted">· {satellites.count}</span>
           )}
+        </button>
+        <button
+          type="button"
+          className={styles.pill}
+          aria-pressed={sheet === 'places'}
+          aria-controls="sheet"
+          onClick={() => onToggle('places')}
+        >
+          Places{' '}
+          {places.selected ? (
+            <span className={styles.chosen}>{places.selected}</span>
+          ) : (
+            <span className="muted">· {places.count > 0 ? 'none picked' : 'none'}</span>
+          )}
+        </button>
+        {passes && (
+          <button
+            type="button"
+            className={styles.pill}
+            aria-pressed={sheet === 'passes'}
+            aria-controls="sheet"
+            onClick={() => onToggle('passes')}
+          >
+            Passes{' '}
+            {passes.active ? (
+              <span className={styles.chosen}>
+                {passes.active.name} {hhmm(passes.active.peakMs)}
+              </span>
+            ) : (
+              <span className="muted">· {passes.count}</span>
+            )}
+          </button>
+        )}
+      </div>
+      {satellites.selected && (
+        <button
+          type="button"
+          className={styles.clear}
+          aria-label={`Unselect ${satellites.selected.name}`}
+          title={`Unselect ${satellites.selected.name}`}
+          onClick={onClear}
+        >
+          ×
         </button>
       )}
     </div>

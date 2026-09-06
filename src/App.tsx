@@ -162,11 +162,23 @@ function App() {
     }
   }, [satellites, passes])
 
+  // The map toggles sit in the corner beside the help on a desktop; on a phone that corner holds the compass and
+  // the follow button, and the title row has the room.
+  const toggles = (
+    <>
+      <MapToggle on={app.globe} onToggle={app.toggleGlobe} title="Globe or flat map">
+        Globe
+      </MapToggle>
+      <ReachToggle on={app.reachVisible} onToggle={app.toggleReach} />
+    </>
+  )
+
   return (
     <>
       <header>
         <h1>nebulosa</h1>
         <p>Ground tracks of the StriX SAR constellation</p>
+        {narrow && <div className={styles.headerToggles}>{toggles}</div>}
       </header>
       <main>
         <Suspense fallback={<div className="map" />}>
@@ -244,6 +256,7 @@ function App() {
           <Toolbar
             sheet={app.sheet}
             onToggle={app.toggleSheet}
+            onClear={() => app.select(null)}
             satellites={{
               count: satellites.length,
               selected: selectedSatellite
@@ -268,10 +281,7 @@ function App() {
         )}
         <LiveTimeBar />
         <Help open={app.helpOpen} onToggle={app.setHelpOpen}>
-          <MapToggle on={app.globe} onToggle={app.toggleGlobe} title="Globe or flat map">
-            Globe
-          </MapToggle>
-          <ReachToggle on={app.reachVisible} onToggle={app.toggleReach} />
+          {!narrow && toggles}
         </Help>
       </main>
       <footer>
