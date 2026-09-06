@@ -454,6 +454,11 @@ test('following keeps the selected satellite centered as time moves, until the m
   expect(onFollowBreak).toHaveBeenCalledTimes(3)
   mapInstance.handlers['wheel']()
   expect(onFollowBreak).toHaveBeenCalledTimes(4)
+
+  rerender(<MapView {...props} follow={false} now={new Date(later.getTime() + 300_000)} />)
+  mapInstance.handlers['wheel']()
+  start('dragstart', { originalEvent: {} })
+  expect(onFollowBreak).toHaveBeenCalledTimes(4)
 })
 test('a focus flies once and never again when following stops; a new focus flies while not following', () => {
   const sats = [strix1].map(satelliteFrom)

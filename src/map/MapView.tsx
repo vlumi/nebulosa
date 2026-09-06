@@ -139,6 +139,7 @@ export function MapView({
   const select = useLatest(onSelect)
   const currentTime = useLatest(now)
   const followBreak = useLatest(onFollowBreak)
+  const following = useLatest(follow)
   // A recenter while a pointer is down cancels the drag MapLibre is about to start, so following pauses from
   // pointer down to pointer up; the store hears of the break only once the drag has begun.
   const pointerDown = useRef(false)
@@ -228,6 +229,7 @@ export function MapView({
     // the wheel event: it only queues the zoom for the next frame, and a recenter before that frame would
     // discard the queue, so the zoom would never start.
     const release = () => {
+      if (!following.current) return
       letGo.current = true
       followBreak.current?.()
     }
@@ -358,7 +360,6 @@ export function MapView({
 
   // Each focus request flies once; while following, the follow already centers, and turning it off later must
   // not replay the flight, or the drag that turned it off is thrown back to the satellite.
-  const following = useLatest(follow)
   const flownFocus = useRef<number>(undefined)
   useEffect(() => {
     if (!focus || focus.seq === flownFocus.current) return
