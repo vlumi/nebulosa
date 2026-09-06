@@ -286,7 +286,7 @@ test('keyboard: W opens the places sheet and the arrows then step through the pl
   expect(screen.queryByRole('complementary')).toBeNull()
 })
 
-test('keyboard: F follows the selected satellite, and does nothing with none selected', async () => {
+test('the follow button appears with a selected satellite; F and the button toggle it', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
   render(<App />)
   const panel = within(screen.getByRole('complementary', { name: 'Constellation' }))
@@ -294,9 +294,9 @@ test('keyboard: F follows the selected satellite, and does nothing with none sel
   await userEvent.keyboard('f')
   expect(useApp.getState().follow).toBe(true)
   await userEvent.keyboard('{ArrowDown}')
-  expect(panel.getByRole('checkbox', { name: 'Follow' })).toBeChecked()
+  expect(screen.getByRole('button', { name: 'Follow STRIX-1' })).toHaveAttribute('aria-pressed', 'true')
   await userEvent.keyboard('f')
-  expect(panel.getByRole('checkbox', { name: 'Follow' })).not.toBeChecked()
-  await userEvent.keyboard('f')
-  expect(panel.getByRole('checkbox', { name: 'Follow' })).toBeChecked()
+  expect(screen.getByRole('button', { name: 'Follow STRIX-1' })).toHaveAttribute('aria-pressed', 'false')
+  await userEvent.click(screen.getByRole('button', { name: 'Follow STRIX-1' }))
+  expect(screen.getByRole('button', { name: 'Follow STRIX-1' })).toHaveAttribute('aria-pressed', 'true')
 })

@@ -140,8 +140,9 @@ export function MapView({
   // A recenter while a pointer is down cancels the drag MapLibre is about to start, so following pauses from
   // pointer down to pointer up; the store hears of the break only once the drag has begun.
   const pointerDown = useRef(false)
-  // Two fingers zoom or rotate, and the center drifts a little with them; only a one-finger drag is a pan.
-  const twoFingers = useRef(false)
+  // Set the moment a gesture lets go, before the store hears of it: one more recenter would cancel the gesture.
+  const letGo = useRef(false)
+  const wasFollowing = useRef(follow)
 
   // A track shifted by under a minute is indistinguishable, and while scrubbing or fast-forwarding
   // a few tenths of a second of staleness is invisible; positions still move every frame.
@@ -208,19 +209,22 @@ export function MapView({
     // deck draws with its own depth and culling settings, and MapLibre caches GL state, so after each frame
     // MapLibre is told to re-apply everything; otherwise its far-side tiles can come through as dark wedges.
     map.current.on('move', () => setViewVersion((v) => v + 1))
-    map.current.on('mousedown', () => (pointerDown.current = true))
-    map.current.on('touchstart', (e) => {
-      pointerDown.current = true
-      twoFingers.current = twoFingers.current || e.points.length >= 2
-    })
-    for (const event of ['mouseup', 'dragend'] as const) map.current.on(event, () => (pointerDown.current = false))
-    map.current.on('touchend', (e) => {
-      pointerDown.current = false
-      if (e.points.length === 0) twoFingers.current = false
-    })
-    map.current.on('dragstart', () => {
-      if (!twoFingers.current) followBreak.current?.()
-    })
+    for (const event of ['mousedown', 'touchstart'] as const) map.current.on(event, () => (pointerDown.current = true))
+    for (const event of ['mouseup', 'touchend', 'dragend'] as const)
+      map.current.on(event, () => (pointerDown.current = false))
+    // Any gesture of the reader's own lets go: a pan, a wheel or pinch zoom, a rotation, a tilt. The zoom
+    // buttons keep the center and carry no original event, so they keep following. The wheel is caught as
+    // the wheel event: it only queues the zoom for the next frame, and a recenter before that frame would
+    // discard the queue, so the zoom would never start.
+    const release = () => {
+      letGo.current = true
+      followBreak.current?.()
+    }
+    map.current.on('wheel', release)
+    for (const event of ['dragstart', 'zoomstart', 'rotatestart', 'pitchstart'] as const)
+      map.current.on(event, (e) => {
+        if (e.originalEvent) release()
+      })
     map.current.on('render', () => {
       ;(
         map.current as unknown as { painter?: { context?: { setDirty?: () => void } } } | null
@@ -322,7 +326,9 @@ export function MapView({
   useEffect(applyProjection, [globe, applyProjection])
 
   useEffect(() => {
-    if (!follow || pointerDown.current || selected === null) return
+    if (follow && !wasFollowing.current) letGo.current = false
+    wasFollowing.current = follow
+    if (!follow || letGo.current || pointerDown.current || selected === null) return
     const sat = satellites.find((s) => s.omm.NORAD_CAT_ID === selected)
     const p = sat && positionAt(sat, now)
     if (p) map.current?.jumpTo({ center: [p.lon, p.lat] })

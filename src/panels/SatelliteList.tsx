@@ -18,9 +18,6 @@ interface Props {
   onSelect: (noradId: number | null) => void
   span: TrackSpan
   onSpanChange: (span: TrackSpan) => void
-  /** Keep the selected satellite centered on the map. */
-  follow: boolean
-  onFollowChange: (follow: boolean) => void
   /** The selected satellite's next pass over the selected place, if both exist. */
   nextPass: Pass | null
   placeName?: string
@@ -40,8 +37,6 @@ export function SatelliteList({
   onSelect,
   span,
   onSpanChange,
-  follow,
-  onFollowChange,
   nextPass,
   placeName,
   passes,
@@ -75,12 +70,6 @@ export function SatelliteList({
                   <Detail satellite={s} now={now} />
                   <Readout satellite={s} nextPass={nextPass} placeName={placeName} />
                   <Timeline satellite={s} span={span} passes={passes} probeMs={probeMs} onProbe={onProbe} />
-                  <label
-                    className={styles.follow}
-                    title="Keep the map centered on it as time plays; dragging the map lets go"
-                  >
-                    <input type="checkbox" checked={follow} onChange={(e) => onFollowChange(e.target.checked)} /> Follow
-                  </label>
                 </>
               )}
             </li>
