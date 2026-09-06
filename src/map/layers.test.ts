@@ -29,11 +29,12 @@ test('builds tracks, positions and labels for every satellite, colored by family
   expect(ages[0]).toBeGreaterThan(ages[ages.length - 1])
   expect(ages[ages.length - 1]).toBe(0)
   const { getColor } = tracks.props as unknown as { getColor: (d: unknown) => number[] }
-  const alphaAt = (age: number) => getColor({ ...strix1Rows[0], age })[3]
-  expect(alphaAt(0)).toBe(200)
-  expect(alphaAt(0.06)).toBe(120)
-  expect(alphaAt(0.12)).toBe(40)
-  expect(alphaAt(1)).toBe(40)
+  const alphaAt = (age: number) => getColor({ ...strix1Rows[0], half: 'past', age })[3]
+  expect(getColor({ ...strix1Rows[0], half: 'future', age: 0 })[3]).toBe(215)
+  expect(alphaAt(0)).toBe(98)
+  expect(alphaAt(0.02)).toBe(67)
+  expect(alphaAt(0.04)).toBe(35)
+  expect(alphaAt(1)).toBe(35)
 
   const positionData = positions.props.data as { name: string; family: string }[]
   expect(positionData.map((d) => d.name)).toEqual(['STRIX-1', 'STRIX-9'])
@@ -58,7 +59,7 @@ test('dims everything but the selected satellite and makes layers pickable', () 
   const oldest = (id: number) => trackRows.find((d) => d.noradId === id && d.half === 'past')!
   expect(getColor(future(strix9.NORAD_CAT_ID))[3]).toBe(255)
   expect(getColor(oldest(strix9.NORAD_CAT_ID))[3]).toBeLessThan(255)
-  expect(getColor(future(strix1.NORAD_CAT_ID))[3]).toBe(40)
+  expect(getColor(future(strix1.NORAD_CAT_ID))[3]).toBe(28)
   expect(getColor(oldest(strix9.NORAD_CAT_ID))[3]).toBeGreaterThan(3 * getColor(future(strix1.NORAD_CAT_ID))[3])
   expect(getWidth(future(strix9.NORAD_CAT_ID))).toBeGreaterThan(getWidth(future(strix1.NORAD_CAT_ID)))
   expect(getWidth(oldest(strix9.NORAD_CAT_ID))).toBe(getWidth(future(strix9.NORAD_CAT_ID)))

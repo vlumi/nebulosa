@@ -30,7 +30,7 @@
   --panel: #ffffff;
   --text: #1c1f26;
   --muted: #5b6270;
-  --accent: #a86f00;
+  --accent: #8f5f00;
   --border: rgb(0 0 0 / 0.15);
   --border-strong: rgb(0 0 0 / 0.45);
   --hover: rgb(0 0 0 / 0.06);
@@ -38,7 +38,7 @@
   --marker: #1c1f26;
   --strip-day: rgb(0 0 0 / 0.08);
   --strip-night: rgb(30 40 70 / 0.55);
-  --family-sun-synchronous: rgb(176 125 0);
+  --family-sun-synchronous: rgb(150 105 0);
   --family-mid-inclination: rgb(0 110 170);
   color-scheme: light;
 }
@@ -150,5 +150,5 @@ main .maplibregl-ctrl-group button.maplibregl-ctrl-compass .maplibregl-ctrl-icon
 }
 
 :root[data-theme='light'] main .maplibregl-ctrl-group button.maplibregl-ctrl-compass .maplibregl-ctrl-icon {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 29 29'%3E%3Cpath d='M10.5 14l4-8 4 8z' fill='%23a86f00'/%3E%3Cpath d='M10.5 16l4 8 4-8z' fill='%235b6270'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 29 29'%3E%3Cpath d='M10.5 14l4-8 4 8z' fill='%238f5f00'/%3E%3Cpath d='M10.5 16l4 8 4-8z' fill='%235b6270'/%3E%3C/svg%3E");
 }

@@ -97,6 +97,8 @@ interface Props {
   follow?: boolean
   onFollowBreak?: () => void
   theme?: Theme
+  /** Height of the bars floating over the map's foot; the camera centers and the fit is taken above them. */
+  bottomInset?: number
 }
 
 export function MapView({
@@ -120,6 +122,7 @@ export function MapView({
   follow = false,
   onFollowBreak,
   theme = 'dark',
+  bottomInset = 0,
 }: Props) {
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<MapLibre>(null)
@@ -159,6 +162,7 @@ export function MapView({
   const surfaces = useLatest({ nightData, reachData, reachColor, nightPaint: nightPaint(theme) })
 
   const projection = useLatest(globe)
+  const inset = useLatest(bottomInset)
   const initialTheme = useRef(theme)
   const styleReady = useRef(false)
   const applyProjection = useCallback(() => {
@@ -172,8 +176,15 @@ export function MapView({
     map.current = new MapLibre({
       container: container.current!,
       style: BASEMAPS[initialTheme.current],
+      // MapLibre's own lines are antialiased in the shader and it leaves multisampling off; deck.gl's paths and
+      // discs share the context in interleaved mode and would render with jagged edges without it.
+      canvasContextAttributes: { antialias: true },
       center: [139.7, 35.7],
-      zoom: fitZoom(container.current!.clientWidth, container.current!.clientHeight, projection.current),
+      zoom: fitZoom(
+        container.current!.clientWidth,
+        container.current!.clientHeight - inset.current,
+        projection.current,
+      ),
       doubleClickZoom: false,
     })
     const addAt = (e: { point: { x: number; y: number }; lngLat: { lat: number; lng: number } }) =>
@@ -321,6 +332,10 @@ export function MapView({
   useEffect(() => {
     if (flyTo) map.current?.easeTo({ center: [flyTo.lon, flyTo.lat], duration: 600 })
   }, [flyTo])
+
+  useEffect(() => {
+    map.current?.setPadding({ top: 0, left: 0, right: 0, bottom: bottomInset })
+  }, [bottomInset])
 
   // A new basemap for a new theme: the style.load handler above re-adds the surfaces with the theme's paints.
   useEffect(() => {

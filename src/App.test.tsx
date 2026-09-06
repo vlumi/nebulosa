@@ -13,6 +13,7 @@ vi.mock('maplibre-gl', () => ({
       easeTo: vi.fn(),
       jumpTo: vi.fn(),
       setStyle: vi.fn(),
+      setPadding: vi.fn(),
       on: vi.fn(),
       off: vi.fn(),
       isStyleLoaded: () => false,

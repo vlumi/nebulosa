@@ -101,8 +101,10 @@ function capCells(rimLat: number): LonLat[][] {
 }
 
 const TAIL_CHUNKS = 60
-/** Share of the flown half over which the tail fades from full to floor; flat beyond it. */
-const TAIL_FADE_SPAN = 0.12
+/** Share of the flown half over which the tail fades to its floor; flat beyond it. */
+const TAIL_FADE_SPAN = 0.04
+/** Share of the drop taken at once behind the satellite, so the head has an edge even when zoomed in close. */
+const TAIL_STEP = 0.65
 
 /**
  * The track split at `now`. The half ahead is one segment; the flown half is a run of chunks with
@@ -131,17 +133,21 @@ function segmentsOf(track: TrackDatum, nowMs: number): SegmentDatum[] {
  */
 const GLOBE_LIFT_M = 30_000
 
+/**
+ * Track alpha ahead of the satellite and at the oldest end of the flown half; the flown half fades between them.
+ * One table for both themes: the contrast only has to tell head from tail at a glance.
+ */
 const ALPHA = {
-  selected: { ahead: 255, oldest: 130 },
-  normal: { ahead: 200, oldest: 40 },
-  dimmed: { ahead: 40, oldest: 12 },
+  selected: { ahead: 255, oldest: 90 },
+  normal: { ahead: 215, oldest: 35 },
+  dimmed: { ahead: 28, oldest: 8 },
 }
 const WIDTH = { selected: 3, normal: 1.5, dimmed: 1.5 }
 
-/** Smoothstep from 0 at the satellite to 1 at TAIL_FADE_SPAN of the way back, then 1. */
+/** A step to TAIL_STEP right behind the satellite, then a smoothstep to 1 at TAIL_FADE_SPAN of the way back. */
 function tailFade(age: number): number {
   const t = Math.min(1, age / TAIL_FADE_SPAN)
-  return t * t * (3 - 2 * t)
+  return TAIL_STEP + (1 - TAIL_STEP) * t * t * (3 - 2 * t)
 }
 
 /** `selected` is a NORAD catalog number; everything else is dimmed while one is set. */
@@ -184,7 +190,7 @@ export function buildLayers(
   // away from the camera for half the globe, so labels skip both tests and far-side ones are dropped instead.
   const text = { modelMatrix, parameters: { depthCompare: 'always', cullMode: 'none' } } as const
   // Beyond ±85° the basemap has no data and draws a fan that picks up whatever touches it. Rather than patch
-  // the night and the reach into that, the caps are blank dark discs: honest holes, in either theme.
+  // the night and the reach into that, the caps are blank gray discs: honest holes, in a neutral neither theme nor the night uses.
   const caps = [...capCells(POLE_CAP), ...capCells(-POLE_CAP)]
   const layers: Layer[] = [
     new SolidPolygonLayer<LonLat[]>({
@@ -203,7 +209,7 @@ export function buildLayers(
       getPath: (d) => d.path,
       getColor: (d) => {
         const { ahead, oldest } = ALPHA[emphasis(d)]
-        return color(d, Math.round(ahead + (oldest - ahead) * tailFade(d.age)))
+        return color(d, d.half === 'future' ? ahead : Math.round(ahead + (oldest - ahead) * tailFade(d.age)))
       },
       getWidth: (d) => WIDTH[emphasis(d)],
       widthUnits: 'pixels',

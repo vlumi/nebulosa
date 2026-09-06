@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ReactNode, Ref } from 'react'
 import type { OrbitFamily } from '../orbit/orbit'
 import { familyCss } from '../shared/palette'
 import { hhmm } from '../shared/format'
@@ -16,6 +16,8 @@ interface Props {
   onClearSatellite: () => void
   onClearPlace: () => void
   onClearPass: () => void
+  /** The app measures where the toolbar sits to keep the map centered above it. */
+  ref?: Ref<HTMLDivElement>
 }
 
 /**
@@ -31,9 +33,10 @@ export function Toolbar({
   onClearSatellite,
   onClearPlace,
   onClearPass,
+  ref,
 }: Props) {
   return (
-    <div className={styles.toolbar} role="toolbar" aria-label="Lists">
+    <div ref={ref} className={styles.toolbar} role="toolbar" aria-label="Lists">
       <Pill
         pressed={sheet === 'satellites'}
         onToggle={() => onToggle('satellites')}
