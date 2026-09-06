@@ -16,7 +16,7 @@ export const BASEMAPS: Record<Theme, string> = {
  */
 export interface Palette {
   bg: Rgb
-  /** The polar discs: a hole where the basemap has no data, dark in either theme so it reads as one. */
+  /** The polar discs: a hole where the basemap has no data, a neutral gray that neither theme nor the night uses. */
   cap: Rgb
   text: Rgb
   panel: Rgba
@@ -29,7 +29,7 @@ export interface Palette {
 export const PALETTES: Record<Theme, Palette> = {
   dark: {
     bg: [11, 13, 20],
-    cap: [11, 13, 20],
+    cap: [88, 92, 100],
     text: [214, 217, 224],
     panel: [11, 13, 20, 220],
     pin: '#8a90a0',
@@ -39,7 +39,7 @@ export const PALETTES: Record<Theme, Palette> = {
   },
   light: {
     bg: [244, 245, 248],
-    cap: [28, 31, 38],
+    cap: [112, 116, 124],
     text: [28, 31, 38],
     panel: [255, 255, 255, 230],
     pin: '#5b6270',
