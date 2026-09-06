@@ -4,7 +4,7 @@ Ground-track visualizer for the Synspective StriX SAR constellation, from public
 
 **The name:** *Strix nebulosa*, the great gray owl: same genus as the StriX satellites, the iconic owl of Finland, and Latin for "cloudy", so an owl named *cloudy* for satellites built to see through clouds. Owls see in the dark; so does SAR.
 
-**Status:** unofficial demo project, not affiliated with Synspective. All data is public (NORAD GP data via CelesTrak). Milestones M0 to M6 below were delivered on 2026-09-04, SAR reach and the globe on the two days after, the shell (M7) and places (M8) on 2026-09-05; [Next](#next) is the plan from here, and [docs/screenshots](docs/screenshots/README.md) holds one capture per milestone.
+**Status:** unofficial demo project, not affiliated with Synspective. All data is public (NORAD GP data via CelesTrak). Milestones M0 to M6 below were delivered on 2026-09-04, SAR reach and the globe on the two days after, the shell (M7) and places (M8) on 2026-09-05, the focused satellite (M9) and the theme (M10) on 2026-09-06; everything in [Next](#next) is done but the small things listed there, and [docs/screenshots](docs/screenshots/README.md) holds one capture per milestone.
 
 ## Data
 
@@ -82,7 +82,7 @@ The two panels cover the whole screen on a phone, and choosing something should 
 
 - A **toolbar of buttons along the bottom** (satellites, places, passes; the clock stays where it is), each showing its current selection while closed: the satellite's name and swatch, the place's name, the count and next time of passes.
 - Tapping a button opens **one sheet** with that list; choosing something closes the sheet on a phone. On desktop the same sheet opens as the left column does today, and choosing keeps it open, since there is room.
-- Keyboard scheme: S, W and P open the sheets, ↑ ↓ step through the open one, Esc closes them first.
+- Keyboard scheme: S, W and P open the sheets, ↑ ↓ step through the open one, Esc peels the selection back a layer at a time; a × on the sheet closes it, and a × on each pill clears its choice.
 - Open question: whether desktop keeps a permanently open column at all, or also goes to the toolbar with sheets. The toolbar-only design is simpler and one code path; the column shows more at once. Prototype the toolbar on both and decide with screenshots.
 - Conflicts: this rewrites `App.tsx`, the panels and their styles. Nothing else should be in flight against those files while it lands.
 
@@ -110,8 +110,8 @@ Where a satellite is, has been and will be, beyond a highlighted track.
 
 ### M10 — theme (done)
 
-- **Light and dark**, following the system by default, with a toggle in the corner beside Globe and SAR reach.
-- OpenFreeMap serves five styles without a key: `fiord` (the current dark blue), `dark`, `positron` (light grey), `bright` and `liberty` (light, colored). Dark stays on fiord; light goes to positron, with bright as the alternative to compare. The night shading, the reach band, the track palette and the panel tokens each need a light variant; the family colors probably survive as they are.
+- **Light and dark**, following the system by default, with a Light pill in the title row beside Globe and SAR reach.
+- OpenFreeMap serves five styles without a key: `fiord` (the current dark blue), `dark`, `positron` (light grey), `bright` and `liberty` (light, colored). Dark stays on fiord; light goes to positron, with bright as the alternative to compare. The night shading, the reach band, the track palette and the panel tokens each need a light variant; the family colors and the accent darken on the light ground to clear the contrast guidelines.
 - Conflicts: CSS tokens, `palette.ts`, `MapView`'s basemap and the surface paints. Small, and last.
 
 ## Non-goals
