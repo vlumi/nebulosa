@@ -4,6 +4,7 @@ import type { Satellite, TrackSpan } from '../orbit/orbit'
 import { daylightStretches } from '../orbit/readout'
 import { hhmm } from '../shared/format'
 import { PROBE_BIG_STEP_MS, PROBE_STEP_MS } from '../shortcuts'
+import { useStrings } from '../i18n/useStrings'
 import { useApp } from '../store'
 import { useFrame } from '../time/frame'
 import styles from './Timeline.module.css'
@@ -22,6 +23,7 @@ const STEP_MS = 60_000
  * night along it, this satellite's passes over the place, and the probe, which it moves in the store when pointed at.
  */
 export function Timeline({ satellite, span, passes }: Props) {
+  const t = useStrings()
   const probeMs = useApp((s) => s.selection.probeMs)
   const onProbe = useApp((s) => s.setProbe)
   const minute = useFrame((f) => Math.floor(f.timeMs / STEP_MS))
@@ -45,7 +47,7 @@ export function Timeline({ satellite, span, passes }: Props) {
       viewBox="0 0 100 10"
       preserveAspectRatio="none"
       role="slider"
-      aria-label="Time along the track"
+      aria-label={t.satellites.timeline}
       aria-valuemin={fromMs}
       aria-valuemax={toMs}
       aria-valuenow={probeMs ?? nowMs}
@@ -85,7 +87,7 @@ export function Timeline({ satellite, span, passes }: Props) {
           height={5}
           className={styles.pass}
         >
-          <title>{`Pass ${hhmm(p.startMs)}–${hhmm(p.endMs)} UTC, ${Math.round(p.maxElevationDeg)}° peak`}</title>
+          <title>{t.satellites.passTitle(hhmm(p.startMs), hhmm(p.endMs), Math.round(p.maxElevationDeg))}</title>
         </rect>
       ))}
       <line x1={x(nowMs)} x2={x(nowMs)} y1={0} y2={10} className={styles.now} />

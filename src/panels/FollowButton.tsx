@@ -1,3 +1,4 @@
+import { useStrings } from '../i18n/useStrings'
 import styles from './FollowButton.module.css'
 
 interface Props {
@@ -8,13 +9,14 @@ interface Props {
 
 /** A round button on the map while a satellite is selected: keep it centered, or let the map go. */
 export function FollowButton({ name, on, onToggle }: Props) {
+  const s = useStrings()
   return (
     <button
       type="button"
       className={styles.follow}
       aria-pressed={on}
-      aria-label={`Follow ${name}`}
-      title={on ? `Following ${name}; drag the map to let go` : `Follow ${name}`}
+      aria-label={s.follow.follow(name)}
+      title={on ? s.follow.following(name) : s.follow.follow(name)}
       onClick={onToggle}
     >
       <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">

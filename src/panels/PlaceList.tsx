@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Place } from '../places/places'
+import { useStrings } from '../i18n/useStrings'
 import { formatLocation } from '../shared/format'
 import panel from './panel.module.css'
 import styles from './PlaceList.module.css'
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function PlaceList({ places, placeId, onSelect, onRename, onRemove, pinsLocked, onLockChange }: Props) {
+  const t = useStrings()
   const [renaming, setRenaming] = useState<string | null>(null)
   // The rename form replaces the row that had focus; when it goes, focus returns to the pencil that opened it.
   const pencils = useRef(new Map<string, HTMLButtonElement>())
@@ -31,12 +33,10 @@ export function PlaceList({ places, placeId, onSelect, onRename, onRemove, pinsL
   }
   return (
     <>
-      <p className={`${styles.header} muted`}>
-        Passes are computed for the selected place. Double-click the map, or press and hold on a phone, to add one; drag
-        a pin to move it.
-      </p>
+      <p className={`${styles.header} muted`}>{t.places.header}</p>
       <label className={styles.lock}>
-        <input type="checkbox" checked={pinsLocked} onChange={(e) => onLockChange(e.target.checked)} /> Lock pins
+        <input type="checkbox" checked={pinsLocked} onChange={(e) => onLockChange(e.target.checked)} />{' '}
+        {t.places.lockPins}
       </label>
       <ul className={`${panel.list} ${styles.list}`}>
         {places.map((place) => {
@@ -56,8 +56,8 @@ export function PlaceList({ places, placeId, onSelect, onRename, onRemove, pinsL
                     if (e.key === 'Escape') stopRenaming(place.id)
                   }}
                 >
-                  <input name="name" defaultValue={place.name} aria-label="Place name" autoFocus />
-                  <button type="submit">Save</button>
+                  <input name="name" defaultValue={place.name} aria-label={t.places.placeName} autoFocus />
+                  <button type="submit">{t.places.save}</button>
                 </form>
               ) : (
                 <button
@@ -73,7 +73,7 @@ export function PlaceList({ places, placeId, onSelect, onRename, onRemove, pinsL
               <button
                 type="button"
                 className={styles.action}
-                aria-label={`Rename ${place.name}`}
+                aria-label={t.places.rename(place.name)}
                 ref={(el) => {
                   if (el) pencils.current.set(place.id, el)
                   else pencils.current.delete(place.id)
@@ -85,7 +85,7 @@ export function PlaceList({ places, placeId, onSelect, onRename, onRemove, pinsL
               <button
                 type="button"
                 className={styles.action}
-                aria-label={`Remove ${place.name}`}
+                aria-label={t.places.remove(place.name)}
                 onClick={() => onRemove(place.id)}
               >
                 ×
@@ -94,7 +94,7 @@ export function PlaceList({ places, placeId, onSelect, onRename, onRemove, pinsL
           )
         })}
       </ul>
-      {places.length === 0 && <p className="muted">No places yet.</p>}
+      {places.length === 0 && <p className="muted">{t.places.none}</p>}
     </>
   )
 }

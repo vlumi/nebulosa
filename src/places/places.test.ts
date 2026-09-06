@@ -1,4 +1,4 @@
-import { loadPlaces, newPlace, savePlaces, SEED, TOKYO } from './places'
+import { loadPlaces, newPlace, savePlaces, SEED, SEED_JA, TOKYO } from './places'
 
 class MemoryStorage {
   private items = new Map<string, string>()
@@ -6,6 +6,10 @@ class MemoryStorage {
   setItem = (key: string, value: string) => void this.items.set(key, value)
 }
 const memory = () => new MemoryStorage() as unknown as Storage
+
+test('an empty store yields the seed of the given language', () => {
+  expect(loadPlaces(memory(), SEED_JA).places[0].name).toBe('東京')
+})
 
 test('an empty or unreadable store yields the seed', () => {
   expect(loadPlaces(memory())).toEqual(SEED)

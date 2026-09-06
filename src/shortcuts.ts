@@ -1,29 +1,30 @@
 import type { Pass } from './orbit/passes'
 import type { Satellite } from './orbit/orbit'
 import type { Theme } from './shared/theme'
+import type { Strings } from './i18n/strings'
 import { useApp } from './store'
 
 /** One arrow step of the track probe, and the step with Shift held. */
 export const PROBE_STEP_MS = 30_000
 export const PROBE_BIG_STEP_MS = 5 * 60_000
 
-/** The keyboard scheme, in one place: the handler dispatches on it and the legend renders from it. */
-export const SHORTCUTS = [
-  { keys: '↑ ↓', does: 'step through the open panel' },
-  { keys: 'Shift ↑ ↓', does: 'move the selected place in its list' },
-  { keys: '← →', does: 'probe along the selected track (Shift: 5 min)' },
-  { keys: '⏎', does: 'go to the pass' },
-  { keys: 'Space', does: 'play / pause' },
+/** The keyboard scheme, in one place: the handler dispatches on it and the legend renders from it, `does` naming a help string. */
+export const SHORTCUTS: { keys: string; does: keyof Strings['help'] }[] = [
+  { keys: '↑ ↓', does: 'stepPanel' },
+  { keys: 'Shift ↑ ↓', does: 'movePlace' },
+  { keys: '← →', does: 'probe' },
+  { keys: '⏎', does: 'goToPass' },
+  { keys: 'Space', does: 'playPause' },
   { keys: 'L', does: 'live' },
-  { keys: '1 2 3', does: 'the sheets, in toolbar order' },
-  { keys: 'O', does: 'only the selected satellite\u2019s passes' },
-  { keys: 'F', does: 'follow the selected satellite' },
-  { keys: 'R', does: 'SAR reach beside the selected track' },
-  { keys: 'G', does: 'globe / flat map' },
-  { keys: 'T', does: 'light / dark' },
-  { keys: 'Esc', does: 'clear the pass, then the place, then the satellite' },
-  { keys: '?', does: 'this help' },
-] as const
+  { keys: '1 2 3', does: 'sheets' },
+  { keys: 'O', does: 'onlySelected' },
+  { keys: 'F', does: 'follow' },
+  { keys: 'R', does: 'reach' },
+  { keys: 'G', does: 'globe' },
+  { keys: 'T', does: 'theme' },
+  { keys: 'Esc', does: 'escape' },
+  { keys: '?', does: 'help' },
+]
 
 const FORM_FIELDS = new Set(['INPUT', 'SELECT', 'TEXTAREA'])
 

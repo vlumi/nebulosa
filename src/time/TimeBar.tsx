@@ -1,4 +1,5 @@
 import { isLive, liveClock, RATES, scrubbedTo, simTime, withPaused, withRate, type Clock } from './clock'
+import { useStrings } from '../i18n/useStrings'
 import { formatOffset, utcDate, utcSecond } from '../shared/format'
 import { Segmented } from '../shared/Segmented'
 import styles from './TimeBar.module.css'
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function TimeBar({ clock, now, onChange }: Props) {
+  const s = useStrings()
   const realMs = now.getTime()
   const simMs = simTime(clock, realMs)
   // The slider spans the displayed UTC day; the date picker beside it moves between days.
@@ -22,25 +24,25 @@ export function TimeBar({ clock, now, onChange }: Props) {
   return (
     <div className={styles.bar}>
       <button type="button" onClick={() => onChange(liveClock(realMs))} disabled={isLive(clock, realMs)}>
-        Live
+        {s.time.live}
       </button>
       <button
         type="button"
-        aria-label={playing ? 'Pause' : 'Play'}
+        aria-label={playing ? s.time.pause : s.time.play}
         onClick={() => onChange(withPaused(clock, playing, realMs))}
       >
         {playing ? '❚❚' : '▶'}
       </button>
       <Segmented
-        label="Speed"
+        label={s.time.speed}
         options={RATES}
         value={clock.rate}
         onChange={(rate) => onChange(withRate(clock, rate, realMs))}
-        format={(rate) => `${rate}×`}
+        format={s.time.rate}
       />
       <input
         type="range"
-        aria-label="Time of day (UTC)"
+        aria-label={s.time.timeOfDay}
         min={0}
         max={DAY_MS - STEP_MS}
         step={STEP_MS}
@@ -49,7 +51,7 @@ export function TimeBar({ clock, now, onChange }: Props) {
       />
       <input
         type="date"
-        aria-label="Date (UTC)"
+        aria-label={s.time.date}
         value={utcDate(simMs)}
         onChange={(e) => {
           if (!e.target.value) return
@@ -59,7 +61,7 @@ export function TimeBar({ clock, now, onChange }: Props) {
       />
       <output>
         {utcSecond(simMs)} UTC
-        <span className="muted"> · {formatOffset(simMs, realMs)}</span>
+        <span className="muted"> · {formatOffset(simMs, realMs, s)}</span>
       </output>
     </div>
   )
