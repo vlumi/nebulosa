@@ -8,9 +8,9 @@ Unofficial demo project; not affiliated with Synspective.
 
 Live at [nebulosa.misaki.fi](https://nebulosa.misaki.fi). [SCOPE.md](SCOPE.md) is the plan it was built from; [ARCHITECTURE.md](ARCHITECTURE.md) explains how it works and the maths behind it.
 
-![The globe with STRIX-3 selected: its details, the radar's reach band beside its track, the pass list filtered to it and to 30° or higher, the one pass shown with the satellite ghosted at its peak](docs/screenshots/2026-09-05-m9.png)
+![The globe with STRIX-3 selected and followed: its details, a live readout of where it is and what comes next, a strip of its track with day and night, the radar's reach band beside the track](docs/screenshots/010-focused-satellite.png)
 
-<img src="docs/screenshots/2026-09-05-m9-phone.png" alt="The same site on a phone: the pass list filtered to one satellite, peaks inside the steering range marked, one pass shown, the globe below" width="260">
+<img src="docs/screenshots/010-focused-satellite-phone.png" alt="The same site on a phone: the satellite followed on the globe, the follow button lit under the compass" width="260">
 
 Every capture, one per milestone, is shown in [docs/screenshots](docs/screenshots/README.md).
 
