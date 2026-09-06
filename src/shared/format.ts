@@ -55,3 +55,13 @@ const COMPASS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
 export function compassPoint(azimuthDeg: number): string {
   return COMPASS[Math.round((((azimuthDeg % 360) + 360) % 360) / 45) % 8]
 }
+
+/** "45 s", "23 min", "1 h 12 min" for a span ahead. */
+export function formatDuration(ms: number): string {
+  const totalSeconds = Math.max(0, Math.round(ms / 1000))
+  if (totalSeconds < 60) return `${totalSeconds} s`
+  const totalMinutes = Math.round(totalSeconds / 60)
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  return [hours ? `${hours} h` : '', minutes || !hours ? `${minutes} min` : ''].filter(Boolean).join(' ')
+}

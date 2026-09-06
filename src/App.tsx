@@ -66,6 +66,7 @@ function App() {
       (!selectedSatellite || !app.filters.onlySelected || p.noradId === app.selection.noradId),
   )
   const familyOf = (noradId: number) => byId(noradId)?.family ?? 'mid-inclination'
+  const nextPass = allPasses.find((p) => p.noradId === app.selection.noradId && p.endMs > minute * 60_000) ?? null
 
   // The handler reads the store directly; it re-registers only when the lists it steps through change.
   useEffect(() => {
@@ -189,6 +190,8 @@ function App() {
                   onSpanChange={app.setSpan}
                   follow={app.follow}
                   onFollowChange={app.setFollow}
+                  nextPass={nextPass}
+                  placeName={place?.name}
                 />
               )}
             </aside>
