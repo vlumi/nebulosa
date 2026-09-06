@@ -4,7 +4,7 @@ Ground-track visualizer for the Synspective StriX SAR constellation, from public
 
 **The name:** *Strix nebulosa*, the great gray owl: same genus as the StriX satellites, the iconic owl of Finland, and Latin for "cloudy", so an owl named *cloudy* for satellites built to see through clouds. Owls see in the dark; so does SAR.
 
-**Status:** unofficial demo project, not affiliated with Synspective. All data is public (NORAD GP data via CelesTrak). Milestones M0 to M6 below were delivered on 2026-09-04, SAR reach and the globe on the two days after, the shell (M7) and places (M8) on 2026-09-05, the focused satellite (M9) and the theme (M10) on 2026-09-06, the Japanese interface (M11) on 2026-09-07; everything in [Next](#next) is done but the one small thing listed there, and [docs/screenshots](docs/screenshots/README.md) holds one capture per milestone.
+**Status:** unofficial demo project, not affiliated with Synspective. All data is public (NORAD GP data via CelesTrak). Milestones M0 to M6 below were delivered on 2026-09-04, SAR reach and the globe on the two days after, the shell (M7) and places (M8) on 2026-09-05, the focused satellite (M9) and the theme (M10) on 2026-09-06, the Japanese interface (M11) on 2026-09-07; everything in [Next](#next) is done, and [docs/screenshots](docs/screenshots/README.md) holds one capture per milestone.
 
 ## Data
 
@@ -102,10 +102,6 @@ Where a satellite is, has been and will be, beyond a highlighted track.
 - **Readout (done):** sub-satellite point, altitude, speed, direction, time to the next pass over the selected place, and time to the next terminator crossing, in the satellite's sheet while selected.
 - **Own timeline (done):** the arrow-key probe is also a strip under the readout, spanning the drawn track: day and night along it, the passes over the selected place, the displayed moment in the middle; pointing at it moves the probe, a double click clears it.
 - Conflicts: store selection, `layers.ts`, the satellite sheet from M7. Wait for M7; independent of M8 except for the next-pass field.
-
-### Small things noticed along the way
-
-- The last two quads at either end of a reach ribbon render more saturated than the rest; the geometry is verified clean, so it is a rendering effect.
 
 ### M10 — theme (done)
 
