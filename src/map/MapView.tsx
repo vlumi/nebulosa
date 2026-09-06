@@ -1,5 +1,5 @@
 import { MapLibreOverlay } from '@deck.gl/maplibre'
-import { Map as MapLibre, Marker, NavigationControl, setWorkerUrl, type GeoJSONSource } from 'maplibre-gl'
+import { Map as MapLibre, NavigationControl, setWorkerUrl, type GeoJSONSource, type Marker } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -21,6 +21,8 @@ import type { Location } from '../orbit/passes'
 import type { Place } from '../places/places'
 import type { CameraRequest } from '../store'
 import { fitZoom, GLOBE_MAX_ZOOM } from './fit'
+import { nearestLabel } from './labels'
+import { usePins } from './usePins'
 import { useLatest } from '../shared/useLatest'
 import { useThrottled } from '../shared/useThrottled'
 
@@ -31,33 +33,6 @@ interface InterleavedDeck {
   }
 }
 const LONG_PRESS_MS = 600
-/** How far, in pixels, a basemap label may be from the tap to name the place after it. */
-const LABEL_RADIUS_PX = 60
-const SETTLEMENTS = new Set(['city', 'town', 'village'])
-
-/**
- * The name of the nearest settlement label the basemap is showing around `point`, else the country's,
- * else nothing: the tiles already know the names, so no service is asked and no coordinates leave the browser.
- */
-function nearestLabel(map: MapLibre | null, point: { x: number; y: number }): string | undefined {
-  if (!map) return undefined
-  const r = LABEL_RADIUS_PX
-  const features = map.queryRenderedFeatures([
-    [point.x - r, point.y - r],
-    [point.x + r, point.y + r],
-  ])
-  const named = features.filter((f) => f.sourceLayer === 'place' && typeof f.properties?.name === 'string')
-  const rank = (f: (typeof named)[number]) => {
-    const [lon, lat] = (f.geometry as GeoJSON.Point).coordinates
-    const p = map.project([lon, lat])
-    return Math.hypot(p.x - point.x, p.y - point.y)
-  }
-  const pick = (test: (cls: unknown) => boolean) =>
-    named.filter((f) => test(f.properties.class)).sort((a, b) => rank(a) - rank(b))[0]
-  const label = pick((cls) => SETTLEMENTS.has(String(cls))) ?? pick((cls) => cls === 'country')
-  return label ? String(label.properties['name:en'] ?? label.properties.name_en ?? label.properties.name) : undefined
-}
-
 // MapLibre 6 resolves its worker relative to its own script URL, which a bundled app does not provide.
 setWorkerUrl(maplibreWorkerUrl)
 
@@ -126,8 +101,6 @@ export function MapView({
   const [viewVersion, setViewVersion] = useState(0)
 
   // The map and overlay are created once; their callbacks read the latest props through these.
-  const placeSelect = useLatest(onPlaceSelect)
-  const placeMove = useLatest(onPlaceMove)
   const placeAdd = useLatest(onPlaceAdd)
   const select = useLatest(onSelect)
   const currentTime = useLatest(now)
@@ -291,42 +264,7 @@ export function MapView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // One draggable pin per place, the selected one in the accent color; pins come and go with the list.
-  useEffect(() => {
-    const m = map.current
-    if (!m) return
-    for (const [id, marker] of markers.current) {
-      if (!places.some((p) => p.id === id)) {
-        marker.remove()
-        markers.current.delete(id)
-      }
-    }
-    for (const place of places) {
-      const color = place.id === placeId ? PALETTES[theme].pinSelected : PALETTES[theme].pin
-      let marker = markers.current.get(place.id)
-      if (!marker || marker.getElement().dataset.color !== color) {
-        marker?.remove()
-        // MapLibre only dims a pin behind the globe; here it vanishes, and the render hook below also stops it
-        // taking the pointer, or a hidden pin could be grabbed and dragged onto the near side.
-        marker = new Marker({ draggable: !pinsLocked, color, opacityWhenCovered: '0' })
-          .setLngLat([place.lon, place.lat])
-          .addTo(m)
-        marker.getElement().dataset.color = color
-        marker.getElement().addEventListener('click', (e) => {
-          e.stopPropagation()
-          placeSelect.current(place.id)
-        })
-        marker.on('dragend', () => {
-          const { lng, lat } = marker!.getLngLat()
-          placeMove.current(place.id, { lat, lon: lng })
-        })
-        markers.current.set(place.id, marker)
-      } else {
-        marker.setLngLat([place.lon, place.lat])
-        marker.setDraggable(!pinsLocked)
-      }
-    }
-  }, [places, placeId, pinsLocked, theme, placeSelect, placeMove])
+  usePins(map, markers, { places, placeId, pinsLocked, theme, onSelect: onPlaceSelect, onMove: onPlaceMove })
 
   useEffect(() => {
     map.current?.setPadding({ top: 0, left: 0, right: 0, bottom: bottomInset })

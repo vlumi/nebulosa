@@ -4,6 +4,7 @@ import type { Satellite, TrackSpan } from '../orbit/orbit'
 import { daylightStretches } from '../orbit/readout'
 import { hhmm } from '../shared/format'
 import { PROBE_BIG_STEP_MS, PROBE_STEP_MS } from '../shortcuts'
+import { useApp } from '../store'
 import { useFrame } from '../time/frame'
 import styles from './Timeline.module.css'
 
@@ -12,17 +13,17 @@ interface Props {
   span: TrackSpan
   /** This satellite's passes over the selected place; those inside the window are drawn. */
   passes: Pass[]
-  probeMs: number | null
-  onProbe: (timeMs: number | null) => void
 }
 
 const STEP_MS = 60_000
 
 /**
  * The drawn track as a strip of time: the flown part left of the center, the part ahead to its right, day and
- * night along it, this satellite's passes over the place, and the probe. Pointing at the strip moves the probe.
+ * night along it, this satellite's passes over the place, and the probe, which it moves in the store when pointed at.
  */
-export function Timeline({ satellite, span, passes, probeMs, onProbe }: Props) {
+export function Timeline({ satellite, span, passes }: Props) {
+  const probeMs = useApp((s) => s.selection.probeMs)
+  const onProbe = useApp((s) => s.setProbe)
   const minute = useFrame((f) => Math.floor(f.timeMs / STEP_MS))
   const nowMs = minute * STEP_MS
   const periodMs = satellite.periodMinutes * STEP_MS

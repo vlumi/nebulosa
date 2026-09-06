@@ -2,11 +2,14 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { satelliteFrom } from '../orbit/orbit'
 import { useFrame } from '../time/frame'
 import { strix1 } from '../test/fixtures'
+import { resetApp, useApp } from '../store'
 import { Timeline } from './Timeline'
 import { daylightStretches } from '../orbit/readout'
 
 const sat = satelliteFrom(strix1)
 const span = { pastOrbits: 1, futureOrbits: 1 }
+
+beforeEach(resetApp)
 
 test('day and night alternate along one orbit', () => {
   const fromMs = Date.parse('2026-09-04T12:00:00Z')
@@ -22,7 +25,8 @@ test('day and night alternate along one orbit', () => {
 test('the strip shows the passes in its window and pointing at it moves the probe', () => {
   const nowMs = Date.parse('2026-09-04T12:00:00Z')
   useFrame.setState({ timeMs: nowMs })
-  const onProbe = vi.fn()
+  useApp.getState().select(strix1.NORAD_CAT_ID)
+  const probe = () => useApp.getState().selection.probeMs
   const inWindow = {
     noradId: 53815,
     name: 'STRIX-1',
@@ -39,7 +43,7 @@ test('the strip shows the passes in its window and pointing at it moves the prob
     peakMs: nowMs + 10 * 3_600_000,
     endMs: nowMs + 10 * 3_600_000 + 60_000,
   }
-  render(<Timeline satellite={sat} span={span} passes={[inWindow, outside]} probeMs={null} onProbe={onProbe} />)
+  render(<Timeline satellite={sat} span={span} passes={[inWindow, outside]} />)
   const strip = screen.getByRole('slider', { name: 'Time along the track' })
   expect(strip.querySelectorAll('rect').length).toBeGreaterThan(2)
   const titles = [...strip.querySelectorAll('title')].map((t) => t.textContent)
@@ -49,15 +53,15 @@ test('the strip shows the passes in its window and pointing at it moves the prob
   vi.spyOn(strip, 'getBoundingClientRect').mockReturnValue({ left: 0, width: 200 } as DOMRect)
   strip.setPointerCapture = vi.fn()
   fireEvent.pointerDown(strip, { clientX: 100, pointerId: 1, buttons: 1 })
-  expect(onProbe).toHaveBeenLastCalledWith(nowMs)
+  expect(probe()).toBe(nowMs)
   fireEvent.pointerMove(strip, { clientX: 200, pointerId: 1, buttons: 1 })
-  expect(onProbe).toHaveBeenLastCalledWith(Math.round((nowMs + sat.periodMinutes * 60_000) / 1000) * 1000)
+  expect(probe()).toBe(Math.round((nowMs + sat.periodMinutes * 60_000) / 1000) * 1000)
   fireEvent.doubleClick(strip)
-  expect(onProbe).toHaveBeenLastCalledWith(null)
+  expect(probe()).toBe(null)
 
   strip.focus()
   fireEvent.keyDown(strip, { key: 'ArrowRight' })
-  expect(onProbe).toHaveBeenLastCalledWith(nowMs + 30_000)
+  expect(probe()).toBe(nowMs + 30_000)
   fireEvent.keyDown(strip, { key: 'ArrowLeft', shiftKey: true })
-  expect(onProbe).toHaveBeenLastCalledWith(nowMs - 5 * 60_000)
+  expect(probe()).toBe(nowMs + 30_000 - 5 * 60_000)
 })

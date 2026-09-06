@@ -18,8 +18,6 @@ test('shows no detail block until a satellite is selected', () => {
       onSpanChange={vi.fn()}
       nextPass={null}
       passes={[]}
-      probeMs={null}
-      onProbe={vi.fn()}
     />,
   )
   expect(screen.queryByRole('definition')).toBeNull()
@@ -36,8 +34,6 @@ test('describes the selected satellite in human terms', () => {
       onSpanChange={vi.fn()}
       nextPass={null}
       passes={[]}
-      probeMs={null}
-      onProbe={vi.fn()}
     />,
   )
   const detail = within(screen.getByLabelText('STRIX-1 details'))
@@ -61,8 +57,6 @@ test('the track span selects report a new span', async () => {
       onSpanChange={onSpanChange}
       nextPass={null}
       passes={[]}
-      probeMs={null}
-      onProbe={vi.fn()}
     />,
   )
   await userEvent.click(
@@ -97,8 +91,6 @@ test('the selected satellite reads out where it is now, its next pass and its ne
       nextPass={nextPass}
       placeName="Tokyo"
       passes={[nextPass]}
-      probeMs={null}
-      onProbe={vi.fn()}
     />,
   )
   const readout = within(screen.getByLabelText('STRIX-1 now'))
