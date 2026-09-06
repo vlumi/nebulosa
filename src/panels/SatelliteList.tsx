@@ -23,8 +23,6 @@ interface Props {
   placeName?: string
   /** The selected satellite's passes over the selected place, for its timeline. */
   passes: Pass[]
-  probeMs: number | null
-  onProbe: (timeMs: number | null) => void
 }
 
 const BEHIND_CHOICES = [...SPAN_CHOICES].reverse()
@@ -40,8 +38,6 @@ export function SatelliteList({
   nextPass,
   placeName,
   passes,
-  probeMs,
-  onProbe,
 }: Props) {
   const epoch = newestEpoch(satellites.map((s) => s.omm))
   return (
@@ -69,7 +65,7 @@ export function SatelliteList({
                 <>
                   <Detail satellite={s} now={now} />
                   <Readout satellite={s} nextPass={nextPass} placeName={placeName} />
-                  <Timeline satellite={s} span={span} passes={passes} probeMs={probeMs} onProbe={onProbe} />
+                  <Timeline satellite={s} span={span} passes={passes} />
                 </>
               )}
             </li>

@@ -16,13 +16,7 @@ import { Toolbar } from './panels/Toolbar'
 import { useNarrow } from './panels/useNarrow'
 import { resolveTheme, type Theme } from './shared/theme'
 import { useSystemDark } from './shared/useSystemDark'
-import {
-  belongsToFocusedControl,
-  PROBE_BIG_STEP_MS,
-  PROBE_STEP_MS,
-  releaseFocusAfterPointerClick,
-  stepIndex,
-} from './shortcuts'
+import { dispatchShortcut, releaseFocusAfterPointerClick } from './shortcuts'
 import styles from './App.module.css'
 import panel from './panels/panel.module.css'
 import { selectedPlace, useApp, type Sheet as SheetKey } from './store'
@@ -97,94 +91,11 @@ function App() {
     [allPasses, selectedId, minute],
   )
 
-  // The handler reads the store directly; it re-registers only when the lists it steps through change.
+  // The keys act on the store directly; the listener re-registers only when the lists they step through change.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (belongsToFocusedControl(e) || e.metaKey || e.ctrlKey || e.altKey) return
-      const s = useApp.getState()
-      const satelliteIndex = satellites.findIndex((sat) => sat.omm.NORAD_CAT_ID === s.selection.noradId)
-      const passIndex = passes.findIndex(
-        (p) => p.noradId === s.selection.activePass?.noradId && p.peakMs === s.selection.activePass?.peakMs,
-      )
-      const placeIndex = s.places.findIndex((p) => p.id === s.placeId)
-      switch (e.key) {
-        case '?':
-        case '/':
-          s.setHelpOpen(!s.helpOpen)
-          break
-        case 'Escape':
-          s.escape()
-          break
-        case 'ArrowDown':
-        case 'ArrowUp': {
-          const delta = e.key === 'ArrowDown' ? 1 : -1
-          if (s.sheet === 'passes') {
-            const i = stepIndex(passIndex, delta, passes.length)
-            if (i >= 0) s.showPass(passes[i])
-          } else if (s.sheet === 'places' && e.shiftKey) {
-            if (s.placeId !== null) s.reorderPlace(s.placeId, delta)
-          } else if (s.sheet === 'places') {
-            const i = stepIndex(placeIndex, delta, s.places.length)
-            if (i >= 0) s.selectPlace(s.places[i].id, true)
-          } else {
-            const i = stepIndex(satelliteIndex, delta, satellites.length)
-            if (i >= 0) s.selectFromList(satellites[i].omm.NORAD_CAT_ID)
-          }
-          break
-        }
-        case 'ArrowRight':
-        case 'ArrowLeft':
-          s.probe(
-            (e.shiftKey ? PROBE_BIG_STEP_MS : PROBE_STEP_MS) * (e.key === 'ArrowRight' ? 1 : -1),
-            useFrame.getState().timeMs,
-          )
-          break
-        case 'Enter':
-          if (s.selection.activePass) s.goToPass(s.selection.activePass)
-          break
-        case ' ':
-          s.togglePlay()
-          break
-        case 'l':
-        case 'L':
-          s.goLive()
-          break
-        case 's':
-        case 'S':
-          s.toggleSheet('satellites')
-          break
-        case 'p':
-        case 'P':
-          s.toggleSheet('passes')
-          break
-        case 'w':
-        case 'W':
-          s.toggleSheet('places')
-          break
-        case 'o':
-        case 'O':
-          if (s.selection.noradId !== null) s.toggleOnlySelected()
-          break
-        case 'r':
-        case 'R':
-          s.toggleReach()
-          break
-        case 'g':
-        case 'G':
-          s.toggleGlobe()
-          break
-        case 'f':
-        case 'F':
-          if (s.selection.noradId !== null) s.toggleFollow()
-          break
-        case 't':
-        case 'T':
-          s.setThemeChoice(theme === 'light' ? 'dark' : 'light')
-          break
-        default:
-          return
-      }
-      e.preventDefault()
+      if (dispatchShortcut(e, { satellites, passes, theme, displayedMs: () => useFrame.getState().timeMs }))
+        e.preventDefault()
     }
     window.addEventListener('keydown', onKey)
     window.addEventListener('click', releaseFocusAfterPointerClick)
@@ -248,8 +159,6 @@ function App() {
                   nextPass={nextPass}
                   placeName={place?.name}
                   passes={allPasses.filter((p) => p.noradId === app.selection.noradId)}
-                  probeMs={app.selection.probeMs}
-                  onProbe={app.setProbe}
                 />
               )}
             </Sheet>
