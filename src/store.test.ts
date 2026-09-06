@@ -184,3 +184,13 @@ test('setting follow to what it already is changes nothing', () => {
   useApp.getState().setFollow(true)
   expect(useApp.getState()).toBe(before)
 })
+
+test('showing or going to a pass lets go of following, so the flight to the ghost happens', () => {
+  const { showPass, goToPass, setFollow } = useApp.getState()
+  expect(useApp.getState().follow).toBe(true)
+  showPass(pass)
+  expect(useApp.getState().follow).toBe(false)
+  setFollow(true)
+  goToPass(pass, 100_000)
+  expect(useApp.getState().follow).toBe(false)
+})
