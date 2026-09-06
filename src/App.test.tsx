@@ -316,3 +316,14 @@ test('each pill clears its own choice from its right side, without opening the s
   expect(useApp.getState().placeId).toBeNull()
   expect(screen.getByRole('button', { name: /^Places · none picked/ })).toBeInTheDocument()
 })
+
+test('each sheet has a close button in its corner', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
+  render(<App />)
+  await within(screen.getByRole('complementary', { name: 'Constellation' })).findByText('STRIX-1')
+  await userEvent.click(screen.getByRole('button', { name: 'Close constellation' }))
+  expect(screen.queryByRole('complementary')).toBeNull()
+  await userEvent.keyboard('p')
+  await userEvent.click(screen.getByRole('button', { name: 'Close passes' }))
+  expect(screen.queryByRole('complementary')).toBeNull()
+})
