@@ -60,3 +60,17 @@ test('a pass request computes the same list as the direct call', () => {
   })
   expect(viaRequest).toEqual(direct)
 })
+
+test('a pass in progress at the end of the horizon keeps its true set time', () => {
+  const sat = satelliteFrom(strix1)
+  const from = epochOf(strix1)
+  const full = passesOver(sat, tokyo, from, 48)
+  const cut = full.find((p) => p.startMs > from.getTime() + 3_600_000)!
+  const hours = (cut.peakMs - from.getTime()) / 3_600_000
+  const short = passesOver(sat, tokyo, from, hours)
+  const last = short[short.length - 1]
+  expect(last.startMs).toBe(cut.startMs)
+  expect(last.endMs).toBe(cut.endMs)
+  expect(last.peakMs).toBe(cut.peakMs)
+  expect(short.every((p) => p.startMs < from.getTime() + hours * 3_600_000)).toBe(true)
+})

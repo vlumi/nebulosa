@@ -77,13 +77,22 @@ function App() {
   const place = selectedPlace(app)
   const allPasses = usePasses(elements, place, minute * 60_000, app.filters.horizonHours)
   const selectedSatellite = byId(app.selection.noradId)
-  const passes = allPasses.filter(
-    (p) =>
-      (app.filters.within === 'horizon' || inReach(p.offNadirDeg)) &&
-      (!selectedSatellite || !app.filters.onlySelected || p.noradId === app.selection.noradId),
+  const { within, onlySelected } = app.filters
+  const selectedId = app.selection.noradId
+  const passes = useMemo(
+    () =>
+      allPasses.filter(
+        (p) =>
+          (within === 'horizon' || inReach(p.offNadirDeg)) &&
+          (selectedId === null || !onlySelected || p.noradId === selectedId),
+      ),
+    [allPasses, within, onlySelected, selectedId],
   )
   const familyOf = (noradId: number) => byId(noradId)?.family ?? 'mid-inclination'
-  const nextPass = allPasses.find((p) => p.noradId === app.selection.noradId && p.endMs > minute * 60_000) ?? null
+  const nextPass = useMemo(
+    () => allPasses.find((p) => p.noradId === selectedId && p.endMs > minute * 60_000) ?? null,
+    [allPasses, selectedId, minute],
+  )
 
   // The handler reads the store directly; it re-registers only when the lists it steps through change.
   useEffect(() => {
