@@ -13,7 +13,10 @@ interface Reply {
  * (tests), the same computation runs inline.
  */
 export function usePasses(elements: Omm[], location: Location | null, fromMs: number, hours: number): Pass[] {
-  const [passes, setPasses] = useState<Pass[]>([])
+  // The list remembers which place it was computed for, so a new place shows no list rather than the old one's.
+  const [result, setResult] = useState<{ lat: number; lon: number; passes: Pass[] } | null>(null)
+  const lat = location?.lat
+  const lon = location?.lon
   const worker = useRef<Worker | null>(null)
   const nextId = useRef(0)
 
@@ -27,19 +30,21 @@ export function usePasses(elements: Omm[], location: Location | null, fromMs: nu
   }, [])
 
   useEffect(() => {
-    if (!location) return
-    const request: PassRequest = { id: ++nextId.current, elements, location, fromMs, hours }
+    if (lat === undefined || lon === undefined) return
+    const request: PassRequest = { id: ++nextId.current, elements, location: { lat, lon }, fromMs, hours }
     if (!worker.current) {
-      setPasses(computePasses(request))
+      setResult({ lat, lon, passes: computePasses(request) })
       return
     }
     const onMessage = (event: MessageEvent<Reply>) => {
-      if (event.data.id === request.id) setPasses(event.data.passes)
+      if (event.data.id === request.id) setResult({ lat, lon, passes: event.data.passes })
     }
     worker.current.addEventListener('message', onMessage)
     worker.current.postMessage(request)
     return () => worker.current?.removeEventListener('message', onMessage)
-  }, [elements, location, fromMs, hours])
+  }, [elements, lat, lon, fromMs, hours])
 
-  return location ? passes : []
+  return result && result.lat === lat && result.lon === lon ? result.passes : EMPTY
 }
+
+const EMPTY: Pass[] = []
