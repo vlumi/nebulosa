@@ -82,7 +82,7 @@ The two panels cover the whole screen on a phone, and choosing something should 
 
 - A **toolbar of buttons along the bottom** (satellites, places, passes; the clock stays where it is), each showing its current selection while closed: the satellite's name and swatch, the place's name, the count and next time of passes.
 - Tapping a button opens **one sheet** with that list; choosing something closes the sheet on a phone. On desktop the same sheet opens as the left column does today, and choosing keeps it open, since there is room.
-- Keyboard scheme: S, W and P open the sheets, ↑ ↓ step through the open one, Esc peels the selection back a layer at a time; a × on the sheet closes it, and a × on each pill clears its choice.
+- Keyboard scheme: 1, 2 and 3 open the sheets in toolbar order, ↑ ↓ step through the open one, Esc peels the selection back a layer at a time; a × on the sheet closes it, and a × on each pill clears its choice.
 - Open question: whether desktop keeps a permanently open column at all, or also goes to the toolbar with sheets. The toolbar-only design is simpler and one code path; the column shows more at once. Prototype the toolbar on both and decide with screenshots.
 - Conflicts: this rewrites `App.tsx`, the panels and their styles. Nothing else should be in flight against those files while it lands.
 
@@ -106,7 +106,6 @@ Where a satellite is, has been and will be, beyond a highlighted track.
 ### Small things noticed along the way
 
 - The last two quads at either end of a reach ribbon render more saturated than the rest; the geometry is verified clean, so it is a rendering effect.
-- The sheet shortcuts `S`, `W`, `P` are three unrelated letters. Consecutive keys would be easier: `1` `2` `3` in toolbar order, or another run of neighbouring keys; the arrows are taken by the probe and the lists.
 
 ### M10 — theme (done)
 
