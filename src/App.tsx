@@ -305,6 +305,7 @@ function LiveMap({
     reachVisible,
     globe,
     follow,
+    lang,
     setFollow,
     select,
     selectPlace,
@@ -337,6 +338,7 @@ function LiveMap({
       follow={follow && selection.noradId !== null}
       onFollowBreak={() => setFollow(false)}
       theme={theme}
+      lang={lang}
       bottomInset={bottomInset}
     />
   )

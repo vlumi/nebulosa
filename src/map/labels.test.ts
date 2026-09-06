@@ -31,3 +31,11 @@ test('with no settlement in reach the country serves, and with nothing named the
   expect(nearestLabel(mapWith([feature('water', 'lake', 'Nope', 2)]), { x: 0, y: 0 })).toBeUndefined()
   expect(nearestLabel(null, { x: 0, y: 0 })).toBeUndefined()
 })
+
+test('the name comes in the chosen language when the label has one, else as the basemap shows it', () => {
+  const tokyo = feature('place', 'city', '東京都', 0, { 'name:en': 'Tokyo', 'name:ja': '東京都' })
+  const nameless = feature('place', 'town', 'Somewhere', 0)
+  expect(nearestLabel(mapWith([tokyo]), { x: 0, y: 0 }, 'ja')).toBe('東京都')
+  expect(nearestLabel(mapWith([tokyo]), { x: 0, y: 0 })).toBe('Tokyo')
+  expect(nearestLabel(mapWith([nameless]), { x: 0, y: 0 }, 'ja')).toBe('Somewhere')
+})

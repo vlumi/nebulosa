@@ -5,6 +5,7 @@ import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&ur
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { buildLayers, hoverAt, trackData, type Ghost, type Hover, type SatelliteDatum, type TrackDatum } from './layers'
 import type { LonLat } from '../orbit/orbit'
+import type { Lang } from '../i18n/strings'
 import { BASEMAPS, PALETTES, type Theme } from '../shared/theme'
 import {
   EMPTY,
@@ -21,7 +22,7 @@ import type { Location } from '../orbit/passes'
 import type { Place } from '../places/places'
 import type { CameraRequest } from '../store'
 import { fitZoom, GLOBE_MAX_ZOOM } from './fit'
-import { nearestLabel } from './labels'
+import { labelLanguage, nearestLabel } from './labels'
 import { usePins } from './usePins'
 import { useLatest } from '../shared/useLatest'
 import { useThrottled } from '../shared/useThrottled'
@@ -67,6 +68,8 @@ interface Props {
   follow?: boolean
   onFollowBreak?: () => void
   theme?: Theme
+  /** The basemap's labels and a new place's name come in this language. */
+  lang?: Lang
   /** Height of the bars floating over the map's foot; the camera centers and the fit is taken above them. */
   bottomInset?: number
 }
@@ -91,6 +94,7 @@ export function MapView({
   follow = false,
   onFollowBreak,
   theme = 'dark',
+  lang = 'en',
   bottomInset = 0,
 }: Props) {
   const container = useRef<HTMLDivElement>(null)
@@ -133,6 +137,7 @@ export function MapView({
 
   const projection = useLatest(globe)
   const inset = useLatest(bottomInset)
+  const language = useLatest(lang)
   const initialTheme = useRef(theme)
   const styleReady = useRef(false)
   const applyProjection = useCallback(() => {
@@ -158,7 +163,7 @@ export function MapView({
       doubleClickZoom: false,
     })
     const addAt = (e: { point: { x: number; y: number }; lngLat: { lat: number; lng: number } }) =>
-      placeAdd.current({ lat: e.lngLat.lat, lon: e.lngLat.lng }, nearestLabel(map.current, e.point))
+      placeAdd.current({ lat: e.lngLat.lat, lon: e.lngLat.lng }, nearestLabel(map.current, e.point, language.current))
     map.current.on('dblclick', addAt)
     let press: ReturnType<typeof setTimeout> | undefined
     map.current.on('touchstart', (e) => {
@@ -173,6 +178,7 @@ export function MapView({
       if (!m) return
       styleReady.current = true
       applyProjection()
+      labelLanguage(m, language.current)
       // No tile buffer: a fill that touches the antimeridian is wrapped into world copies, and with a buffer
       // the copies overlap there in a band twice as dark as the rest. No simplification either: the reach is a
       // run of small quads, and moving their vertices makes neighbours overlap or part in a ladder pattern.
@@ -277,6 +283,10 @@ export function MapView({
     initialTheme.current = theme
     map.current?.setStyle(BASEMAPS[theme])
   }, [theme])
+
+  useEffect(() => {
+    if (map.current && styleReady.current) labelLanguage(map.current, lang)
+  }, [lang])
 
   // The projection is part of the style; before the style has loaded, the load handler above applies it.
   useEffect(applyProjection, [globe, applyProjection])

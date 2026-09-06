@@ -25,7 +25,7 @@ Every capture, one per milestone and the light theme beside the dark, is shown i
 - SAR reach: the band of ground 15° to 45° off nadir on either side of the selected satellite's track, and per pass, the look angle at the peak and whether it is inside that range. A satellite straight overhead cannot image the pin; one that peaks at 40° to 74° can.
 - A globe, by default: `G` or the globe toggle in the title row flattens it to Mercator and back. Everything above follows the projection and the far side is hidden, so a mid-inclination orbit and the terminator read at a glance. The basemap has no data beyond 85°, so the poles are blank discs.
 - Light and dark, following the system until `T` or the sun-and-moon toggle in the title row chooses; the basemap, the shading, the tracks and the panels all follow.
-- English and Japanese, following the browser's language until the picker in the title row chooses; every word changes, nothing else does.
+- English and Japanese, following the browser's language until the picker in the title row chooses; every word changes, the basemap's labels included, nothing else does.
 - The element epoch and its age are always visible, because stale elements mean degraded accuracy.
 
 Passes are geometric visibility above the horizon, not imaging opportunities. What the radar could reach is drawn from the one public figure, Synspective's stated 15° to 45° off-nadir steering range: selecting a satellite shades that band on both sides of its track, until the `SAR` toggle (or `R`) hides it, and a pass whose peak falls inside it is marked in the list, which can be narrowed to those passes. Which side the antenna looks, the swath actually chosen and the tasking are not public, so nothing here claims to be an imaging opportunity.
