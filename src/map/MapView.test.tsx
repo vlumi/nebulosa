@@ -35,6 +35,7 @@ const { mapInstance, overlayInstance, markerInstance } = vi.hoisted(() => {
       remove: vi.fn(),
       easeTo: vi.fn(),
       jumpTo: vi.fn(),
+      setStyle: vi.fn(),
       handlers: {} as Record<string, () => void>,
       on: vi.fn(function (this: unknown, event: string, handler: () => void) {
         mapInstance.handlers[event] = handler
@@ -474,4 +475,23 @@ test('a focus flies once and never again when following stops; a new focus flies
   expect(mapInstance.easeTo).not.toHaveBeenCalled()
   rerender(<MapView {...props} follow={false} focus={{ ...focus, seq: 2 }} />)
   expect(mapInstance.easeTo).toHaveBeenCalledTimes(1)
+})
+
+test('a theme change swaps the basemap and recolors the pins', () => {
+  const props = {
+    satellites: [],
+    now: epochOf(strix1),
+    selected: null,
+    onSelect: vi.fn(),
+    places: [tokyoPlace],
+    placeId: 'tokyo',
+    onPlaceSelect: vi.fn(),
+    onPlaceMove: vi.fn(),
+    onPlaceAdd: vi.fn(),
+  }
+  const { rerender } = render(<MapView {...props} theme="dark" />)
+  expect(mapInstance.setStyle).not.toHaveBeenCalled()
+  rerender(<MapView {...props} theme="light" />)
+  expect(mapInstance.setStyle).toHaveBeenCalledWith('https://tiles.openfreemap.org/styles/positron')
+  expect(Marker).toHaveBeenLastCalledWith(expect.objectContaining({ color: '#a86f00' }))
 })

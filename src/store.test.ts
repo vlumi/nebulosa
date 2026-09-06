@@ -161,3 +161,9 @@ test('clearing the pass keeps the satellite', () => {
   clearPass()
   expect(useApp.getState().selection).toEqual({ ...NOTHING, noradId: 65971 })
 })
+
+test('the theme choice is set explicitly and starts at system', () => {
+  expect(useApp.getState().themeChoice).toBe('system')
+  useApp.getState().setThemeChoice('light')
+  expect(useApp.getState().themeChoice).toBe('light')
+})

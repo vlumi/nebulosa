@@ -17,7 +17,8 @@ import {
   type TrackSpan,
 } from '../orbit/orbit'
 import { POLE_CAP } from '../orbit/sun'
-import { FAMILY_COLORS, type Rgba } from '../shared/palette'
+import type { Rgba } from '../shared/palette'
+import { PALETTES, type Palette } from '../shared/theme'
 
 export interface SatelliteDatum {
   noradId: number
@@ -155,6 +156,7 @@ export function buildLayers(
   globe = false,
   /** On the globe, whether a point faces the camera; labels of points that do not are left out. */
   onNearSide: (lonLat: LonLat) => boolean = () => true,
+  palette: Palette = PALETTES.dark,
 ): Layer[] {
   const nowMs = now.getTime()
   const segments = tracks.flatMap((track) => segmentsOf(track, nowMs))
@@ -172,7 +174,7 @@ export function buildLayers(
   })
   const emphasis = (d: SatelliteDatum): 'selected' | 'dimmed' | 'normal' =>
     selected === null ? 'normal' : d.noradId === selected ? 'selected' : 'dimmed'
-  const color = (d: SatelliteDatum, alpha: number): Rgba => [...FAMILY_COLORS[d.family], alpha]
+  const color = (d: SatelliteDatum, alpha: number): Rgba => [...palette.family[d.family], alpha]
   // Depth hides the far side of the globe; on the flat map nothing needs hiding and the test only causes z-fighting.
   const depth = { depthCompare: globe ? 'less-equal' : 'always' } as const
   // A translation applied after tessellation: deck's globe grid cutter mangles paths given a third coordinate.
@@ -182,7 +184,7 @@ export function buildLayers(
   // away from the camera for half the globe, so labels skip both tests and far-side ones are dropped instead.
   const text = { modelMatrix, parameters: { depthCompare: 'always', cullMode: 'none' } } as const
   // Beyond ±85° the basemap has no data and draws a fan that picks up whatever touches it. Rather than patch
-  // the night and the reach into that, the caps are blank discs in the page color: honest holes.
+  // the night and the reach into that, the caps are blank dark discs: honest holes, in either theme.
   const caps = [...capCells(POLE_CAP), ...capCells(-POLE_CAP)]
   const layers: Layer[] = [
     new SolidPolygonLayer<LonLat[]>({
@@ -190,7 +192,7 @@ export function buildLayers(
       data: caps,
       wrapLongitude: !globe,
       getPolygon: (d) => d,
-      getFillColor: [11, 13, 20, 255],
+      getFillColor: [...palette.cap, 255],
       pickable: false,
       ...surface,
     }),
@@ -214,7 +216,7 @@ export function buildLayers(
       pickable: true,
       getPosition: (d) => d.lonLat,
       getFillColor: (d) => color(d, emphasis(d) === 'dimmed' ? 50 : 255),
-      getLineColor: [11, 13, 20],
+      getLineColor: palette.bg,
       stroked: true,
       lineWidthMinPixels: 1.5,
       getRadius: (d) => (emphasis(d) === 'selected' ? 8 : 5),
@@ -228,7 +230,7 @@ export function buildLayers(
       pickable: true,
       getPosition: (d) => d.lonLat,
       getText: (d) => d.name,
-      getColor: (d) => [214, 217, 224, emphasis(d) === 'dimmed' ? 90 : 255],
+      getColor: (d) => [...palette.text, emphasis(d) === 'dimmed' ? 90 : 255],
       getSize: 12,
       getPixelOffset: [0, -14],
       fontFamily: 'system-ui, sans-serif',
@@ -258,7 +260,7 @@ export function buildLayers(
           data: pieces.map((path) => ({ ...continuation, path })),
           pickable: true,
           getPath: (d) => d.path,
-          getColor: [...FAMILY_COLORS[ghostSat.family], 150],
+          getColor: [...palette.family[ghostSat.family], 150],
           getWidth: 1.5,
           widthUnits: 'pixels',
           getDashArray: [6, 4],
@@ -272,7 +274,7 @@ export function buildLayers(
         id: 'ghost',
         data: [datum],
         getPosition: (d) => d.lonLat,
-        getLineColor: (d) => FAMILY_COLORS[d.family],
+        getLineColor: (d) => palette.family[d.family],
         filled: false,
         stroked: true,
         lineWidthMinPixels: 2,
@@ -285,11 +287,11 @@ export function buildLayers(
         data: onNearSide(datum.lonLat) ? [datum] : [],
         getPosition: (d) => d.lonLat,
         getText: () => `${ghostSat.omm.OBJECT_NAME} · ${hhmm(ghost.timeMs)} UTC`,
-        getColor: [214, 217, 224],
+        getColor: palette.text,
         getSize: 12,
         getPixelOffset: [0, 18],
         background: true,
-        getBackgroundColor: [11, 13, 20, 220],
+        getBackgroundColor: palette.panel,
         backgroundPadding: [6, 3],
         fontFamily: 'system-ui, sans-serif',
         characterSet: 'auto',
@@ -315,11 +317,11 @@ export function buildLayers(
         data: [hover],
         getPosition: (d) => d.lonLat,
         getText: () => `${name} · ${hhmmss(hover.timeMs)} UTC · ${formatOffset(hover.timeMs, nowMs)}`,
-        getColor: [214, 217, 224],
+        getColor: palette.text,
         getSize: 12,
         getPixelOffset: [0, 16],
         background: true,
-        getBackgroundColor: [11, 13, 20, 220],
+        getBackgroundColor: palette.panel,
         backgroundPadding: [6, 3],
         fontFamily: 'system-ui, sans-serif',
         characterSet: 'auto',

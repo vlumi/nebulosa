@@ -1,7 +1,7 @@
 .group {
   display: inline-flex;
   vertical-align: middle;
-  border: 1px solid rgb(255 255 255 / 0.15);
+  border: 1px solid var(--border);
   border-radius: 0.25rem;
   overflow: hidden;
 }
@@ -9,7 +9,7 @@
 .group button {
   padding: 0.1rem 0.4rem;
   border: 0;
-  border-left: 1px solid rgb(255 255 255 / 0.15);
+  border-left: 1px solid var(--border);
   background: none;
   color: var(--muted);
   font: inherit;
@@ -25,6 +25,6 @@
 }
 
 .group button[aria-checked='true'] {
-  background: rgb(255 255 255 / 0.12);
+  background: var(--fill-soft);
   color: inherit;
 }

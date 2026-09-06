@@ -3,10 +3,5 @@ import type { OrbitFamily } from '../orbit/orbit'
 export type Rgb = [number, number, number]
 export type Rgba = [number, number, number, number]
 
-export const FAMILY_COLORS: Record<OrbitFamily, Rgb> = {
-  'sun-synchronous': [238, 221, 102],
-  'mid-inclination': [102, 204, 238],
-}
-
-/** CSS color for a family swatch. */
-export const familyCss = (family: OrbitFamily) => `rgb(${FAMILY_COLORS[family].join(' ')})`
+/** CSS color for a family swatch: a token, so it follows the theme. The numeric values live in theme.ts. */
+export const familyCss = (family: OrbitFamily) => `var(--family-${family})`

@@ -4,6 +4,7 @@ import type { Focus } from './map/MapView'
 import { DEFAULT_SPAN, type TrackSpan } from './orbit/orbit'
 import { DEFAULT_FILTERS, type Location, type Pass, type PassFilters } from './orbit/passes'
 import { loadPlaces, newPlace, savePlaces, SEED, type Place, type PlacesState } from './places/places'
+import { loadThemeChoice, saveThemeChoice, type ThemeChoice } from './shared/theme'
 import { liveClock, scrubbedTo, withPaused, type Clock } from './time/clock'
 
 /** What the reader is looking at: a satellite, and possibly a pass of it with its ghost, or a probe along its track. */
@@ -30,6 +31,7 @@ interface State extends PlacesState {
   focus: Focus | null
   /** Keep the selected satellite centered as time plays. */
   follow: boolean
+  themeChoice: ThemeChoice
   flyTo: FlyTo | null
   filters: PassFilters
   span: TrackSpan
@@ -79,6 +81,7 @@ interface Actions {
   toggleGlobe: () => void
   setFollow: (follow: boolean) => void
   toggleFollow: () => void
+  setThemeChoice: (choice: ThemeChoice) => void
 }
 
 const initial = (places: PlacesState): State => ({
@@ -86,6 +89,7 @@ const initial = (places: PlacesState): State => ({
   selection: NOTHING,
   focus: null,
   follow: true,
+  themeChoice: loadThemeChoice(),
   flyTo: null,
   filters: DEFAULT_FILTERS,
   span: DEFAULT_SPAN,
@@ -172,9 +176,11 @@ export const useApp = create<State & Actions>((set, get) => ({
   toggleGlobe: () => set((s) => ({ globe: !s.globe })),
   setFollow: (follow) => set({ follow }),
   toggleFollow: () => set((s) => ({ follow: !s.follow })),
+  setThemeChoice: (themeChoice) => set({ themeChoice }),
 }))
 
 useApp.subscribe((s, previous) => {
+  if (s.themeChoice !== previous.themeChoice) saveThemeChoice(s.themeChoice)
   if (s.places !== previous.places || s.placeId !== previous.placeId || s.pinsLocked !== previous.pinsLocked)
     savePlaces({ places: s.places, placeId: s.placeId, pinsLocked: s.pinsLocked })
 })

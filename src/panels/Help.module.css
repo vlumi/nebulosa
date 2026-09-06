@@ -18,7 +18,7 @@
 .toggle {
   width: 1.8rem;
   height: 1.8rem;
-  border: 1px solid rgb(255 255 255 / 0.15);
+  border: 1px solid var(--border);
   border-radius: 50%;
   background: var(--panel);
   color: var(--muted);
@@ -30,7 +30,7 @@
 .toggle:hover,
 .toggle[aria-expanded='true'] {
   color: var(--text);
-  border-color: rgb(255 255 255 / 0.4);
+  border-color: var(--border-strong);
 }
 
 .legend {
