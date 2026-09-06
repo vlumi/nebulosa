@@ -55,7 +55,7 @@ function App() {
   const minute = useMinute()
   const now = useMemo(() => new Date(minute * 60_000), [minute])
 
-  useEffect(() => startFrameLoop(), [])
+  useEffect(() => startFrameLoop(() => useApp.getState().clock), [])
 
   // A phone opens on the map; the sheets wait behind the toolbar.
   const closeSheet = app.closeSheet
@@ -381,11 +381,10 @@ function LiveMap({
   const time = useMemo(() => new Date(timeMs), [timeMs])
   const {
     selection,
-    focus,
+    camera,
     places,
     placeId,
     pinsLocked,
-    flyTo,
     span,
     reachVisible,
     globe,
@@ -407,14 +406,13 @@ function LiveMap({
       now={time}
       selected={selection.noradId}
       onSelect={select}
-      focus={focus}
+      camera={camera}
       places={places}
       placeId={placeId}
       onPlaceSelect={selectPlace}
       onPlaceMove={movePlace}
       pinsLocked={pinsLocked}
       onPlaceAdd={addPlace}
-      flyTo={flyTo}
       ghost={selection.ghost}
       probe={probe}
       span={span}

@@ -1,7 +1,7 @@
+import { EARTH_RADIUS_KM } from './geo'
 import { epochOf, type Omm } from './elements'
 
 const MU_KM3_S2 = 398600.4418
-export const EARTH_RADIUS_KM = 6378.137
 
 export interface OrbitDescription {
   launchYear: number

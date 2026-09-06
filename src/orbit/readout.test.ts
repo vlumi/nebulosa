@@ -1,6 +1,7 @@
 import { epochOf } from './elements'
 import { positionAt, satelliteFrom } from './orbit'
-import { bearingDeg, isDaylit, nextTerminatorCrossing, stateAt } from './readout'
+import { bearingDeg } from './geo'
+import { isDaylit, nextTerminatorCrossing, stateAt } from './readout'
 import { subsolarPoint } from './sun'
 import { strix1, strix9 } from '../test/fixtures'
 

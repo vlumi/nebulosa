@@ -23,14 +23,14 @@ test('showing a pass selects, ghosts and marks it; going to it also pauses the c
     activePass: pass,
     probeMs: null,
   })
-  expect(s.focus).toEqual({ noradId: 65971, seq: 1, timeMs: 5000 })
+  expect(s.camera).toEqual({ kind: 'satellite', noradId: 65971, seq: 1, timeMs: 5000 })
   expect(s.clock.rate).toBe(1)
 
   useApp.getState().goToPass(pass, 100_000)
   s = useApp.getState()
   expect(s.clock).toEqual({ anchorReal: 100_000, anchorSim: 5000, rate: 1, paused: true })
   expect(s.selection.ghost).toBeNull()
-  expect(s.focus?.seq).toBe(2)
+  expect(s.camera?.seq).toBe(2)
 })
 
 test('escape peels back one layer at a time: help, then pass and probe, then the place, then the satellite', () => {
@@ -104,7 +104,7 @@ test('places: add, select from the list with a flight, move, rename, remove', ()
   expect(s().placeId).toBe('tokyo')
   s().selectPlace(added.id, true)
   expect(s().placeId).toBe(added.id)
-  expect(s().flyTo).toEqual({ lat: 60.17, lon: 24.94, seq: 1 })
+  expect(s().camera).toEqual({ kind: 'point', lat: 60.17, lon: 24.94, seq: 1 })
   s().movePlace(added.id, { lat: 61, lon: 25 })
   s().renamePlace(added.id, 'Helsinki')
   expect(s().places[1]).toEqual({ ...added, lat: 61, lon: 25, name: 'Helsinki' })

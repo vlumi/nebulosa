@@ -271,7 +271,7 @@ test('keyboard: W opens the places sheet and the arrows then step through the pl
   const places = within(screen.getByRole('complementary', { name: 'Places' }))
   await userEvent.keyboard('{ArrowDown}')
   expect(places.getByRole('button', { name: /^Helsinki/ })).toHaveAttribute('aria-pressed', 'true')
-  expect(useApp.getState().flyTo).toMatchObject({ lat: 60.17, lon: 24.94 })
+  expect(useApp.getState().camera).toMatchObject({ kind: 'point', lat: 60.17, lon: 24.94 })
   expect(screen.getByRole('button', { name: /^Places Helsinki/ })).toBeInTheDocument()
   await userEvent.keyboard('{ArrowUp}')
   expect(places.getByRole('button', { name: /^Tokyo/ })).toHaveAttribute('aria-pressed', 'true')
