@@ -14,6 +14,8 @@ import { ReachToggle } from './panels/ReachToggle'
 import { SatelliteList } from './panels/SatelliteList'
 import { Toolbar } from './panels/Toolbar'
 import { useNarrow } from './panels/useNarrow'
+import { resolveTheme, type Theme } from './shared/theme'
+import { useSystemDark } from './shared/useSystemDark'
 import { belongsToFocusedControl, releaseFocusAfterPointerClick, stepIndex } from './shortcuts'
 import styles from './App.module.css'
 import panel from './panels/panel.module.css'
@@ -33,6 +35,11 @@ function App() {
   const [loaded, setLoaded] = useState<Loaded>(null)
   const app = useApp()
   const narrow = useNarrow()
+  const systemDark = useSystemDark()
+  const theme = resolveTheme(app.themeChoice, systemDark)
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+  }, [theme])
   const minute = useMinute()
   const now = useMemo(() => new Date(minute * 60_000), [minute])
 
@@ -149,6 +156,10 @@ function App() {
         case 'F':
           if (s.selection.noradId !== null) s.toggleFollow()
           break
+        case 't':
+        case 'T':
+          s.setThemeChoice(theme === 'light' ? 'dark' : 'light')
+          break
         default:
           return
       }
@@ -160,7 +171,7 @@ function App() {
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('click', releaseFocusAfterPointerClick)
     }
-  }, [satellites, passes])
+  }, [satellites, passes, theme])
 
   // The map toggles live in the title row, which has the room on every screen; the map corners are for the
   // compass, the follow button and the help.
@@ -168,6 +179,13 @@ function App() {
     <>
       <MapToggle on={app.globe} onToggle={app.toggleGlobe} title="Globe or flat map">
         Globe
+      </MapToggle>
+      <MapToggle
+        on={theme === 'light'}
+        onToggle={() => app.setThemeChoice(theme === 'light' ? 'dark' : 'light')}
+        title="Light or dark; follows the system until chosen"
+      >
+        Light
       </MapToggle>
       <ReachToggle on={app.reachVisible} onToggle={app.toggleReach} />
     </>
@@ -182,7 +200,7 @@ function App() {
       </header>
       <main>
         <Suspense fallback={<div className="map" />}>
-          <LiveMap satellites={satellites} selectedSatellite={selectedSatellite} />
+          <LiveMap satellites={satellites} selectedSatellite={selectedSatellite} theme={theme} />
         </Suspense>
         <div className={styles.shell}>
           {app.sheet === 'satellites' && (
@@ -309,9 +327,11 @@ function Sheet({ label, onClose, children }: { label: string; onClose: () => voi
 function LiveMap({
   satellites,
   selectedSatellite,
+  theme,
 }: {
   satellites: ReturnType<typeof satelliteFrom>[]
   selectedSatellite: ReturnType<typeof satelliteFrom> | undefined
+  theme: Theme
 }) {
   const timeMs = useFrame((f) => f.timeMs)
   const time = useMemo(() => new Date(timeMs), [timeMs])
@@ -358,6 +378,7 @@ function LiveMap({
       globe={globe}
       follow={follow && selection.noradId !== null}
       onFollowBreak={() => setFollow(false)}
+      theme={theme}
     />
   )
 }

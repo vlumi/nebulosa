@@ -1,6 +1,6 @@
 import { epochOf } from '../orbit/elements'
 import { strix1, strix9 } from '../test/fixtures'
-import { FAMILY_COLORS } from '../shared/palette'
+import { PALETTES } from '../shared/theme'
 import { buildLayers, hoverAt, trackData } from './layers'
 import { satelliteFrom } from '../orbit/orbit'
 
@@ -38,8 +38,8 @@ test('builds tracks, positions and labels for every satellite, colored by family
   const positionData = positions.props.data as { name: string; family: string }[]
   expect(positionData.map((d) => d.name)).toEqual(['STRIX-1', 'STRIX-9'])
   const { getFillColor: fill } = positions.props as unknown as { getFillColor: (d: unknown) => number[] }
-  expect(fill(positionData[0])).toEqual([...FAMILY_COLORS['sun-synchronous'], 255])
-  expect(fill(positionData[1])).toEqual([...FAMILY_COLORS['mid-inclination'], 255])
+  expect(fill(positionData[0])).toEqual([...PALETTES.dark.family['sun-synchronous'], 255])
+  expect(fill(positionData[1])).toEqual([...PALETTES.dark.family['mid-inclination'], 255])
   expect(labels.props.data).toEqual(positionData)
 })
 
@@ -156,7 +156,7 @@ test('ghost layers draw in the family color and the dashed path follows the samp
   expect(drawn).toBeGreaterThanOrEqual(pieces[0].samples.length)
   expect(getPath(pieces[0])[0]).toEqual(pieces[0].samples[0].lonLat)
   const { getLineColor } = ghost.props as unknown as { getLineColor: (d: unknown) => number[] }
-  expect(getLineColor((ghost.props.data as unknown[])[0])).toEqual(FAMILY_COLORS['mid-inclination'])
+  expect(getLineColor((ghost.props.data as unknown[])[0])).toEqual(PALETTES.dark.family['mid-inclination'])
 })
 
 test('on the globe, labels skip the depth test and far-side ones are left out', () => {

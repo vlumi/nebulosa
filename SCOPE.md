@@ -108,7 +108,7 @@ Where a satellite is, has been and will be, beyond a highlighted track.
 - The last two quads at either end of a reach ribbon render more saturated than the rest; the geometry is verified clean, so it is a rendering effect.
 - The sheet shortcuts `S`, `W`, `P` are three unrelated letters. Consecutive keys would be easier: `1` `2` `3` in toolbar order, or another run of neighbouring keys; the arrows are taken by the probe and the lists.
 
-### M10 — theme
+### M10 — theme (done)
 
 - **Light and dark**, following the system by default, with a toggle in the corner beside Globe and SAR reach.
 - OpenFreeMap serves five styles without a key: `fiord` (the current dark blue), `dark`, `positron` (light grey), `bright` and `liberty` (light, colored). Dark stays on fiord; light goes to positron, with bright as the alternative to compare. The night shading, the reach band, the track palette and the panel tokens each need a light variant; the family colors probably survive as they are.

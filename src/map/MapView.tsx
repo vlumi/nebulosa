@@ -5,10 +5,11 @@ import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&ur
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { buildLayers, hoverAt, trackData, type Ghost, type Hover, type SatelliteDatum, type TrackDatum } from './layers'
 import type { LonLat } from '../orbit/orbit'
+import { BASEMAPS, PALETTES, type Theme } from '../shared/theme'
 import {
   EMPTY,
   NIGHT_LAYER,
-  NIGHT_PAINT,
+  nightPaint,
   nightFeature,
   REACH_LAYER,
   REACH_OPACITY,
@@ -23,8 +24,6 @@ import { fitZoom, GLOBE_MAX_ZOOM } from './fit'
 import { useLatest } from '../shared/useLatest'
 import { useThrottled } from '../shared/useThrottled'
 
-const BASEMAP = 'https://tiles.openfreemap.org/styles/fiord'
-
 /** luma's canvas context behind the overlay's deck, reached only to resize the framebuffer it keeps for the canvas. */
 interface InterleavedDeck {
   device?: {
@@ -32,8 +31,6 @@ interface InterleavedDeck {
   }
 }
 const LONG_PRESS_MS = 600
-const PIN_SELECTED = '#eedd66'
-const PIN = '#8a90a0'
 /** How far, in pixels, a basemap label may be from the tap to name the place after it. */
 const LABEL_RADIUS_PX = 60
 const SETTLEMENTS = new Set(['city', 'town', 'village'])
@@ -99,6 +96,7 @@ interface Props {
   /** Keep the selected satellite centered; a drag on the map hands control back and reports it. */
   follow?: boolean
   onFollowBreak?: () => void
+  theme?: Theme
 }
 
 export function MapView({
@@ -121,6 +119,7 @@ export function MapView({
   globe = false,
   follow = false,
   onFollowBreak,
+  theme = 'dark',
 }: Props) {
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<MapLibre>(null)
@@ -156,10 +155,11 @@ export function MapView({
   const nightData = useMemo(() => nightFeature(new Date(trackMinute * 60_000)), [trackMinute])
   const reachTrack = reach && selected !== null ? tracks.find((t) => t.noradId === selected) : undefined
   const reachData = useMemo(() => (reachTrack ? reachFeature(reachTrack.samples) : EMPTY), [reachTrack])
-  const reachColor = reachFill(reachTrack?.family ?? 'sun-synchronous')
-  const surfaces = useLatest({ nightData, reachData, reachColor })
+  const reachColor = reachFill(reachTrack?.family ?? 'sun-synchronous', theme)
+  const surfaces = useLatest({ nightData, reachData, reachColor, nightPaint: nightPaint(theme) })
 
   const projection = useLatest(globe)
+  const initialTheme = useRef(theme)
   const styleReady = useRef(false)
   const applyProjection = useCallback(() => {
     const m = map.current
@@ -171,7 +171,7 @@ export function MapView({
   useEffect(() => {
     map.current = new MapLibre({
       container: container.current!,
-      style: BASEMAP,
+      style: BASEMAPS[initialTheme.current],
       center: [139.7, 35.7],
       zoom: fitZoom(container.current!.clientWidth, container.current!.clientHeight, projection.current),
       doubleClickZoom: false,
@@ -197,7 +197,7 @@ export function MapView({
       // run of small quads, and moving their vertices makes neighbours overlap or part in a ladder pattern.
       m.addSource(NIGHT_LAYER, { type: 'geojson', data: surfaces.current.nightData, buffer: 0, tolerance: 0 })
       m.addSource(REACH_LAYER, { type: 'geojson', data: surfaces.current.reachData, buffer: 0, tolerance: 0 })
-      m.addLayer({ id: NIGHT_LAYER, type: 'fill', source: NIGHT_LAYER, paint: NIGHT_PAINT })
+      m.addLayer({ id: NIGHT_LAYER, type: 'fill', source: NIGHT_LAYER, paint: surfaces.current.nightPaint })
       m.addLayer({
         id: REACH_LAYER,
         type: 'fill',
@@ -292,7 +292,7 @@ export function MapView({
       }
     }
     for (const place of places) {
-      const color = place.id === placeId ? PIN_SELECTED : PIN
+      const color = place.id === placeId ? PALETTES[theme].pinSelected : PALETTES[theme].pin
       let marker = markers.current.get(place.id)
       if (!marker || marker.getElement().dataset.color !== color) {
         marker?.remove()
@@ -316,11 +316,18 @@ export function MapView({
         marker.setDraggable(!pinsLocked)
       }
     }
-  }, [places, placeId, pinsLocked, placeSelect, placeMove])
+  }, [places, placeId, pinsLocked, theme, placeSelect, placeMove])
 
   useEffect(() => {
     if (flyTo) map.current?.easeTo({ center: [flyTo.lon, flyTo.lat], duration: 600 })
   }, [flyTo])
+
+  // A new basemap for a new theme: the style.load handler above re-adds the surfaces with the theme's paints.
+  useEffect(() => {
+    if (theme === initialTheme.current) return
+    initialTheme.current = theme
+    map.current?.setStyle(BASEMAPS[theme])
+  }, [theme])
 
   // The projection is part of the style; before the style has loaded, the load handler above applies it.
   useEffect(applyProjection, [globe, applyProjection])
@@ -379,10 +386,11 @@ export function MapView({
         span,
         globe,
         globe ? onNearSide : undefined,
+        PALETTES[theme],
       ),
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [satellites, tracks, now, selected, hover, probe, ghost, span, globe, viewVersion])
+  }, [satellites, tracks, now, selected, hover, probe, ghost, span, globe, viewVersion, theme])
 
   return <div ref={container} className="map" />
 }

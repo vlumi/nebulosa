@@ -12,6 +12,7 @@ vi.mock('maplibre-gl', () => ({
       remove: vi.fn(),
       easeTo: vi.fn(),
       jumpTo: vi.fn(),
+      setStyle: vi.fn(),
       on: vi.fn(),
       off: vi.fn(),
       isStyleLoaded: () => false,
@@ -326,4 +327,15 @@ test('each sheet has a close button in its corner', async () => {
   await userEvent.keyboard('p')
   await userEvent.click(screen.getByRole('button', { name: 'Close passes' }))
   expect(screen.queryByRole('complementary')).toBeNull()
+})
+
+test('keyboard: T switches between light and dark, stamped on the document', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
+  render(<App />)
+  expect(document.documentElement.dataset.theme).toBe('dark')
+  await userEvent.keyboard('t')
+  expect(document.documentElement.dataset.theme).toBe('light')
+  expect(screen.getByRole('button', { name: 'Light' })).toHaveAttribute('aria-pressed', 'true')
+  await userEvent.click(screen.getByRole('button', { name: 'Light' }))
+  expect(document.documentElement.dataset.theme).toBe('dark')
 })

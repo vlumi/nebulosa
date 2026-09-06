@@ -6,7 +6,7 @@
   bottom: 5.5rem;
   width: 2.75rem;
   height: 2.75rem;
-  border: 1px solid rgb(255 255 255 / 0.15);
+  border: 1px solid var(--border);
   border-radius: 50%;
   background: var(--panel);
   color: var(--muted);
@@ -19,7 +19,7 @@
 
 .follow:hover {
   color: var(--text);
-  border-color: rgb(255 255 255 / 0.4);
+  border-color: var(--border-strong);
 }
 
 .follow[aria-pressed='true'] {

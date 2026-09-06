@@ -2,7 +2,7 @@ import type { Feature, MultiPolygon, Polygon } from 'geojson'
 import type { LonLat, OrbitFamily, TrackSample } from '../orbit/orbit'
 import { nightPolygon, POLE_CAP } from '../orbit/sun'
 import { reachRibbons } from '../orbit/swath'
-import { FAMILY_COLORS } from '../shared/palette'
+import { PALETTES, type Theme } from '../shared/theme'
 
 /**
  * The two shaded surfaces, night and SAR reach, are MapLibre fill layers rather than deck.gl polygons:
@@ -13,10 +13,16 @@ export const REACH_LAYER = 'reach'
 
 /** No antialiasing, as on the style's own water: a fill that spans the antimeridian is tiled in two halves, and
  * their antialiased edges would meet in a hairline twice as dark as the fill. */
-export const NIGHT_PAINT = { 'fill-color': 'rgb(0 4 20)', 'fill-opacity': 90 / 255, 'fill-antialias': false } as const
+export const nightPaint = (theme: Theme) =>
+  ({
+    'fill-color': PALETTES[theme].night.color,
+    'fill-opacity': PALETTES[theme].night.opacity,
+    'fill-antialias': false,
+  }) as const
 export const REACH_OPACITY = 45 / 255
 
-export const reachFill = (family: OrbitFamily) => `rgb(${FAMILY_COLORS[family].join(' ')})`
+export const reachFill = (family: OrbitFamily, theme: Theme = 'dark') =>
+  `rgb(${PALETTES[theme].family[family].join(' ')})`
 
 export const EMPTY: Feature<MultiPolygon> = {
   type: 'Feature',

@@ -10,11 +10,11 @@
 }
 
 .day {
-  fill: rgb(255 255 255 / 0.18);
+  fill: var(--strip-day);
 }
 
 .night {
-  fill: rgb(0 4 20 / 0.9);
+  fill: var(--strip-night);
 }
 
 .pass {
@@ -22,13 +22,13 @@
 }
 
 .now {
-  stroke: rgb(255 255 255 / 0.9);
+  stroke: var(--marker);
   stroke-width: 0.4;
   vector-effect: non-scaling-stroke;
 }
 
 .probe {
-  stroke: #fff;
+  stroke: var(--marker);
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
 }

@@ -33,7 +33,7 @@
 .row:hover,
 .row[aria-pressed='true'],
 .row[aria-current='true'] {
-  background: rgb(255 255 255 / 0.08);
+  background: var(--hover);
 }
 
 li[data-dimmed] {

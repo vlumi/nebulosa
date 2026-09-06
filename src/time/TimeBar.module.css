@@ -16,7 +16,7 @@
 .bar > button,
 .bar input[type='date'] {
   padding: 0.2rem 0.5rem;
-  border: 1px solid rgb(255 255 255 / 0.15);
+  border: 1px solid var(--border);
   border-radius: 0.25rem;
   background: none;
   color: inherit;
@@ -33,10 +33,6 @@
 .bar input[type='range'] {
   width: 14rem;
   accent-color: var(--accent);
-}
-
-.bar input[type='date'] {
-  color-scheme: dark;
 }
 
 .bar output {
