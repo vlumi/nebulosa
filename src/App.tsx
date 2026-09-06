@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } 
 import type { Hover } from './map/layers'
 import { loadElements, type Omm } from './orbit/elements'
 import { positionAt, satelliteFrom } from './orbit/orbit'
-import { type Pass } from './orbit/passes'
+import { nextPassOf, type Pass } from './orbit/passes'
 import { inReach } from './orbit/swath'
 import { usePasses } from './orbit/usePasses'
 import { FollowButton } from './panels/FollowButton'
@@ -93,9 +93,11 @@ function App() {
     [allPasses, within, onlySelected, selectedId],
   )
   const familyOf = (noradId: number) => byId(noradId)?.family ?? 'mid-inclination'
+  // The readout speaks of the displayed moment, so its next pass is the first still to end then, not now.
+  const displayedMinute = useFrame((f) => Math.floor(f.timeMs / 60_000))
   const nextPass = useMemo(
-    () => allPasses.find((p) => p.noradId === selectedId && p.endMs > minute * 60_000) ?? null,
-    [allPasses, selectedId, minute],
+    () => (selectedId === null ? null : nextPassOf(allPasses, selectedId, displayedMinute * 60_000)),
+    [allPasses, selectedId, displayedMinute],
   )
 
   // The keys act on the store directly; the listener re-registers only when the lists they step through change.
