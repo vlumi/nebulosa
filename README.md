@@ -8,11 +8,11 @@ Unofficial demo project; not affiliated with Synspective.
 
 Live at [nebulosa.misaki.fi](https://nebulosa.misaki.fi). [SCOPE.md](SCOPE.md) is the plan it was built from; [ARCHITECTURE.md](ARCHITECTURE.md) explains how it works and the maths behind it.
 
-![The globe with STRIX-3 selected and followed: its details, a live readout of where it is and what comes next, a strip of its track with day and night, the radar's reach band beside the track](docs/screenshots/010-focused-satellite.png)
+![The globe in the dark theme with STRIX-3 selected near the north pole: its details, a live readout of where it is and what comes next, a strip of its track with day and night, the radar's reach band beside the track](docs/screenshots/011-theme-dark.png)
 
 <img src="docs/screenshots/010-focused-satellite-phone.png" alt="The same site on a phone: the satellite followed on the globe, the follow button lit under the compass" width="260">
 
-Every capture, one per milestone, is shown in [docs/screenshots](docs/screenshots/README.md).
+Every capture, one per milestone and the light theme beside the dark, is shown in [docs/screenshots](docs/screenshots/README.md).
 
 ## What it shows
 
