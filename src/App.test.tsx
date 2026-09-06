@@ -11,6 +11,7 @@ vi.mock('maplibre-gl', () => ({
       addControl: vi.fn(),
       remove: vi.fn(),
       easeTo: vi.fn(),
+      jumpTo: vi.fn(),
       on: vi.fn(),
       off: vi.fn(),
       isStyleLoaded: () => false,
@@ -283,4 +284,18 @@ test('keyboard: W opens the places sheet and the arrows then step through the pl
   await userEvent.keyboard('{ArrowDown}')
   expect(useApp.getState().selection.noradId).toBe(strix1.NORAD_CAT_ID)
   expect(screen.queryByRole('complementary')).toBeNull()
+})
+
+test('keyboard: F follows the selected satellite, and does nothing with none selected', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
+  render(<App />)
+  const panel = within(screen.getByRole('complementary', { name: 'Constellation' }))
+  await panel.findByText('STRIX-1')
+  await userEvent.keyboard('f')
+  expect(useApp.getState().follow).toBe(false)
+  await userEvent.keyboard('{ArrowDown}')
+  await userEvent.keyboard('f')
+  expect(panel.getByRole('checkbox', { name: 'Follow' })).toBeChecked()
+  await userEvent.keyboard('f')
+  expect(panel.getByRole('checkbox', { name: 'Follow' })).not.toBeChecked()
 })

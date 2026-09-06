@@ -96,6 +96,9 @@ interface Props {
   /** Draw the radar's reach beside the selected satellite's track. */
   reach?: boolean
   globe?: boolean
+  /** Keep the selected satellite centered; a drag on the map hands control back and reports it. */
+  follow?: boolean
+  onFollowBreak?: () => void
 }
 
 export function MapView({
@@ -116,6 +119,8 @@ export function MapView({
   span = DEFAULT_SPAN,
   reach = false,
   globe = false,
+  follow = false,
+  onFollowBreak,
 }: Props) {
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<MapLibre>(null)
@@ -131,6 +136,7 @@ export function MapView({
   const placeAdd = useLatest(onPlaceAdd)
   const select = useLatest(onSelect)
   const currentTime = useLatest(now)
+  const followBreak = useLatest(onFollowBreak)
 
   // A track shifted by under a minute is indistinguishable, and while scrubbing or fast-forwarding
   // a few tenths of a second of staleness is invisible; positions still move every frame.
@@ -197,6 +203,7 @@ export function MapView({
     // deck draws with its own depth and culling settings, and MapLibre caches GL state, so after each frame
     // MapLibre is told to re-apply everything; otherwise its far-side tiles can come through as dark wedges.
     map.current.on('move', () => setViewVersion((v) => v + 1))
+    map.current.on('dragstart', () => followBreak.current?.())
     map.current.on('render', () => {
       ;(
         map.current as unknown as { painter?: { context?: { setDirty?: () => void } } } | null
@@ -297,12 +304,19 @@ export function MapView({
   useEffect(applyProjection, [globe, applyProjection])
 
   useEffect(() => {
-    if (!focus) return
+    if (!follow || selected === null) return
+    const sat = satellites.find((s) => s.omm.NORAD_CAT_ID === selected)
+    const p = sat && positionAt(sat, now)
+    if (p) map.current?.jumpTo({ center: [p.lon, p.lat] })
+  }, [follow, selected, satellites, now])
+
+  useEffect(() => {
+    if (!focus || follow) return
     const sat = satellites.find((s) => s.omm.NORAD_CAT_ID === focus.noradId)
     const at = focus.timeMs === undefined ? currentTime.current : new Date(focus.timeMs)
     const p = sat && positionAt(sat, at)
     if (p) map.current?.easeTo({ center: [p.lon, p.lat], duration: 600 })
-  }, [focus, satellites, currentTime])
+  }, [focus, follow, satellites, currentTime])
 
   // Until the style has loaded the sources do not exist; the load handler above then takes the latest data.
   useEffect(() => {

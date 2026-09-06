@@ -34,6 +34,7 @@ const { mapInstance, overlayInstance, markerInstance } = vi.hoisted(() => {
       addControl: vi.fn(),
       remove: vi.fn(),
       easeTo: vi.fn(),
+      jumpTo: vi.fn(),
       handlers: {} as Record<string, () => void>,
       on: vi.fn(function (this: unknown, event: string, handler: () => void) {
         mapInstance.handlers[event] = handler
@@ -404,4 +405,31 @@ test('locked pins are not draggable, and unlocking makes them draggable again', 
   expect(Marker).toHaveBeenLastCalledWith(expect.objectContaining({ draggable: false }))
   rerender(<MapView {...props} pinsLocked={false} />)
   expect(markerInstance.setDraggable).toHaveBeenLastCalledWith(true)
+})
+
+test('following keeps the selected satellite centered as time moves, until the map is dragged', () => {
+  const onFollowBreak = vi.fn()
+  const sats = [strix1].map(satelliteFrom)
+  const props = {
+    satellites: sats,
+    selected: strix1.NORAD_CAT_ID,
+    onSelect: vi.fn(),
+    places: [],
+    placeId: null,
+    onPlaceSelect: vi.fn(),
+    onPlaceMove: vi.fn(),
+    onPlaceAdd: vi.fn(),
+    follow: true,
+    onFollowBreak,
+  }
+  const { rerender } = render(<MapView {...props} now={epochOf(strix1)} />)
+  const later = new Date(epochOf(strix1).getTime() + 60_000)
+  rerender(<MapView {...props} now={later} />)
+  const expected = positionAt(sats[0], later)!
+  const { center } = mapInstance.jumpTo.mock.lastCall![0] as { center: [number, number] }
+  expect(center[0]).toBeCloseTo(expected.lon, 6)
+  expect(center[1]).toBeCloseTo(expected.lat, 6)
+
+  mapInstance.handlers['dragstart']()
+  expect(onFollowBreak).toHaveBeenCalled()
 })

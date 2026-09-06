@@ -16,6 +16,8 @@ test('shows no detail block until a satellite is selected', () => {
       onSelect={vi.fn()}
       span={{ pastOrbits: 1, futureOrbits: 1 }}
       onSpanChange={vi.fn()}
+      follow={false}
+      onFollowChange={vi.fn()}
     />,
   )
   expect(screen.queryByRole('definition')).toBeNull()
@@ -30,6 +32,8 @@ test('describes the selected satellite in human terms', () => {
       onSelect={vi.fn()}
       span={{ pastOrbits: 1, futureOrbits: 1 }}
       onSpanChange={vi.fn()}
+      follow={false}
+      onFollowChange={vi.fn()}
     />,
   )
   const detail = within(screen.getByLabelText('STRIX-1 details'))
@@ -51,6 +55,8 @@ test('the track span selects report a new span', async () => {
       onSelect={vi.fn()}
       span={{ pastOrbits: 1, futureOrbits: 1 }}
       onSpanChange={onSpanChange}
+      follow={false}
+      onFollowChange={vi.fn()}
     />,
   )
   await userEvent.click(
@@ -61,4 +67,22 @@ test('the track span selects report a new span', async () => {
     within(screen.getByRole('radiogroup', { name: 'Track behind' })).getByRole('radio', { name: '½' }),
   )
   expect(onSpanChange).toHaveBeenCalledWith({ pastOrbits: 0.5, futureOrbits: 1 })
+})
+
+test('the selected satellite offers a follow toggle', async () => {
+  const onFollowChange = vi.fn()
+  render(
+    <SatelliteList
+      satellites={sats}
+      now={now}
+      selected={strix1.NORAD_CAT_ID}
+      onSelect={vi.fn()}
+      span={{ pastOrbits: 1, futureOrbits: 1 }}
+      onSpanChange={vi.fn()}
+      follow={false}
+      onFollowChange={onFollowChange}
+    />,
+  )
+  await userEvent.click(screen.getByRole('checkbox', { name: 'Follow' }))
+  expect(onFollowChange).toHaveBeenCalledWith(true)
 })

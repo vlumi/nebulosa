@@ -12,7 +12,7 @@ Grouped by domain, not by kind of file. `orbit/` is everything about the satelli
 
 ## State
 
-Two zustand stores. `store.ts` holds what the reader has chosen: the selection (satellite, ghost, active pass, probe), the places and which one is selected, the pass filters, the track span, the clock, and which sheet is open; its actions, such as showing a pass or the layered Esc, are plain functions and are unit-tested without React. `time/frame.ts` holds the two per-frame values, real time and the eased displayed time, written by one animation loop; only the map and the time bar subscribe to it, and a minute-rounded selector serves the age displays and the pass computation, so the rest of the tree never re-renders for a frame. Data loading and the passes worker stay in `App.tsx`, which passes lists to prop-driven components.
+Two zustand stores. `store.ts` holds what the reader has chosen: the selection (satellite, ghost, active pass, probe), whether the map follows the selected satellite, the places and which one is selected, the pass filters, the track span, the clock, and which sheet is open; its actions, such as showing a pass or the layered Esc, are plain functions and are unit-tested without React. `time/frame.ts` holds the two per-frame values, real time and the eased displayed time, written by one animation loop; only the map and the time bar subscribe to it, and a minute-rounded selector serves the age displays and the pass computation, so the rest of the tree never re-renders for a frame. Data loading and the passes worker stay in `App.tsx`, which passes lists to prop-driven components.
 
 ## Data
 
