@@ -25,6 +25,11 @@
   flex-direction: column;
 }
 
+/* The first line of a sheet keeps clear of the close button in its corner. */
+.sheet > .close + * {
+  padding-right: 2.5rem;
+}
+
 /* The way back out of a sheet, top right, where a close lives; the pill that opened it also closes it. */
 .close {
   position: absolute;
