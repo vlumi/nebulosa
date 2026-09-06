@@ -17,7 +17,6 @@ export interface Selection {
 }
 
 export const NOTHING: Selection = { noradId: null, ghost: null, activePass: null, probeMs: null }
-export { TOKYO } from './places/places'
 
 export type Sheet = 'satellites' | 'places' | 'passes'
 
@@ -46,8 +45,8 @@ interface State extends PlacesState {
 
 interface Actions {
   select: (noradId: number | null) => void
-  /** Select and bring into view, at `timeMs` if given. */
-  selectFromList: (noradId: number, timeMs?: number) => void
+  /** Select and bring into view. */
+  selectFromList: (noradId: number) => void
   showPass: (pass: Pass) => void
   goToPass: (pass: Pass, realMs?: number) => void
   /** Move the track probe by `deltaMs`, starting from `fromMs` when there is none yet. */
@@ -56,7 +55,7 @@ interface Actions {
   setProbe: (timeMs: number | null) => void
   /** Drop the shown pass, its ghost and the probe; keep the satellite. */
   clearPass: () => void
-  /** Help first; then pass, ghost and probe; then the satellite. */
+  /** Help first; then pass, ghost and probe; then the place; then the satellite. */
   escape: () => void
   /** `name` from the map's labels when there is one nearby; else the coordinates. */
   addPlace: (location: Location, name?: string) => void
@@ -103,9 +102,11 @@ const initial = (places: PlacesState): State => ({
 export const useApp = create<State & Actions>((set, get) => ({
   ...initial(loadPlaces()),
 
-  select: (noradId) => set({ selection: { ...NOTHING, noradId } }),
-  selectFromList: (noradId, timeMs) =>
-    set((s) => ({ selection: { ...NOTHING, noradId }, focus: { noradId, seq: (s.focus?.seq ?? 0) + 1, timeMs } })),
+  // Selecting the satellite already selected, by its dot, label, track or dashed continuation, keeps its pass, ghost
+  // and probe: only a change of satellite starts over.
+  select: (noradId) => set((s) => (s.selection.noradId === noradId ? s : { selection: { ...NOTHING, noradId } })),
+  selectFromList: (noradId) =>
+    set((s) => ({ selection: { ...NOTHING, noradId }, focus: { noradId, seq: (s.focus?.seq ?? 0) + 1 } })),
   showPass: (pass) =>
     set((s) => ({
       selection: {
@@ -174,7 +175,7 @@ export const useApp = create<State & Actions>((set, get) => ({
   setHelpOpen: (helpOpen) => set({ helpOpen }),
   toggleReach: () => set((s) => ({ reachVisible: !s.reachVisible })),
   toggleGlobe: () => set((s) => ({ globe: !s.globe })),
-  setFollow: (follow) => set({ follow }),
+  setFollow: (follow) => set((s) => (s.follow === follow ? s : { follow })),
   toggleFollow: () => set((s) => ({ follow: !s.follow })),
   setThemeChoice: (themeChoice) => set({ themeChoice }),
 }))

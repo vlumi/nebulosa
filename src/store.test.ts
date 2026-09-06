@@ -167,3 +167,20 @@ test('the theme choice is set explicitly and starts at system', () => {
   useApp.getState().setThemeChoice('light')
   expect(useApp.getState().themeChoice).toBe('light')
 })
+
+test('re-selecting the selected satellite keeps its pass, ghost and probe; another satellite starts over', () => {
+  const { showPass, probe, select } = useApp.getState()
+  showPass(pass)
+  probe(30_000, 0)
+  const before = useApp.getState().selection
+  select(65971)
+  expect(useApp.getState().selection).toBe(before)
+  select(53815)
+  expect(useApp.getState().selection).toEqual({ ...NOTHING, noradId: 53815 })
+})
+
+test('setting follow to what it already is changes nothing', () => {
+  const before = useApp.getState()
+  useApp.getState().setFollow(true)
+  expect(useApp.getState()).toBe(before)
+})
