@@ -36,8 +36,9 @@ export function Toolbar({
   ref,
 }: Props) {
   return (
-    <div ref={ref} className={styles.toolbar} role="toolbar" aria-label="Lists">
+    <div ref={ref} className={styles.toolbar} role="group" aria-label="Lists">
       <Pill
+        sheet="satellites"
         pressed={sheet === 'satellites'}
         onToggle={() => onToggle('satellites')}
         clear={satellites.selected && { label: `Unselect ${satellites.selected.name}`, onClear: onClearSatellite }}
@@ -53,6 +54,7 @@ export function Toolbar({
         )}
       </Pill>
       <Pill
+        sheet="places"
         pressed={sheet === 'places'}
         onToggle={() => onToggle('places')}
         clear={places.selected ? { label: `Unselect ${places.selected}`, onClear: onClearPlace } : undefined}
@@ -66,6 +68,7 @@ export function Toolbar({
       </Pill>
       {passes && (
         <Pill
+          sheet="passes"
           pressed={sheet === 'passes'}
           onToggle={() => onToggle('passes')}
           clear={passes.active && { label: `Clear the ${passes.active.name} pass`, onClear: onClearPass }}
@@ -85,11 +88,13 @@ export function Toolbar({
 }
 
 function Pill({
+  sheet,
   pressed,
   onToggle,
   clear,
   children,
 }: {
+  sheet: Sheet
   pressed: boolean
   onToggle: () => void
   clear?: { label: string; onClear: () => void }
@@ -97,7 +102,7 @@ function Pill({
 }) {
   return (
     <div className={styles.pill} data-pressed={pressed ? '' : undefined}>
-      <button type="button" aria-pressed={pressed} aria-controls="sheet" onClick={onToggle}>
+      <button type="button" data-sheet={sheet} aria-expanded={pressed} onClick={onToggle}>
         {children}
       </button>
       {clear && (

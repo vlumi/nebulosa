@@ -1,6 +1,5 @@
 import { create } from 'zustand'
-import { useApp } from '../store'
-import { simTime } from './clock'
+import { simTime, type Clock } from './clock'
 import { approach } from './smoothing'
 
 interface Frame {
@@ -16,18 +15,18 @@ interface Frame {
  */
 export const useFrame = create<Frame>(() => ({
   nowMs: Date.now(),
-  timeMs: simTime(useApp.getState().clock, Date.now()),
+  timeMs: Date.now(),
 }))
 
 export const useMinute = () => useFrame((f) => Math.floor(f.nowMs / 60_000))
 
-/** Runs the single animation-frame loop; returns the stop function. */
-export function startFrameLoop(): () => void {
+/** Runs the single animation-frame loop against whatever clock `getClock` returns; returns the stop function. */
+export function startFrameLoop(getClock: () => Clock): () => void {
   let displayed = useFrame.getState().timeMs
   let last = performance.now()
   let frame = requestAnimationFrame(function tick(t) {
     const nowMs = Date.now()
-    displayed = approach(displayed, simTime(useApp.getState().clock, nowMs), t - last)
+    displayed = approach(displayed, simTime(getClock(), nowMs), t - last)
     last = t
     useFrame.setState({ nowMs, timeMs: displayed })
     frame = requestAnimationFrame(tick)

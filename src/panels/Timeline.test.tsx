@@ -54,4 +54,10 @@ test('the strip shows the passes in its window and pointing at it moves the prob
   expect(onProbe).toHaveBeenLastCalledWith(Math.round((nowMs + sat.periodMinutes * 60_000) / 1000) * 1000)
   fireEvent.doubleClick(strip)
   expect(onProbe).toHaveBeenLastCalledWith(null)
+
+  strip.focus()
+  fireEvent.keyDown(strip, { key: 'ArrowRight' })
+  expect(onProbe).toHaveBeenLastCalledWith(nowMs + 30_000)
+  fireEvent.keyDown(strip, { key: 'ArrowLeft', shiftKey: true })
+  expect(onProbe).toHaveBeenLastCalledWith(nowMs - 5 * 60_000)
 })

@@ -1,7 +1,7 @@
 import { describeOrbit, formatAltitude } from '../orbit/describe'
 import { newestEpoch } from '../orbit/elements'
 import { compassPoint, formatAge, formatDuration, formatLocation, hhmm, utcMinute } from '../shared/format'
-import { nextTerminatorCrossing, stateAt } from '../orbit/readout'
+import { nextTerminatorCrossing, stateAt, type TerminatorCrossing } from '../orbit/readout'
 import type { Pass } from '../orbit/passes'
 import { useFrame } from '../time/frame'
 import { Timeline } from './Timeline'
@@ -125,6 +125,25 @@ function Detail({ satellite, now }: { satellite: Satellite; now: Date }) {
   )
 }
 
+/**
+ * The next crossing is a scan of a whole orbit, so it is kept per satellite until it has passed, the clock has gone
+ * backwards, or a minute has gone by without one; a second's tick never rescans.
+ */
+const knownCrossings = new Map<number, { fromMs: number; crossing: TerminatorCrossing | null }>()
+
+function terminatorCrossingFor(satellite: Satellite, simMs: number): TerminatorCrossing | null {
+  const known = knownCrossings.get(satellite.omm.NORAD_CAT_ID)
+  const stale =
+    !known ||
+    simMs < known.fromMs ||
+    (known.crossing !== null && simMs >= known.crossing.timeMs) ||
+    (known.crossing === null && simMs - known.fromMs > 60_000)
+  if (!stale) return known.crossing
+  const fresh = { fromMs: simMs, crossing: nextTerminatorCrossing(satellite, simMs) }
+  knownCrossings.set(satellite.omm.NORAD_CAT_ID, fresh)
+  return fresh.crossing
+}
+
 /** Where the satellite is at the displayed moment, updated every second while the sheet is open. */
 function Readout({
   satellite,
@@ -137,8 +156,8 @@ function Readout({
 }) {
   const simMs = useFrame((f) => Math.floor(f.timeMs / 1000) * 1000)
   const state = stateAt(satellite, new Date(simMs))
+  const crossing = terminatorCrossingFor(satellite, simMs)
   if (!state) return null
-  const crossing = nextTerminatorCrossing(satellite, simMs)
   const pass = nextPass && nextPass.endMs > simMs ? nextPass : null
   const rows: [string, string][] = [
     ['Over', formatLocation(state)],

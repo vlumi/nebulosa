@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import type { Ghost } from './map/layers'
-import type { Focus } from './map/MapView'
 import { DEFAULT_SPAN, type TrackSpan } from './orbit/orbit'
 import { DEFAULT_FILTERS, type Location, type Pass, type PassFilters } from './orbit/passes'
 import { loadPlaces, newPlace, savePlaces, SEED, type Place, type PlacesState } from './places/places'
@@ -20,18 +19,17 @@ export const NOTHING: Selection = { noradId: null, ghost: null, activePass: null
 
 export type Sheet = 'satellites' | 'places' | 'passes'
 
-/** A request to center the map on a point; `seq` makes repeated requests distinct. */
-export interface FlyTo extends Location {
-  seq: number
-}
+/** A request to move the camera once: to a satellite, at a moment if given, or to a point. `seq` keeps repeats distinct. */
+export type CameraRequest = { seq: number } & (
+  { kind: 'satellite'; noradId: number; timeMs?: number } | { kind: 'point'; lat: number; lon: number }
+)
 
 interface State extends PlacesState {
   selection: Selection
-  focus: Focus | null
+  camera: CameraRequest | null
   /** Keep the selected satellite centered as time plays. */
   follow: boolean
   themeChoice: ThemeChoice
-  flyTo: FlyTo | null
   filters: PassFilters
   span: TrackSpan
   clock: Clock
@@ -83,13 +81,14 @@ interface Actions {
   setThemeChoice: (choice: ThemeChoice) => void
 }
 
+const nextSeq = (s: { camera: CameraRequest | null }) => (s.camera?.seq ?? 0) + 1
+
 const initial = (places: PlacesState): State => ({
   ...places,
   selection: NOTHING,
-  focus: null,
+  camera: null,
   follow: true,
   themeChoice: loadThemeChoice(),
-  flyTo: null,
   filters: DEFAULT_FILTERS,
   span: DEFAULT_SPAN,
   clock: liveClock(Date.now()),
@@ -106,7 +105,8 @@ export const useApp = create<State & Actions>((set, get) => ({
   // and probe: only a change of satellite starts over.
   select: (noradId) => set((s) => (s.selection.noradId === noradId ? s : { selection: { ...NOTHING, noradId } })),
   selectFromList: (noradId) =>
-    set((s) => ({ selection: { ...NOTHING, noradId }, focus: { noradId, seq: (s.focus?.seq ?? 0) + 1 } })),
+    set((s) => ({ selection: { ...NOTHING, noradId }, camera: { kind: 'satellite', noradId, seq: nextSeq(s) } })),
+  // A pass is a moment elsewhere on the track; following would hold the camera on the satellite and hide the ghost.
   showPass: (pass) =>
     set((s) => ({
       selection: {
@@ -115,13 +115,15 @@ export const useApp = create<State & Actions>((set, get) => ({
         activePass: pass,
         probeMs: null,
       },
-      focus: { noradId: pass.noradId, seq: (s.focus?.seq ?? 0) + 1, timeMs: pass.peakMs },
+      camera: { kind: 'satellite', noradId: pass.noradId, timeMs: pass.peakMs, seq: nextSeq(s) },
+      follow: false,
     })),
   goToPass: (pass, realMs = Date.now()) =>
     set((s) => ({
       clock: withPaused(scrubbedTo(s.clock, pass.peakMs, realMs), true, realMs),
       selection: { noradId: pass.noradId, ghost: null, activePass: pass, probeMs: null },
-      focus: { noradId: pass.noradId, seq: (s.focus?.seq ?? 0) + 1, timeMs: pass.peakMs },
+      camera: { kind: 'satellite', noradId: pass.noradId, timeMs: pass.peakMs, seq: nextSeq(s) },
+      follow: false,
     })),
   probe: (deltaMs, fromMs) =>
     set((s) =>
@@ -146,7 +148,7 @@ export const useApp = create<State & Actions>((set, get) => ({
       const place = s.places.find((p) => p.id === id)
       return {
         placeId: place ? place.id : null,
-        flyTo: fly && place ? { lat: place.lat, lon: place.lon, seq: (s.flyTo?.seq ?? 0) + 1 } : s.flyTo,
+        camera: fly && place ? { kind: 'point', lat: place.lat, lon: place.lon, seq: nextSeq(s) } : s.camera,
       }
     }),
   movePlace: (id, location) =>

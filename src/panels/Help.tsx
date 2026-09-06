@@ -14,7 +14,7 @@ export function Help({ open, onToggle, children }: Props) {
   return (
     <div className={styles.help}>
       {open && (
-        <dl className={styles.legend} role="dialog" aria-label="Keyboard shortcuts">
+        <dl className={styles.legend} role="region" aria-label="Keyboard shortcuts">
           {SHORTCUTS.map(({ keys, does }) => (
             <div key={keys}>
               <dt>

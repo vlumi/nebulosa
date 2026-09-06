@@ -19,7 +19,7 @@ import {
 import { DEFAULT_SPAN, positionAt, type Satellite, type TrackSpan } from '../orbit/orbit'
 import type { Location } from '../orbit/passes'
 import type { Place } from '../places/places'
-import type { FlyTo } from '../store'
+import type { CameraRequest } from '../store'
 import { fitZoom, GLOBE_MAX_ZOOM } from './fit'
 import { useLatest } from '../shared/useLatest'
 import { useThrottled } from '../shared/useThrottled'
@@ -65,18 +65,13 @@ setWorkerUrl(maplibreWorkerUrl)
  * A request to bring a satellite into view at `timeMs` (default: the displayed time);
  * `seq` makes repeated requests for the same one distinct.
  */
-export interface Focus {
-  noradId: number
-  seq: number
-  timeMs?: number
-}
-
 interface Props {
   satellites: Satellite[]
   now: Date
   selected: number | null
   onSelect: (noradId: number | null) => void
-  focus?: Focus | null
+  /** One camera move, to a satellite or a point; see the store. */
+  camera?: CameraRequest | null
   places: Place[]
   placeId: string | null
   onPlaceSelect: (id: string) => void
@@ -85,7 +80,6 @@ interface Props {
   pinsLocked?: boolean
   /** A double click, or a long press on a touch screen; `name` is the nearest place label the basemap shows there, if any. */
   onPlaceAdd: (location: Location, name?: string) => void
-  flyTo?: FlyTo | null
   ghost?: Ghost | null
   /** A point to show as if hovered, driven from the keyboard; the pointer wins while it is over a track. */
   probe?: Hover | null
@@ -106,14 +100,13 @@ export function MapView({
   now,
   selected,
   onSelect,
-  focus = null,
+  camera = null,
   places,
   placeId,
   onPlaceSelect,
   onPlaceMove,
   pinsLocked = false,
   onPlaceAdd,
-  flyTo = null,
   ghost = null,
   probe = null,
   span = DEFAULT_SPAN,
@@ -146,6 +139,8 @@ export function MapView({
   // Set the moment a gesture lets go, before the store hears of it: one more recenter would cancel the gesture.
   const letGo = useRef(false)
   const wasFollowing = useRef(follow)
+  // The follow's own recenter fires a move too; the layers are being rebuilt for this frame anyway.
+  const recentering = useRef(false)
 
   // A track shifted by under a minute is indistinguishable, and while scrubbing or fast-forwarding
   // a few tenths of a second of staleness is invisible; positions still move every frame.
@@ -220,7 +215,9 @@ export function MapView({
     map.current.on('zoom', applyProjection)
     // deck draws with its own depth and culling settings, and MapLibre caches GL state, so after each frame
     // MapLibre is told to re-apply everything; otherwise its far-side tiles can come through as dark wedges.
-    map.current.on('move', () => setViewVersion((v) => v + 1))
+    map.current.on('move', () => {
+      if (!recentering.current) setViewVersion((v) => v + 1)
+    })
     for (const event of ['mousedown', 'touchstart'] as const) map.current.on(event, () => (pointerDown.current = true))
     for (const event of ['mouseup', 'touchend', 'dragend'] as const)
       map.current.on(event, () => (pointerDown.current = false))
@@ -332,10 +329,6 @@ export function MapView({
   }, [places, placeId, pinsLocked, theme, placeSelect, placeMove])
 
   useEffect(() => {
-    if (flyTo) map.current?.easeTo({ center: [flyTo.lon, flyTo.lat], duration: 600 })
-  }, [flyTo])
-
-  useEffect(() => {
     map.current?.setPadding({ top: 0, left: 0, right: 0, bottom: bottomInset })
   }, [bottomInset])
 
@@ -355,21 +348,28 @@ export function MapView({
     if (!follow || letGo.current || pointerDown.current || selected === null) return
     const sat = satellites.find((s) => s.omm.NORAD_CAT_ID === selected)
     const p = sat && positionAt(sat, now)
-    if (p) map.current?.jumpTo({ center: [p.lon, p.lat] })
+    if (!p) return
+    recentering.current = true
+    map.current?.jumpTo({ center: [p.lon, p.lat] })
+    recentering.current = false
   }, [follow, selected, satellites, now])
 
-  // Each focus request flies once; while following, the follow already centers, and turning it off later must
-  // not replay the flight, or the drag that turned it off is thrown back to the satellite.
-  const flownFocus = useRef<number>(undefined)
+  // Each camera request flies once. A flight to a satellite is skipped while following, which already centers on
+  // it, and turning following off later must not replay it, or the drag that turned it off is thrown back.
+  const flown = useRef<number>(undefined)
   useEffect(() => {
-    if (!focus || focus.seq === flownFocus.current) return
-    flownFocus.current = focus.seq
+    if (!camera || camera.seq === flown.current) return
+    flown.current = camera.seq
+    if (camera.kind === 'point') {
+      map.current?.easeTo({ center: [camera.lon, camera.lat], duration: 600 })
+      return
+    }
     if (following.current) return
-    const sat = satellites.find((s) => s.omm.NORAD_CAT_ID === focus.noradId)
-    const at = focus.timeMs === undefined ? currentTime.current : new Date(focus.timeMs)
+    const sat = satellites.find((s) => s.omm.NORAD_CAT_ID === camera.noradId)
+    const at = camera.timeMs === undefined ? currentTime.current : new Date(camera.timeMs)
     const p = sat && positionAt(sat, at)
     if (p) map.current?.easeTo({ center: [p.lon, p.lat], duration: 600 })
-  }, [focus, following, satellites, currentTime])
+  }, [camera, following, satellites, currentTime])
 
   // Until the style has loaded the sources do not exist; the load handler above then takes the latest data.
   useEffect(() => {
@@ -392,21 +392,17 @@ export function MapView({
 
   useEffect(() => {
     overlay.current?.setProps({
-      layers: buildLayers(
-        satellites,
-        tracks,
-        now,
+      layers: buildLayers(satellites, tracks, now, {
         selected,
-        hover ?? probe,
+        hover: hover ?? probe,
         ghost,
-        span,
         globe,
-        globe ? onNearSide : undefined,
-        PALETTES[theme],
-      ),
+        onNearSide: globe ? onNearSide : undefined,
+        palette: PALETTES[theme],
+      }),
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [satellites, tracks, now, selected, hover, probe, ghost, span, globe, viewVersion, theme])
+  }, [satellites, tracks, now, selected, hover, probe, ghost, globe, viewVersion, theme])
 
   return <div ref={container} className="map" />
 }

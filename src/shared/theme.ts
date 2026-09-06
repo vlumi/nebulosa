@@ -1,5 +1,6 @@
 import type { OrbitFamily } from '../orbit/orbit'
 import type { Rgb, Rgba } from './palette'
+import { storage } from './storage'
 
 export type Theme = 'light' | 'dark'
 /** What the reader chose; `system` follows the operating system's preference. */
@@ -55,14 +56,6 @@ export function resolveTheme(choice: ThemeChoice, systemDark: boolean): Theme {
 }
 
 const KEY = 'nebulosa.theme'
-
-function storage(): Storage | undefined {
-  try {
-    return window.localStorage
-  } catch {
-    return undefined
-  }
-}
 
 export function loadThemeChoice(store = storage()): ThemeChoice {
   try {

@@ -1,10 +1,8 @@
+import { DEG, RAD } from './geo'
 import { ecfToLookAngles, eciToEcf, gstime, propagate } from 'satellite.js'
 import type { Omm } from './elements'
 import { positionAt, satelliteFrom, type Satellite } from './orbit'
 import { offNadirForElevation } from './swath'
-
-const RAD = Math.PI / 180
-const DEG = 180 / Math.PI
 
 /** Choices for how far ahead the pass list looks. */
 export const HORIZONS_H = [6, 12, 24, 48] as const
@@ -72,15 +70,19 @@ function crossing(sat: Satellite, location: Location, lo: number, hi: number, ri
   return (lo + hi) / 2
 }
 
-/** Longer than any low-Earth-orbit pass, so a pass in progress at `from` is found from its true rise. */
-const LOOKBACK_MS = 20 * 60_000
+/**
+ * Longer than any low-Earth-orbit pass: scanning this much before `from` finds a pass in progress from its true
+ * rise, and this much past the horizon lets a pass in progress there run to its true set.
+ */
+const MARGIN_MS = 20 * 60_000
 
-/** Every pass above the horizon between `from` and `from + hours`, scanned every `stepSeconds`. */
+/** Every pass above the horizon that starts before `from + hours` and ends after `from`, scanned every `stepSeconds`. */
 export function passesOver(sat: Satellite, location: Location, from: Date, hours = 24, stepSeconds = 30): Pass[] {
   const passes: Pass[] = []
   const stepMs = stepSeconds * 1000
-  const scanStartMs = from.getTime() - LOOKBACK_MS
-  const endMs = from.getTime() + hours * 3_600_000
+  const scanStartMs = from.getTime() - MARGIN_MS
+  const horizonMs = from.getTime() + hours * 3_600_000
+  const endMs = horizonMs + MARGIN_MS
   const initial = elevation(sat, location, scanStartMs)
   let current: { startMs: number; peakMs: number; peakElevation: number } | null =
     initial > 0 ? { startMs: scanStartMs, peakMs: scanStartMs, peakElevation: initial } : null
@@ -101,7 +103,7 @@ export function passesOver(sat: Satellite, location: Location, from: Date, hours
     }
   }
   if (current !== null) passes.push(finish(sat, location, current, endMs))
-  return passes.filter((pass) => pass.endMs > from.getTime())
+  return passes.filter((pass) => pass.endMs > from.getTime() && pass.startMs < horizonMs)
 }
 
 function finish(

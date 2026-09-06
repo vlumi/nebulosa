@@ -63,3 +63,10 @@
     max-height: 40vh;
   }
 }
+
+@media (max-width: 720px), (max-height: 560px) {
+  .goto {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
+}

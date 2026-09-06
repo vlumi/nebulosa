@@ -28,3 +28,10 @@
   background: var(--fill-soft);
   color: inherit;
 }
+
+@media (max-width: 720px), (max-height: 560px) {
+  .group button {
+    min-height: 2.25rem;
+    padding: 0.1rem 0.6rem;
+  }
+}

@@ -1,8 +1,6 @@
 import { gstime, jday, sunPos } from 'satellite.js'
+import { DEG, RAD } from './geo'
 import type { LonLat } from './orbit'
-
-const DEG = 180 / Math.PI
-const RAD = Math.PI / 180
 
 export interface SubsolarPoint {
   lon: number

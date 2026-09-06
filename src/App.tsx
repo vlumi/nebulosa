@@ -16,17 +16,20 @@ import { Toolbar } from './panels/Toolbar'
 import { useNarrow } from './panels/useNarrow'
 import { resolveTheme, type Theme } from './shared/theme'
 import { useSystemDark } from './shared/useSystemDark'
-import { belongsToFocusedControl, releaseFocusAfterPointerClick, stepIndex } from './shortcuts'
+import {
+  belongsToFocusedControl,
+  PROBE_BIG_STEP_MS,
+  PROBE_STEP_MS,
+  releaseFocusAfterPointerClick,
+  stepIndex,
+} from './shortcuts'
 import styles from './App.module.css'
 import panel from './panels/panel.module.css'
-import { selectedPlace, useApp } from './store'
+import { selectedPlace, useApp, type Sheet as SheetKey } from './store'
 import { startFrameLoop, useFrame, useMinute } from './time/frame'
 import { TimeBar } from './time/TimeBar'
 
 type Loaded = { elements: Omm[] } | { error: string } | null
-
-const PROBE_STEP_MS = 30_000
-const PROBE_BIG_STEP_MS = 5 * 60_000
 
 // MapLibre and deck.gl are most of the bundle; the shell and the lists paint before they arrive.
 const LazyMapView = lazy(() => import('./map/MapView').then((m) => ({ default: m.MapView })))
@@ -52,7 +55,7 @@ function App() {
   const minute = useMinute()
   const now = useMemo(() => new Date(minute * 60_000), [minute])
 
-  useEffect(() => startFrameLoop(), [])
+  useEffect(() => startFrameLoop(() => useApp.getState().clock), [])
 
   // A phone opens on the map; the sheets wait behind the toolbar.
   const closeSheet = app.closeSheet
@@ -77,13 +80,22 @@ function App() {
   const place = selectedPlace(app)
   const allPasses = usePasses(elements, place, minute * 60_000, app.filters.horizonHours)
   const selectedSatellite = byId(app.selection.noradId)
-  const passes = allPasses.filter(
-    (p) =>
-      (app.filters.within === 'horizon' || inReach(p.offNadirDeg)) &&
-      (!selectedSatellite || !app.filters.onlySelected || p.noradId === app.selection.noradId),
+  const { within, onlySelected } = app.filters
+  const selectedId = app.selection.noradId
+  const passes = useMemo(
+    () =>
+      allPasses.filter(
+        (p) =>
+          (within === 'horizon' || inReach(p.offNadirDeg)) &&
+          (selectedId === null || !onlySelected || p.noradId === selectedId),
+      ),
+    [allPasses, within, onlySelected, selectedId],
   )
   const familyOf = (noradId: number) => byId(noradId)?.family ?? 'mid-inclination'
-  const nextPass = allPasses.find((p) => p.noradId === app.selection.noradId && p.endMs > minute * 60_000) ?? null
+  const nextPass = useMemo(
+    () => allPasses.find((p) => p.noradId === selectedId && p.endMs > minute * 60_000) ?? null,
+    [allPasses, selectedId, minute],
+  )
 
   // The handler reads the store directly; it re-registers only when the lists it steps through change.
   useEffect(() => {
@@ -218,7 +230,7 @@ function App() {
         </Suspense>
         <div className={styles.shell}>
           {app.sheet === 'satellites' && (
-            <Sheet label="Constellation" onClose={app.closeSheet}>
+            <Sheet label="Constellation" sheet="satellites" onClose={app.closeSheet}>
               {loaded === null && <p>Loading orbital elements…</p>}
               {loaded && 'error' in loaded && <p role="alert">{loaded.error}</p>}
               {satellites.length > 0 && (
@@ -243,7 +255,7 @@ function App() {
             </Sheet>
           )}
           {app.sheet === 'places' && (
-            <Sheet label="Places" onClose={app.closeSheet}>
+            <Sheet label="Places" sheet="places" onClose={app.closeSheet}>
               <PlaceList
                 places={app.places}
                 placeId={app.placeId}
@@ -259,12 +271,12 @@ function App() {
             </Sheet>
           )}
           {app.sheet === 'passes' && satellites.length > 0 && !place && (
-            <Sheet label="Passes" onClose={app.closeSheet}>
+            <Sheet label="Passes" sheet="passes" onClose={app.closeSheet}>
               <p className="muted">Pick a place to see passes over it.</p>
             </Sheet>
           )}
           {app.sheet === 'passes' && satellites.length > 0 && place && (
-            <Sheet label="Passes" onClose={app.closeSheet}>
+            <Sheet label="Passes" sheet="passes" onClose={app.closeSheet}>
               <PassList
                 place={place}
                 passes={passes}
@@ -325,10 +337,25 @@ function App() {
 }
 
 /** One sheet of the shell: a panel with a × in its corner, since the pill that opened it is not an obvious way back. */
-function Sheet({ label, onClose, children }: { label: string; onClose: () => void; children: ReactNode }) {
+function Sheet({
+  label,
+  sheet,
+  onClose,
+  children,
+}: {
+  label: string
+  sheet: SheetKey
+  onClose: () => void
+  children: ReactNode
+}) {
+  // Closing unmounts the button that had focus; the pill that owns the sheet is where a keyboard user came from.
+  const close = () => {
+    onClose()
+    document.querySelector<HTMLElement>(`[data-sheet="${sheet}"]`)?.focus()
+  }
   return (
     <aside id="sheet" className={`${panel.panel} ${styles.sheet}`} aria-label={label}>
-      <button type="button" className={styles.close} aria-label={`Close ${label.toLowerCase()}`} onClick={onClose}>
+      <button type="button" className={styles.close} aria-label={`Close ${label.toLowerCase()}`} onClick={close}>
         <svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true">
           <path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
@@ -354,11 +381,10 @@ function LiveMap({
   const time = useMemo(() => new Date(timeMs), [timeMs])
   const {
     selection,
-    focus,
+    camera,
     places,
     placeId,
     pinsLocked,
-    flyTo,
     span,
     reachVisible,
     globe,
@@ -380,14 +406,13 @@ function LiveMap({
       now={time}
       selected={selection.noradId}
       onSelect={select}
-      focus={focus}
+      camera={camera}
       places={places}
       placeId={placeId}
       onPlaceSelect={selectPlace}
       onPlaceMove={movePlace}
       pinsLocked={pinsLocked}
       onPlaceAdd={addPlace}
-      flyTo={flyTo}
       ghost={selection.ghost}
       probe={probe}
       span={span}
@@ -401,8 +426,9 @@ function LiveMap({
   )
 }
 
+/** The bar shows whole seconds, so it follows real time at one hertz; the store's clock changes still land at once. */
 function LiveTimeBar() {
-  const nowMs = useFrame((f) => f.nowMs)
+  const nowMs = useFrame((f) => Math.floor(f.nowMs / 1000) * 1000)
   const now = useMemo(() => new Date(nowMs), [nowMs])
   const { clock, setClock } = useApp()
   return <TimeBar clock={clock} now={now} onChange={setClock} />

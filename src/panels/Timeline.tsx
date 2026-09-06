@@ -3,6 +3,7 @@ import type { Pass } from '../orbit/passes'
 import type { Satellite, TrackSpan } from '../orbit/orbit'
 import { daylightStretches } from '../orbit/readout'
 import { hhmm } from '../shared/format'
+import { PROBE_BIG_STEP_MS, PROBE_STEP_MS } from '../shortcuts'
 import { useFrame } from '../time/frame'
 import styles from './Timeline.module.css'
 
@@ -56,6 +57,13 @@ export function Timeline({ satellite, span, passes, probeMs, onProbe }: Props) {
         if (e.buttons) probeFrom(e)
       }}
       onDoubleClick={() => onProbe(null)}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        const direction = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0
+        if (!direction) return
+        e.preventDefault()
+        onProbe((probeMs ?? nowMs) + direction * (e.shiftKey ? PROBE_BIG_STEP_MS : PROBE_STEP_MS))
+      }}
     >
       {stretches.map((s) => (
         <rect
