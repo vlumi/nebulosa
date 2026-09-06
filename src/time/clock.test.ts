@@ -9,13 +9,22 @@ test('a live clock follows real time', () => {
   expect(isLive(clock, t0 + 5 * minute)).toBe(true)
 })
 
-test('pausing freezes simulated time; resuming continues from there', () => {
+test('pausing freezes simulated time; a pause that began live resumes live', () => {
   const paused = withPaused(liveClock(t0), true, t0 + 2 * minute)
   expect(simTime(paused, t0 + 10 * minute)).toBe(t0 + 2 * minute)
   expect(isLive(paused, t0 + 10 * minute)).toBe(false)
 
   const resumed = withPaused(paused, false, t0 + 10 * minute)
-  expect(simTime(resumed, t0 + 11 * minute)).toBe(t0 + 3 * minute)
+  expect(resumed).toEqual(liveClock(t0 + 10 * minute))
+  expect(isLive(resumed, t0 + 11 * minute)).toBe(true)
+})
+
+test('a pause of a scrubbed clock resumes where it stopped', () => {
+  const scrubbed = scrubbedTo(liveClock(t0), t0 - 60 * minute, t0)
+  const paused = withPaused(scrubbed, true, t0 + 2 * minute)
+  const resumed = withPaused(paused, false, t0 + 10 * minute)
+  expect(resumed.liveOnResume).toBeUndefined()
+  expect(simTime(resumed, t0 + 11 * minute)).toBe(t0 - 60 * minute + 2 * minute + minute)
   expect(isLive(resumed, t0 + 11 * minute)).toBe(false)
 })
 
