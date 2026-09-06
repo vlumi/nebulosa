@@ -56,9 +56,9 @@ export const PALETTES: Record<Theme, Palette> = {
     night: { color: 'rgb(30 40 70)', opacity: 0.28 },
     family: { 'sun-synchronous': [176, 125, 0], 'mid-inclination': [0, 110, 170] },
     track: {
-      selected: { ahead: 255, oldest: 50 },
-      normal: { ahead: 230, oldest: 25 },
-      dimmed: { ahead: 45, oldest: 8 },
+      selected: { ahead: 255, oldest: 90 },
+      normal: { ahead: 230, oldest: 45 },
+      dimmed: { ahead: 45, oldest: 12 },
     },
   },
 }

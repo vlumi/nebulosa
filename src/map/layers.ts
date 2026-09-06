@@ -102,9 +102,9 @@ function capCells(rimLat: number): LonLat[][] {
 
 const TAIL_CHUNKS = 60
 /** Share of the flown half over which the tail fades to its floor; flat beyond it. */
-const TAIL_FADE_SPAN = 0.06
+const TAIL_FADE_SPAN = 0.04
 /** Share of the drop taken at once behind the satellite, so the head has an edge even when zoomed in close. */
-const TAIL_STEP = 0.5
+const TAIL_STEP = 0.65
 
 /**
  * The track split at `now`. The half ahead is one segment; the flown half is a run of chunks with
