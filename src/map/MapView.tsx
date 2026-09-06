@@ -53,7 +53,8 @@ interface Props {
   onPlaceMove: (id: string, location: Location) => void
   /** Pins cannot be dragged while locked. */
   pinsLocked?: boolean
-  /** A double click, or a long press on a touch screen; `name` is the nearest place label the basemap shows there, if any. */
+  /** A double click, or a long press on a touch screen; `name` is the nearest place label the basemap shows there, if
+   * any. */
   onPlaceAdd: (location: Location, name?: string) => void
   ghost?: Ghost | null
   /** A point to show as if hovered, driven from the keyboard; the pointer wins while it is over a track. */
@@ -186,8 +187,6 @@ export function MapView({
       })
     })
     map.current.on('zoom', applyProjection)
-    // deck draws with its own depth and culling settings, and MapLibre caches GL state, so after each frame
-    // MapLibre is told to re-apply everything; otherwise its far-side tiles can come through as dark wedges.
     map.current.on('move', () => {
       if (!recentering.current) setViewVersion((v) => v + 1)
     })
@@ -208,6 +207,8 @@ export function MapView({
       map.current.on(event, (e) => {
         if (e.originalEvent) release()
       })
+    // deck draws with its own depth and culling settings, and MapLibre caches GL state, so after each frame
+    // MapLibre is told to re-apply everything; otherwise its far-side tiles can come through as dark wedges.
     map.current.on('render', () => {
       ;(
         map.current as unknown as { painter?: { context?: { setDirty?: () => void } } } | null
