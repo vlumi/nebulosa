@@ -437,6 +437,19 @@ test('following keeps the selected satellite centered as time moves, until the m
   mapInstance.handlers['dragstart']()
   expect(onFollowBreak).toHaveBeenCalled()
   mapInstance.handlers['dragend']()
+
+  onFollowBreak.mockClear()
+  const touch = mapInstance.handlers['touchstart'] as unknown as (e: { points: unknown[] }) => void
+  const touchEnd = mapInstance.handlers['touchend'] as unknown as (e: { points: unknown[] }) => void
+  touch({ points: [{}, {}] })
+  mapInstance.handlers['dragstart']()
+  expect(onFollowBreak).not.toHaveBeenCalled()
+  touchEnd({ points: [{}] })
+  touchEnd({ points: [] })
+  touch({ points: [{}] })
+  mapInstance.handlers['dragstart']()
+  expect(onFollowBreak).toHaveBeenCalled()
+  mapInstance.handlers['dragend']()
   rerender(<MapView {...props} now={new Date(later.getTime() + 120_000)} />)
   expect(mapInstance.jumpTo).toHaveBeenCalled()
 })

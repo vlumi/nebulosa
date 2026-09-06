@@ -140,6 +140,8 @@ export function MapView({
   // A recenter while a pointer is down cancels the drag MapLibre is about to start, so following pauses from
   // pointer down to pointer up; the store hears of the break only once the drag has begun.
   const pointerDown = useRef(false)
+  // Two fingers zoom or rotate, and the center drifts a little with them; only a one-finger drag is a pan.
+  const twoFingers = useRef(false)
 
   // A track shifted by under a minute is indistinguishable, and while scrubbing or fast-forwarding
   // a few tenths of a second of staleness is invisible; positions still move every frame.
@@ -206,10 +208,19 @@ export function MapView({
     // deck draws with its own depth and culling settings, and MapLibre caches GL state, so after each frame
     // MapLibre is told to re-apply everything; otherwise its far-side tiles can come through as dark wedges.
     map.current.on('move', () => setViewVersion((v) => v + 1))
-    for (const event of ['mousedown', 'touchstart'] as const) map.current.on(event, () => (pointerDown.current = true))
-    for (const event of ['mouseup', 'touchend', 'dragend'] as const)
-      map.current.on(event, () => (pointerDown.current = false))
-    map.current.on('dragstart', () => followBreak.current?.())
+    map.current.on('mousedown', () => (pointerDown.current = true))
+    map.current.on('touchstart', (e) => {
+      pointerDown.current = true
+      twoFingers.current = twoFingers.current || e.points.length >= 2
+    })
+    for (const event of ['mouseup', 'dragend'] as const) map.current.on(event, () => (pointerDown.current = false))
+    map.current.on('touchend', (e) => {
+      pointerDown.current = false
+      if (e.points.length === 0) twoFingers.current = false
+    })
+    map.current.on('dragstart', () => {
+      if (!twoFingers.current) followBreak.current?.()
+    })
     map.current.on('render', () => {
       ;(
         map.current as unknown as { painter?: { context?: { setDirty?: () => void } } } | null
