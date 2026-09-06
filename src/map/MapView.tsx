@@ -137,6 +137,11 @@ export function MapView({
   const select = useLatest(onSelect)
   const currentTime = useLatest(now)
   const followBreak = useLatest(onFollowBreak)
+  // A recenter while a pointer is down cancels the drag MapLibre is about to start, so following pauses from
+  // pointer down to pointer up; the store hears of the break only once the drag has begun.
+  const pointerDown = useRef(false)
+  // Two fingers zoom or rotate, and the center drifts a little with them; only a one-finger drag is a pan.
+  const twoFingers = useRef(false)
 
   // A track shifted by under a minute is indistinguishable, and while scrubbing or fast-forwarding
   // a few tenths of a second of staleness is invisible; positions still move every frame.
@@ -203,7 +208,19 @@ export function MapView({
     // deck draws with its own depth and culling settings, and MapLibre caches GL state, so after each frame
     // MapLibre is told to re-apply everything; otherwise its far-side tiles can come through as dark wedges.
     map.current.on('move', () => setViewVersion((v) => v + 1))
-    map.current.on('dragstart', () => followBreak.current?.())
+    map.current.on('mousedown', () => (pointerDown.current = true))
+    map.current.on('touchstart', (e) => {
+      pointerDown.current = true
+      twoFingers.current = twoFingers.current || e.points.length >= 2
+    })
+    for (const event of ['mouseup', 'dragend'] as const) map.current.on(event, () => (pointerDown.current = false))
+    map.current.on('touchend', (e) => {
+      pointerDown.current = false
+      if (e.points.length === 0) twoFingers.current = false
+    })
+    map.current.on('dragstart', () => {
+      if (!twoFingers.current) followBreak.current?.()
+    })
     map.current.on('render', () => {
       ;(
         map.current as unknown as { painter?: { context?: { setDirty?: () => void } } } | null
@@ -305,19 +322,25 @@ export function MapView({
   useEffect(applyProjection, [globe, applyProjection])
 
   useEffect(() => {
-    if (!follow || selected === null) return
+    if (!follow || pointerDown.current || selected === null) return
     const sat = satellites.find((s) => s.omm.NORAD_CAT_ID === selected)
     const p = sat && positionAt(sat, now)
     if (p) map.current?.jumpTo({ center: [p.lon, p.lat] })
   }, [follow, selected, satellites, now])
 
+  // Each focus request flies once; while following, the follow already centers, and turning it off later must
+  // not replay the flight, or the drag that turned it off is thrown back to the satellite.
+  const following = useLatest(follow)
+  const flownFocus = useRef<number>(undefined)
   useEffect(() => {
-    if (!focus || follow) return
+    if (!focus || focus.seq === flownFocus.current) return
+    flownFocus.current = focus.seq
+    if (following.current) return
     const sat = satellites.find((s) => s.omm.NORAD_CAT_ID === focus.noradId)
     const at = focus.timeMs === undefined ? currentTime.current : new Date(focus.timeMs)
     const p = sat && positionAt(sat, at)
     if (p) map.current?.easeTo({ center: [p.lon, p.lat], duration: 600 })
-  }, [focus, follow, satellites, currentTime])
+  }, [focus, following, satellites, currentTime])
 
   // Until the style has loaded the sources do not exist; the load handler above then takes the latest data.
   useEffect(() => {
