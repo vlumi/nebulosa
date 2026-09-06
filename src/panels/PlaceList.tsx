@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Place } from '../places/places'
 import { formatLocation } from '../shared/format'
 import panel from './panel.module.css'
@@ -17,6 +17,18 @@ interface Props {
 
 export function PlaceList({ places, placeId, onSelect, onRename, onRemove, pinsLocked, onLockChange }: Props) {
   const [renaming, setRenaming] = useState<string | null>(null)
+  // The rename form replaces the row that had focus; when it goes, focus returns to the pencil that opened it.
+  const pencils = useRef(new Map<string, HTMLButtonElement>())
+  const returnTo = useRef<string | null>(null)
+  useEffect(() => {
+    if (renaming !== null || returnTo.current === null) return
+    pencils.current.get(returnTo.current)?.focus()
+    returnTo.current = null
+  }, [renaming])
+  const stopRenaming = (id: string) => {
+    returnTo.current = id
+    setRenaming(null)
+  }
   return (
     <>
       <p className={`${styles.header} muted`}>
@@ -38,7 +50,10 @@ export function PlaceList({ places, placeId, onSelect, onRename, onRemove, pinsL
                     e.preventDefault()
                     const name = new FormData(e.currentTarget).get('name')
                     if (typeof name === 'string' && name.trim()) onRename(place.id, name.trim())
-                    setRenaming(null)
+                    stopRenaming(place.id)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') stopRenaming(place.id)
                   }}
                 >
                   <input name="name" defaultValue={place.name} aria-label="Place name" autoFocus />
@@ -59,7 +74,11 @@ export function PlaceList({ places, placeId, onSelect, onRename, onRemove, pinsL
                 type="button"
                 className={styles.action}
                 aria-label={`Rename ${place.name}`}
-                onClick={() => setRenaming(renaming === place.id ? null : place.id)}
+                ref={(el) => {
+                  if (el) pencils.current.set(place.id, el)
+                  else pencils.current.delete(place.id)
+                }}
+                onClick={() => (renaming === place.id ? stopRenaming(place.id) : setRenaming(place.id))}
               >
                 ✎
               </button>
