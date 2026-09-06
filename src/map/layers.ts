@@ -131,11 +131,6 @@ function segmentsOf(track: TrackDatum, nowMs: number): SegmentDatum[] {
  */
 const GLOBE_LIFT_M = 30_000
 
-const ALPHA = {
-  selected: { ahead: 255, oldest: 130 },
-  normal: { ahead: 200, oldest: 40 },
-  dimmed: { ahead: 40, oldest: 12 },
-}
 const WIDTH = { selected: 3, normal: 1.5, dimmed: 1.5 }
 
 /** Smoothstep from 0 at the satellite to 1 at TAIL_FADE_SPAN of the way back, then 1. */
@@ -202,7 +197,7 @@ export function buildLayers(
       pickable: true,
       getPath: (d) => d.path,
       getColor: (d) => {
-        const { ahead, oldest } = ALPHA[emphasis(d)]
+        const { ahead, oldest } = palette.track[emphasis(d)]
         return color(d, Math.round(ahead + (oldest - ahead) * tailFade(d.age)))
       },
       getWidth: (d) => WIDTH[emphasis(d)],

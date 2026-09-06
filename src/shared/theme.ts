@@ -24,6 +24,10 @@ export interface Palette {
   pinSelected: string
   night: { color: string; opacity: number }
   family: Record<OrbitFamily, Rgb>
+  /** Track alpha ahead of the satellite and at the oldest end of the flown half, per emphasis; the flown half fades
+   * between them. A dark line over a pale ground stays legible at a much lower alpha than a light one over a dark
+   * ground, so the light theme fades further for the head and tail to tell apart. */
+  track: Record<'selected' | 'normal' | 'dimmed', { ahead: number; oldest: number }>
 }
 
 export const PALETTES: Record<Theme, Palette> = {
@@ -36,6 +40,11 @@ export const PALETTES: Record<Theme, Palette> = {
     pinSelected: '#eedd66',
     night: { color: 'rgb(0 4 20)', opacity: 90 / 255 },
     family: { 'sun-synchronous': [238, 221, 102], 'mid-inclination': [102, 204, 238] },
+    track: {
+      selected: { ahead: 255, oldest: 130 },
+      normal: { ahead: 200, oldest: 40 },
+      dimmed: { ahead: 40, oldest: 12 },
+    },
   },
   light: {
     bg: [244, 245, 248],
@@ -46,6 +55,11 @@ export const PALETTES: Record<Theme, Palette> = {
     pinSelected: '#a86f00',
     night: { color: 'rgb(30 40 70)', opacity: 0.28 },
     family: { 'sun-synchronous': [176, 125, 0], 'mid-inclination': [0, 110, 170] },
+    track: {
+      selected: { ahead: 255, oldest: 50 },
+      normal: { ahead: 230, oldest: 25 },
+      dimmed: { ahead: 45, oldest: 8 },
+    },
   },
 }
 
