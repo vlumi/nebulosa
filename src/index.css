@@ -51,6 +51,8 @@ main {
   flex: 1;
   position: relative;
   min-height: 0;
+  /* Whatever the floating bars cannot fit is clipped here, so the page itself never scrolls sideways. */
+  overflow: hidden;
 }
 
 /* More specific than MapLibre's own .maplibregl-map { position: relative }, which would collapse the container. */
