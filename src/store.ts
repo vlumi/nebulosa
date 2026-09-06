@@ -83,7 +83,7 @@ const initial = (places: PlacesState): State => ({
   ...places,
   selection: NOTHING,
   focus: null,
-  follow: false,
+  follow: true,
   flyTo: null,
   filters: DEFAULT_FILTERS,
   span: DEFAULT_SPAN,

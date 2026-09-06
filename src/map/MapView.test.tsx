@@ -440,3 +440,26 @@ test('following keeps the selected satellite centered as time moves, until the m
   rerender(<MapView {...props} now={new Date(later.getTime() + 120_000)} />)
   expect(mapInstance.jumpTo).toHaveBeenCalled()
 })
+
+test('a focus flies once and never again when following stops; a new focus flies while not following', () => {
+  const sats = [strix1].map(satelliteFrom)
+  const props = {
+    satellites: sats,
+    now: epochOf(strix1),
+    selected: strix1.NORAD_CAT_ID,
+    onSelect: vi.fn(),
+    places: [],
+    placeId: null,
+    onPlaceSelect: vi.fn(),
+    onPlaceMove: vi.fn(),
+    onPlaceAdd: vi.fn(),
+    onFollowBreak: vi.fn(),
+  }
+  const focus = { noradId: strix1.NORAD_CAT_ID, seq: 1 }
+  const { rerender } = render(<MapView {...props} follow focus={focus} />)
+  expect(mapInstance.easeTo).not.toHaveBeenCalled()
+  rerender(<MapView {...props} follow={false} focus={focus} />)
+  expect(mapInstance.easeTo).not.toHaveBeenCalled()
+  rerender(<MapView {...props} follow={false} focus={{ ...focus, seq: 2 }} />)
+  expect(mapInstance.easeTo).toHaveBeenCalledTimes(1)
+})

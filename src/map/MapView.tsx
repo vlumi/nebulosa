@@ -317,13 +317,19 @@ export function MapView({
     if (p) map.current?.jumpTo({ center: [p.lon, p.lat] })
   }, [follow, selected, satellites, now])
 
+  // Each focus request flies once; while following, the follow already centers, and turning it off later must
+  // not replay the flight, or the drag that turned it off is thrown back to the satellite.
+  const following = useLatest(follow)
+  const flownFocus = useRef<number>(undefined)
   useEffect(() => {
-    if (!focus || follow) return
+    if (!focus || focus.seq === flownFocus.current) return
+    flownFocus.current = focus.seq
+    if (following.current) return
     const sat = satellites.find((s) => s.omm.NORAD_CAT_ID === focus.noradId)
     const at = focus.timeMs === undefined ? currentTime.current : new Date(focus.timeMs)
     const p = sat && positionAt(sat, at)
     if (p) map.current?.easeTo({ center: [p.lon, p.lat], duration: 600 })
-  }, [focus, follow, satellites, currentTime])
+  }, [focus, following, satellites, currentTime])
 
   // Until the style has loaded the sources do not exist; the load handler above then takes the latest data.
   useEffect(() => {
