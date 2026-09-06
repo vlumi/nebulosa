@@ -132,3 +132,14 @@ test('a place moves one step up or down its list and stops at the ends', () => {
   reorderPlace('tokyo', 1)
   expect(names()).toEqual(['Paris', 'Helsinki', 'Tokyo'])
 })
+
+test('follow is a mode: toggled or set, and kept across selections', () => {
+  const { toggleFollow, setFollow, select } = useApp.getState()
+  expect(useApp.getState().follow).toBe(false)
+  toggleFollow()
+  expect(useApp.getState().follow).toBe(true)
+  select(null)
+  expect(useApp.getState().follow).toBe(true)
+  setFollow(false)
+  expect(useApp.getState().follow).toBe(false)
+})

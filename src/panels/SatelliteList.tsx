@@ -14,12 +14,24 @@ interface Props {
   onSelect: (noradId: number | null) => void
   span: TrackSpan
   onSpanChange: (span: TrackSpan) => void
+  /** Keep the selected satellite centered on the map. */
+  follow: boolean
+  onFollowChange: (follow: boolean) => void
 }
 
 const BEHIND_CHOICES = [...SPAN_CHOICES].reverse()
 const fraction = (n: number) => ({ 0.25: '¼', 0.5: '½' })[n] ?? String(n)
 
-export function SatelliteList({ satellites, now, selected, onSelect, span, onSpanChange }: Props) {
+export function SatelliteList({
+  satellites,
+  now,
+  selected,
+  onSelect,
+  span,
+  onSpanChange,
+  follow,
+  onFollowChange,
+}: Props) {
   const epoch = newestEpoch(satellites.map((s) => s.omm))
   return (
     <>
@@ -42,7 +54,17 @@ export function SatelliteList({ satellites, now, selected, onSelect, span, onSpa
                   <span title="Inclination">{s.omm.INCLINATION.toFixed(1)}°</span>
                 </span>
               </button>
-              {isSelected && <Detail satellite={s} now={now} />}
+              {isSelected && (
+                <>
+                  <Detail satellite={s} now={now} />
+                  <label
+                    className={styles.follow}
+                    title="Keep the map centered on it as time plays; dragging the map lets go"
+                  >
+                    <input type="checkbox" checked={follow} onChange={(e) => onFollowChange(e.target.checked)} /> Follow
+                  </label>
+                </>
+              )}
             </li>
           )
         })}

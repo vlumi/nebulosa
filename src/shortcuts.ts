@@ -8,6 +8,7 @@ export const SHORTCUTS = [
   { keys: 'L', does: 'live' },
   { keys: 'S W P', does: 'satellites, places, passes' },
   { keys: 'O', does: 'only the selected satellite\u2019s passes' },
+  { keys: 'F', does: 'follow the selected satellite' },
   { keys: 'R', does: 'SAR reach beside the selected track' },
   { keys: 'G', does: 'globe / flat map' },
   { keys: 'Esc', does: 'clear the pass, then the place, then the satellite' },

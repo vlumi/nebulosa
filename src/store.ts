@@ -28,6 +28,8 @@ export interface FlyTo extends Location {
 interface State extends PlacesState {
   selection: Selection
   focus: Focus | null
+  /** Keep the selected satellite centered as time plays. */
+  follow: boolean
   flyTo: FlyTo | null
   filters: PassFilters
   span: TrackSpan
@@ -71,12 +73,15 @@ interface Actions {
   setHelpOpen: (open: boolean) => void
   toggleReach: () => void
   toggleGlobe: () => void
+  setFollow: (follow: boolean) => void
+  toggleFollow: () => void
 }
 
 const initial = (places: PlacesState): State => ({
   ...places,
   selection: NOTHING,
   focus: null,
+  follow: false,
   flyTo: null,
   filters: DEFAULT_FILTERS,
   span: DEFAULT_SPAN,
@@ -158,6 +163,8 @@ export const useApp = create<State & Actions>((set, get) => ({
   setHelpOpen: (helpOpen) => set({ helpOpen }),
   toggleReach: () => set((s) => ({ reachVisible: !s.reachVisible })),
   toggleGlobe: () => set((s) => ({ globe: !s.globe })),
+  setFollow: (follow) => set({ follow }),
+  toggleFollow: () => set((s) => ({ follow: !s.follow })),
 }))
 
 useApp.subscribe((s, previous) => {

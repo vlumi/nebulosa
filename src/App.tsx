@@ -143,6 +143,10 @@ function App() {
         case 'G':
           s.toggleGlobe()
           break
+        case 'f':
+        case 'F':
+          if (s.selection.noradId !== null) s.toggleFollow()
+          break
         default:
           return
       }
@@ -183,6 +187,8 @@ function App() {
                   }}
                   span={app.span}
                   onSpanChange={app.setSpan}
+                  follow={app.follow}
+                  onFollowChange={app.setFollow}
                 />
               )}
             </aside>
@@ -287,6 +293,8 @@ function LiveMap({
     span,
     reachVisible,
     globe,
+    follow,
+    setFollow,
     select,
     selectPlace,
     movePlace,
@@ -316,6 +324,8 @@ function LiveMap({
       span={span}
       reach={reachVisible}
       globe={globe}
+      follow={follow && selection.noradId !== null}
+      onFollowBreak={() => setFollow(false)}
     />
   )
 }
