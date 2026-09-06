@@ -76,6 +76,11 @@ main > .map {
   main .maplibregl-ctrl-group button.maplibregl-ctrl-zoom-out {
     display: none;
   }
+
+  /* With the zoom buttons gone the compass is alone, but it keeps the divider MapLibre gives a third button. */
+  main .maplibregl-ctrl-group button.maplibregl-ctrl-compass {
+    border-top: 0;
+  }
 }
 
 /* MapLibre's controls in the app's own dress: the panel behind them, a hairline border, light icons, and a needle

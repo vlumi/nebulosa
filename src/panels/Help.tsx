@@ -9,7 +9,7 @@ interface Props {
   children?: ReactNode
 }
 
-/** The corner bottom-right: the keyboard legend as a floating panel behind a ? button, beside other map toggles. */
+/** The corner bottom-right: the keyboard legend as a floating panel behind a ? button. */
 export function Help({ open, onToggle, children }: Props) {
   return (
     <div className={styles.help}>

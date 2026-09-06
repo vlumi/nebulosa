@@ -26,48 +26,47 @@
   }
 }
 
-.clear {
-  flex: none;
-  width: 2rem;
-  height: 2rem;
-  border: 1px solid rgb(255 255 255 / 0.15);
-  border-radius: 50%;
-  background: var(--panel);
+/* The other side of the pill: a divider, then the × that clears the choice. */
+.pill > .clear {
+  padding: 0 0.7rem 0 0.55rem;
+  border-left: 1px solid rgb(255 255 255 / 0.15);
   color: var(--muted);
-  font: inherit;
-  font-size: 1.1rem;
-  line-height: 1;
-  cursor: pointer;
 }
 
-.clear:hover {
+.pill > .clear:hover {
   color: var(--text);
-  border-color: rgb(255 255 255 / 0.4);
 }
 
 .pill {
   display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
+  align-items: stretch;
   height: 2rem;
-  padding: 0 0.8rem;
   border: 1px solid rgb(255 255 255 / 0.15);
   border-radius: 1rem;
   background: var(--panel);
-  color: var(--text);
-  font: inherit;
-  font-size: 0.875rem;
-  font-weight: 600;
   white-space: nowrap;
-  cursor: pointer;
 }
 
 .pill:hover {
   border-color: rgb(255 255 255 / 0.4);
 }
 
-.pill[aria-pressed='true'] {
+.pill[data-pressed] {
   border-color: var(--accent);
+}
+
+.pill > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.8rem;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .chosen {

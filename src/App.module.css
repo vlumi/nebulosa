@@ -38,7 +38,7 @@
   }
 }
 
-/* The map toggles in the title row, phones only; see App.tsx. */
+/* The map toggles at the right end of the title row; see App.tsx. */
 .headerToggles {
   margin-left: auto;
   display: flex;

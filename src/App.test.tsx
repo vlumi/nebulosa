@@ -302,13 +302,17 @@ test('the follow button appears with a selected satellite; F and the button togg
   expect(screen.getByRole('button', { name: 'Follow STRIX-1' })).toHaveAttribute('aria-pressed', 'true')
 })
 
-test('the toolbar offers to unselect the satellite without opening its sheet', async () => {
+test('each pill clears its own choice from its right side, without opening the sheet', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
   render(<App />)
   await within(screen.getByRole('complementary', { name: 'Constellation' })).findByText('STRIX-1')
-  expect(screen.queryByRole('button', { name: /^Unselect / })).toBeNull()
+  expect(screen.queryByRole('button', { name: /^Unselect STRIX/ })).toBeNull()
   await userEvent.keyboard('{ArrowDown}')
   await userEvent.click(screen.getByRole('button', { name: 'Unselect STRIX-1' }))
   expect(useApp.getState().selection.noradId).toBeNull()
   expect(screen.getByRole('button', { name: /^Satellites · 2/ })).toBeInTheDocument()
+
+  await userEvent.click(screen.getByRole('button', { name: 'Unselect Tokyo' }))
+  expect(useApp.getState().placeId).toBeNull()
+  expect(screen.getByRole('button', { name: /^Places · none picked/ })).toBeInTheDocument()
 })

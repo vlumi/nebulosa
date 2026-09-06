@@ -162,8 +162,8 @@ function App() {
     }
   }, [satellites, passes])
 
-  // The map toggles sit in the corner beside the help on a desktop; on a phone that corner holds the compass and
-  // the follow button, and the title row has the room.
+  // The map toggles live in the title row, which has the room on every screen; the map corners are for the
+  // compass, the follow button and the help.
   const toggles = (
     <>
       <MapToggle on={app.globe} onToggle={app.toggleGlobe} title="Globe or flat map">
@@ -178,7 +178,7 @@ function App() {
       <header>
         <h1>nebulosa</h1>
         <p>Ground tracks of the StriX SAR constellation</p>
-        {narrow && <div className={styles.headerToggles}>{toggles}</div>}
+        <div className={styles.headerToggles}>{toggles}</div>
       </header>
       <main>
         <Suspense fallback={<div className="map" />}>
@@ -256,7 +256,9 @@ function App() {
           <Toolbar
             sheet={app.sheet}
             onToggle={app.toggleSheet}
-            onClear={() => app.select(null)}
+            onClearSatellite={() => app.select(null)}
+            onClearPlace={() => app.selectPlace(null)}
+            onClearPass={app.clearPass}
             satellites={{
               count: satellites.length,
               selected: selectedSatellite
@@ -280,9 +282,7 @@ function App() {
           <FollowButton name={selectedSatellite.omm.OBJECT_NAME} on={app.follow} onToggle={app.toggleFollow} />
         )}
         <LiveTimeBar />
-        <Help open={app.helpOpen} onToggle={app.setHelpOpen}>
-          {!narrow && toggles}
-        </Help>
+        <Help open={app.helpOpen} onToggle={app.setHelpOpen} />
       </main>
       <footer>
         Unofficial demo, not affiliated with Synspective. Orbital data: CelesTrak. Map: OpenFreeMap, © OpenStreetMap.
