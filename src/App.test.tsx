@@ -176,7 +176,7 @@ test('on a phone the map comes first: one sheet at a time, and choosing somethin
   expect(screen.getByRole('button', { name: /^Satellites STRIX-/ })).toBeInTheDocument()
 })
 
-test('keyboard: arrows step through the open sheet, Enter goes to the pass, Space pauses, S and P switch sheets, Esc clears', async () => {
+test('keyboard: arrows step through the open sheet, Enter goes to the pass, Space pauses, 1 and 3 switch sheets, Esc clears', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
   render(<App />)
   const panel = within(screen.getByRole('complementary', { name: 'Constellation' }))
@@ -190,7 +190,7 @@ test('keyboard: arrows step through the open sheet, Enter goes to the pass, Spac
   await userEvent.keyboard('{ArrowUp}')
   expect(panel.getByRole('button', { name: /STRIX-1/ })).toHaveAttribute('aria-pressed', 'true')
 
-  await userEvent.keyboard('p')
+  await userEvent.keyboard('3')
   expect(screen.queryByRole('complementary', { name: 'Constellation' })).toBeNull()
   const passes = within(screen.getByRole('complementary', { name: 'Passes' }))
   await userEvent.keyboard('{ArrowDown}')
@@ -205,12 +205,12 @@ test('keyboard: arrows step through the open sheet, Enter goes to the pass, Spac
   await userEvent.keyboard('l')
   expect(screen.getByRole('button', { name: 'Live' })).toBeDisabled()
 
-  await userEvent.keyboard('s')
+  await userEvent.keyboard('1')
   expect(screen.getByRole('complementary', { name: 'Constellation' })).toBeInTheDocument()
   expect(screen.queryByRole('complementary', { name: 'Passes' })).toBeNull()
-  await userEvent.keyboard('s')
+  await userEvent.keyboard('1')
   expect(screen.queryByRole('complementary')).toBeNull()
-  await userEvent.keyboard('p')
+  await userEvent.keyboard('3')
   const reopened = within(screen.getByRole('complementary', { name: 'Passes' }))
 
   await userEvent.keyboard('o')
@@ -225,7 +225,7 @@ test('keyboard: arrows step through the open sheet, Enter goes to the pass, Spac
 
   await userEvent.keyboard('{Escape}')
   expect(reopened.queryByRole('button', { current: true })).toBeNull()
-  await userEvent.keyboard('s')
+  await userEvent.keyboard('1')
   const constellation = within(screen.getByRole('complementary', { name: 'Constellation' }))
   expect(constellation.getByRole('button', { name: /STRIX-1/ })).toHaveAttribute('aria-pressed', 'true')
   await userEvent.keyboard('{Escape}')
@@ -261,13 +261,13 @@ test('places: the pill names the selected place; with none, passes wait for one;
   expect(screen.getByRole('button', { name: /^Places · none$/ })).toBeInTheDocument()
 })
 
-test('keyboard: W opens the places sheet and the arrows then step through the places, flying to each', async () => {
+test('keyboard: 2 opens the places sheet and the arrows then step through the places, flying to each', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
   render(<App />)
   useApp.setState({ places: [TOKYO, { id: 'helsinki', name: 'Helsinki', lat: 60.17, lon: 24.94 }] })
   await screen.findByRole('button', { name: /^Passes · / })
 
-  await userEvent.keyboard('w')
+  await userEvent.keyboard('2')
   const places = within(screen.getByRole('complementary', { name: 'Places' }))
   await userEvent.keyboard('{ArrowDown}')
   expect(places.getByRole('button', { name: /^Helsinki/ })).toHaveAttribute('aria-pressed', 'true')
@@ -282,7 +282,7 @@ test('keyboard: W opens the places sheet and the arrows then step through the pl
   ])
   expect(places.getByRole('button', { name: /^Tokyo/ })).toHaveAttribute('aria-pressed', 'true')
 
-  await userEvent.keyboard('w')
+  await userEvent.keyboard('2')
   expect(screen.queryByRole('complementary')).toBeNull()
   await userEvent.keyboard('{ArrowDown}')
   expect(useApp.getState().selection.noradId).toBe(strix1.NORAD_CAT_ID)
@@ -327,7 +327,7 @@ test('each sheet has a close button in its corner', async () => {
   expect(screen.queryByRole('complementary')).toBeNull()
   expect(document.activeElement).toBe(screen.getByRole('button', { name: /^Satellites/ }))
   expect(screen.getByRole('button', { name: /^Satellites/ })).toHaveAttribute('aria-expanded', 'false')
-  await userEvent.keyboard('p')
+  await userEvent.keyboard('3')
   expect(screen.getByRole('button', { name: /^Passes/ })).toHaveAttribute('aria-expanded', 'true')
   await userEvent.click(screen.getByRole('button', { name: 'Close passes' }))
   expect(screen.queryByRole('complementary')).toBeNull()

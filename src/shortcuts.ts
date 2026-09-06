@@ -15,7 +15,7 @@ export const SHORTCUTS = [
   { keys: '⏎', does: 'go to the pass' },
   { keys: 'Space', does: 'play / pause' },
   { keys: 'L', does: 'live' },
-  { keys: 'S W P', does: 'satellites, places, passes' },
+  { keys: '1 2 3', does: 'the sheets, in toolbar order' },
   { keys: 'O', does: 'only the selected satellite\u2019s passes' },
   { keys: 'F', does: 'follow the selected satellite' },
   { keys: 'R', does: 'SAR reach beside the selected track' },
@@ -113,17 +113,14 @@ export function dispatchShortcut(
     case 'L':
       s.goLive()
       break
-    case 's':
-    case 'S':
+    case '1':
       s.toggleSheet('satellites')
       break
-    case 'p':
-    case 'P':
-      s.toggleSheet('passes')
-      break
-    case 'w':
-    case 'W':
+    case '2':
       s.toggleSheet('places')
+      break
+    case '3':
+      s.toggleSheet('passes')
       break
     case 'o':
     case 'O':
