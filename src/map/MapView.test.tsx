@@ -36,6 +36,7 @@ const { mapInstance, overlayInstance, markerInstance } = vi.hoisted(() => {
       easeTo: vi.fn(),
       jumpTo: vi.fn(),
       setStyle: vi.fn(),
+      setPadding: vi.fn(),
       handlers: {} as Record<string, () => void>,
       on: vi.fn(function (this: unknown, event: string, handler: () => void) {
         mapInstance.handlers[event] = handler

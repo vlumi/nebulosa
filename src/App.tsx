@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Hover } from './map/layers'
 import { loadElements, type Omm } from './orbit/elements'
 import { positionAt, satelliteFrom } from './orbit/orbit'
@@ -35,6 +35,15 @@ function App() {
   const [loaded, setLoaded] = useState<Loaded>(null)
   const app = useApp()
   const narrow = useNarrow()
+  // The toolbar and the time bar float over the foot of the map; the map centers and fits above them.
+  const mainRef = useRef<HTMLElement>(null)
+  const toolbarRef = useRef<HTMLDivElement>(null)
+  const [bottomInset, setBottomInset] = useState(0)
+  useEffect(() => {
+    const main = mainRef.current?.getBoundingClientRect()
+    const toolbar = toolbarRef.current?.getBoundingClientRect()
+    if (main && toolbar) setBottomInset(Math.max(0, Math.round(main.bottom - toolbar.top)))
+  }, [narrow])
   const systemDark = useSystemDark()
   const theme = resolveTheme(app.themeChoice, systemDark)
   useEffect(() => {
@@ -198,9 +207,14 @@ function App() {
         <p>Ground tracks of the StriX SAR constellation</p>
         <div className={styles.headerToggles}>{toggles}</div>
       </header>
-      <main>
+      <main ref={mainRef}>
         <Suspense fallback={<div className="map" />}>
-          <LiveMap satellites={satellites} selectedSatellite={selectedSatellite} theme={theme} />
+          <LiveMap
+            satellites={satellites}
+            selectedSatellite={selectedSatellite}
+            theme={theme}
+            bottomInset={bottomInset}
+          />
         </Suspense>
         <div className={styles.shell}>
           {app.sheet === 'satellites' && (
@@ -272,6 +286,7 @@ function App() {
             </Sheet>
           )}
           <Toolbar
+            ref={toolbarRef}
             sheet={app.sheet}
             onToggle={app.toggleSheet}
             onClearSatellite={() => app.select(null)}
@@ -328,10 +343,12 @@ function LiveMap({
   satellites,
   selectedSatellite,
   theme,
+  bottomInset,
 }: {
   satellites: ReturnType<typeof satelliteFrom>[]
   selectedSatellite: ReturnType<typeof satelliteFrom> | undefined
   theme: Theme
+  bottomInset: number
 }) {
   const timeMs = useFrame((f) => f.timeMs)
   const time = useMemo(() => new Date(timeMs), [timeMs])
@@ -379,6 +396,7 @@ function LiveMap({
       follow={follow && selection.noradId !== null}
       onFollowBreak={() => setFollow(false)}
       theme={theme}
+      bottomInset={bottomInset}
     />
   )
 }
