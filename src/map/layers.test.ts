@@ -185,3 +185,12 @@ test('the continuation joins the drawn track where it really ends, not where the
   expect(continuation.samples[0].timeMs).toBeLessThanOrEqual(drawnEnd)
   expect(continuation.samples.some((s) => s.timeMs === justBeyond)).toBe(true)
 })
+
+test('the track segments are the same array from one frame to the next until a split moves', () => {
+  const sats = [strix1].map(satelliteFrom)
+  const at = epochOf(strix1)
+  const tracks = trackData(sats, at)
+  const data = (now: Date) => buildLayers(sats, tracks, now)[1].props.data
+  expect(data(new Date(at.getTime() + 1000))).toBe(data(new Date(at.getTime() + 2000)))
+  expect(data(new Date(at.getTime() + 2000))).not.toBe(data(new Date(at.getTime() + 61_000)))
+})

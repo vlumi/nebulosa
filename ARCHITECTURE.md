@@ -44,7 +44,7 @@ Two zustand stores. `store.ts` holds what the reader has chosen: the selection (
 
 **Smoothness.** Real time is read every animation frame, and the displayed simulated time eases toward the target with an exponential approach, time constant 120 ms, snapping when within a quarter second. A scrub therefore animates rather than cuts, and at 600× the display lags the true simulated time by a constant, invisible ~70 s while staying smooth. The easing loop is registered once and reads its target from a ref; re-registering it per frame canceled the pending step and froze the display, which was a real bug once.
 
-**Cost control.** Positions are recomputed every frame, nine SGP4 evaluations. Tracks are recomputed only when the displayed minute changes and at most every 150 ms of real time, since a track shifted by under a minute is indistinguishable. Passes are recomputed when the selected place moves or changes or the real minute changes, and are anchored to real time so that scrubbing never changes the list under the reader.
+**Cost control.** Positions are recomputed every frame, nine SGP4 evaluations. Tracks are recomputed only when the displayed minute changes and at most every 150 ms of real time, since a track shifted by under a minute is indistinguishable, and their segments are rebuilt only when the split between flown and ahead moves to another sample, so deck.gl keeps its path geometry between frames. The time bar follows real time at one hertz, and the readout's terminator scan is kept until the crossing has passed. Passes are recomputed when the selected place moves or changes or the real minute changes, and are anchored to real time so that scrubbing never changes the list under the reader.
 
 ## Terminator
 

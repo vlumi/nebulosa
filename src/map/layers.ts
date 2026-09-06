@@ -110,9 +110,12 @@ const TAIL_STEP = 0.65
  * The track split at `now`. The half ahead is one segment; the flown half is a run of chunks with
  * increasing `age`, so it can fade out behind the satellite. Neighbours share a boundary point.
  */
-function segmentsOf(track: TrackDatum, nowMs: number): SegmentDatum[] {
+function splitIndex(track: TrackDatum, nowMs: number): number {
   const i = track.samples.findIndex((s) => s.timeMs > nowMs)
-  const split = i === -1 ? track.samples.length : i
+  return i === -1 ? track.samples.length : i
+}
+
+function segmentsOf(track: TrackDatum, split: number): SegmentDatum[] {
   const path = track.samples.map((s) => s.lonLat)
   const past = path.slice(0, split + 1)
   const segments: SegmentDatum[] = []
@@ -126,6 +129,24 @@ function segmentsOf(track: TrackDatum, nowMs: number): SegmentDatum[] {
   for (const piece of splitAtAntimeridian(future)) segments.push({ ...track, half: 'future', age: 0, path: piece })
   return segments
 }
+
+/**
+ * The segments of a set of tracks, rebuilt only when a split moves to another sample, so deck.gl keeps its path
+ * geometry between frames; the same array comes back while nothing changed.
+ */
+const segmentCache = new WeakMap<TrackDatum[], { splits: number[]; segments: SegmentDatum[] }>()
+
+function segmentsFor(tracks: TrackDatum[], nowMs: number): SegmentDatum[] {
+  const splits = tracks.map((track) => splitIndex(track, nowMs))
+  const cached = segmentCache.get(tracks)
+  if (cached && cached.splits.every((split, i) => split === splits[i])) return cached.segments
+  const segments = tracks.flatMap((track, i) => segmentsOf(track, splits[i]))
+  segmentCache.set(tracks, { splits, segments })
+  return segments
+}
+
+/** Both polar caps, once: they never change. */
+const CAPS = [...capCells(POLE_CAP), ...capCells(-POLE_CAP)]
 
 /**
  * On the globe, deck draws straight chords between samples while the basemap draws its own faceted sphere;
@@ -175,7 +196,7 @@ export function buildLayers(
   }: LayerOptions = {},
 ): Layer[] {
   const nowMs = now.getTime()
-  const segments = tracks.flatMap((track) => segmentsOf(track, nowMs))
+  const segments = segmentsFor(tracks, nowMs)
   const positions: PositionDatum[] = satellites.flatMap((sat) => {
     const p = positionAt(sat, now)
     if (!p) return []
@@ -201,14 +222,14 @@ export function buildLayers(
   const text = { modelMatrix, parameters: { depthCompare: 'always', cullMode: 'none' } } as const
   // Beyond ±85° the basemap has no data and draws a fan that picks up whatever touches it. Rather than patch
   // the night and the reach into that, the caps are blank gray discs: honest holes, in a neutral neither theme nor the night uses.
-  const caps = [...capCells(POLE_CAP), ...capCells(-POLE_CAP)]
   const layers: Layer[] = [
     new SolidPolygonLayer<LonLat[]>({
       id: 'poles',
-      data: caps,
+      data: CAPS,
       wrapLongitude: !globe,
       getPolygon: (d) => d,
       getFillColor: [...palette.cap, 255],
+      updateTriggers: { getFillColor: palette },
       pickable: false,
       ...surface,
     }),
@@ -224,7 +245,7 @@ export function buildLayers(
       getWidth: (d) => WIDTH[emphasis(d)],
       widthUnits: 'pixels',
       ...surface,
-      updateTriggers: { getColor: selected, getWidth: selected },
+      updateTriggers: { getColor: [selected, palette], getWidth: selected },
     }),
     new ScatterplotLayer<PositionDatum>({
       id: 'positions',
@@ -238,7 +259,7 @@ export function buildLayers(
       getRadius: (d) => (emphasis(d) === 'selected' ? 8 : 5),
       radiusUnits: 'pixels',
       ...surface,
-      updateTriggers: { getFillColor: selected, getRadius: selected },
+      updateTriggers: { getFillColor: [selected, palette], getRadius: selected },
     }),
     new TextLayer<PositionDatum>({
       id: 'labels',
@@ -250,7 +271,7 @@ export function buildLayers(
       getSize: 12,
       getPixelOffset: [0, -14],
       fontFamily: 'system-ui, sans-serif',
-      updateTriggers: { getColor: selected },
+      updateTriggers: { getColor: [selected, palette] },
       ...text,
     }),
   ]

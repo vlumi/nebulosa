@@ -401,8 +401,9 @@ function LiveMap({
   )
 }
 
+/** The bar shows whole seconds, so it follows real time at one hertz; the store's clock changes still land at once. */
 function LiveTimeBar() {
-  const nowMs = useFrame((f) => f.nowMs)
+  const nowMs = useFrame((f) => Math.floor(f.nowMs / 1000) * 1000)
   const now = useMemo(() => new Date(nowMs), [nowMs])
   const { clock, setClock } = useApp()
   return <TimeBar clock={clock} now={now} onChange={setClock} />
