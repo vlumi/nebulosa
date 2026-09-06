@@ -1,11 +1,16 @@
 import type { Map as MapLibre } from 'maplibre-gl'
+import type { Lang } from '../i18n/strings'
 
 /** How far, in pixels, a basemap label may be from the tap to name the place after it. */
 const LABEL_RADIUS_PX = 60
 const SETTLEMENTS = new Set(['city', 'town', 'village'])
 
 /** The nearest settlement label the basemap shows within reach of the point, else the nearest country label. */
-export function nearestLabel(map: MapLibre | null, point: { x: number; y: number }): string | undefined {
+export function nearestLabel(
+  map: MapLibre | null,
+  point: { x: number; y: number },
+  lang: Lang = 'en',
+): string | undefined {
   if (!map) return undefined
   const r = LABEL_RADIUS_PX
   const features = map.queryRenderedFeatures([
@@ -21,5 +26,26 @@ export function nearestLabel(map: MapLibre | null, point: { x: number; y: number
   const pick = (test: (cls: unknown) => boolean) =>
     named.filter((f) => test(f.properties.class)).sort((a, b) => rank(a) - rank(b))[0]
   const label = pick((cls) => SETTLEMENTS.has(String(cls))) ?? pick((cls) => cls === 'country')
-  return label ? String(label.properties['name:en'] ?? label.properties.name_en ?? label.properties.name) : undefined
+  return label
+    ? String(label.properties[`name:${lang}`] ?? label.properties.name_en ?? label.properties.name)
+    : undefined
+}
+
+/**
+ * The basemap's labels in the chosen language: its style shows local names with a Latin transliteration, and
+ * the tiles carry a name per language, so every symbol layer that shows a name is retargeted at that one,
+ * falling back to the Latin form and then the local name where the language has none.
+ */
+export function labelLanguage(map: MapLibre, lang: Lang): void {
+  const named = map
+    .getStyle()
+    .layers.filter((layer) => layer.type === 'symbol' && JSON.stringify(layer.layout?.['text-field']).includes('"name'))
+  for (const layer of named) {
+    map.setLayoutProperty(layer.id, 'text-field', [
+      'coalesce',
+      ['get', `name:${lang}`],
+      ['get', 'name:latin'],
+      ['get', 'name'],
+    ])
+  }
 }

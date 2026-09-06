@@ -50,6 +50,18 @@ const { mapInstance, overlayInstance, markerInstance } = vi.hoisted(() => {
       addLayer: vi.fn(),
       getLayer: vi.fn((id: string) => (mapInstance.sources[id] ? { id } : undefined)),
       setPaintProperty: vi.fn(),
+      setLayoutProperty: vi.fn(),
+      getStyle: vi.fn(() => ({
+        layers: [
+          {
+            id: 'place_city',
+            type: 'symbol',
+            layout: { 'text-field': ['coalesce', ['get', 'name_en'], ['get', 'name']] },
+          },
+          { id: 'highway_ref', type: 'symbol', layout: { 'text-field': ['to-string', ['get', 'ref']] } },
+          { id: 'water', type: 'fill' },
+        ],
+      })),
       zoom: 1.5,
       getZoom: vi.fn(() => mapInstance.zoom),
       getCanvas: vi.fn(() => ({ clientWidth: 640, clientHeight: 480, width: 1280, height: 960 })),
@@ -500,4 +512,35 @@ test('a theme change swaps the basemap and recolors the pins', () => {
   rerender(<MapView {...props} theme="light" />)
   expect(mapInstance.setStyle).toHaveBeenCalledWith('https://tiles.openfreemap.org/styles/positron')
   expect(Marker).toHaveBeenLastCalledWith(expect.objectContaining({ color: '#8f5f00' }))
+})
+
+test('basemap labels that show a name follow the language, once the style loads and when it changes', () => {
+  const sats = [strix1].map(satelliteFrom)
+  const view = (lang: 'en' | 'ja') => (
+    <MapView
+      satellites={sats}
+      now={epochOf(strix1)}
+      selected={null}
+      onSelect={vi.fn()}
+      places={[]}
+      placeId={null}
+      onPlaceSelect={vi.fn()}
+      onPlaceMove={vi.fn()}
+      onPlaceAdd={vi.fn()}
+      lang={lang}
+    />
+  )
+  const { rerender } = render(view('en'))
+  expect(mapInstance.setLayoutProperty).not.toHaveBeenCalled()
+  act(() => mapInstance.handlers['style.load']())
+  expect(mapInstance.setLayoutProperty.mock.calls).toEqual([
+    ['place_city', 'text-field', ['coalesce', ['get', 'name:en'], ['get', 'name:latin'], ['get', 'name']]],
+  ])
+  rerender(view('ja'))
+  expect(mapInstance.setLayoutProperty).toHaveBeenLastCalledWith('place_city', 'text-field', [
+    'coalesce',
+    ['get', 'name:ja'],
+    ['get', 'name:latin'],
+    ['get', 'name'],
+  ])
 })

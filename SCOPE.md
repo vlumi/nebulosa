@@ -119,7 +119,7 @@ The constellation is Japanese and so is much of its audience; the interface shou
 
 - **Two languages**, English and Japanese, following the browser's language until a picker of language names in the title row chooses; the choice kept in the browser like the theme.
 - **Strings, not layouts.** Every visible string, the legend, the titles and the readout's phrasing, comes from one dictionary per language, with the same keys; dates and times stay UTC and numeric, so only words change. Satellite names, NORAD numbers and units stay as they are.
-- **Place names** already come from the basemap in the local script; the seed place gets both names.
+- **Place names** come from the basemap, which carries a name per language: its labels switch with the interface, and a new place is named in the chosen language; the seed place gets both names.
 - **Typography:** the system font stack already covers Japanese; check line lengths in the pills, the readout labels and the pass list, where Japanese is shorter and the CJK glyphs taller.
 - Conflicts: every panel, so land it when nothing else is in flight against them.
 
