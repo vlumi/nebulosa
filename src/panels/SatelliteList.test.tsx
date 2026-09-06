@@ -16,8 +16,6 @@ test('shows no detail block until a satellite is selected', () => {
       onSelect={vi.fn()}
       span={{ pastOrbits: 1, futureOrbits: 1 }}
       onSpanChange={vi.fn()}
-      follow={false}
-      onFollowChange={vi.fn()}
       nextPass={null}
       passes={[]}
       probeMs={null}
@@ -36,8 +34,6 @@ test('describes the selected satellite in human terms', () => {
       onSelect={vi.fn()}
       span={{ pastOrbits: 1, futureOrbits: 1 }}
       onSpanChange={vi.fn()}
-      follow={false}
-      onFollowChange={vi.fn()}
       nextPass={null}
       passes={[]}
       probeMs={null}
@@ -63,8 +59,6 @@ test('the track span selects report a new span', async () => {
       onSelect={vi.fn()}
       span={{ pastOrbits: 1, futureOrbits: 1 }}
       onSpanChange={onSpanChange}
-      follow={false}
-      onFollowChange={vi.fn()}
       nextPass={null}
       passes={[]}
       probeMs={null}
@@ -79,28 +73,6 @@ test('the track span selects report a new span', async () => {
     within(screen.getByRole('radiogroup', { name: 'Track behind' })).getByRole('radio', { name: '½' }),
   )
   expect(onSpanChange).toHaveBeenCalledWith({ pastOrbits: 0.5, futureOrbits: 1 })
-})
-
-test('the selected satellite offers a follow toggle', async () => {
-  const onFollowChange = vi.fn()
-  render(
-    <SatelliteList
-      satellites={sats}
-      now={now}
-      selected={strix1.NORAD_CAT_ID}
-      onSelect={vi.fn()}
-      span={{ pastOrbits: 1, futureOrbits: 1 }}
-      onSpanChange={vi.fn()}
-      follow={false}
-      onFollowChange={onFollowChange}
-      nextPass={null}
-      passes={[]}
-      probeMs={null}
-      onProbe={vi.fn()}
-    />,
-  )
-  await userEvent.click(screen.getByRole('checkbox', { name: 'Follow' }))
-  expect(onFollowChange).toHaveBeenCalledWith(true)
 })
 
 test('the selected satellite reads out where it is now, its next pass and its next terminator crossing', () => {
@@ -122,8 +94,6 @@ test('the selected satellite reads out where it is now, its next pass and its ne
       onSelect={vi.fn()}
       span={{ pastOrbits: 1, futureOrbits: 1 }}
       onSpanChange={vi.fn()}
-      follow={false}
-      onFollowChange={vi.fn()}
       nextPass={nextPass}
       placeName="Tokyo"
       passes={[nextPass]}

@@ -1,0 +1,36 @@
+/* Above the corner pills, big enough for a thumb; on a phone below them, under the compass. */
+.follow {
+  position: absolute;
+  z-index: 3;
+  right: 0.75rem;
+  bottom: 5.75rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid rgb(255 255 255 / 0.15);
+  border-radius: 50%;
+  background: var(--panel);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+}
+
+.follow:hover {
+  color: var(--text);
+  border-color: rgb(255 255 255 / 0.4);
+}
+
+.follow[aria-pressed='true'] {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+@media (max-width: 720px), (max-height: 560px) {
+  .follow {
+    top: 6rem;
+    right: 0.5rem;
+    bottom: auto;
+  }
+}

@@ -133,15 +133,15 @@ test('a place moves one step up or down its list and stops at the ends', () => {
   expect(names()).toEqual(['Paris', 'Helsinki', 'Tokyo'])
 })
 
-test('follow is a mode: toggled or set, and kept across selections', () => {
+test('follow is a mode, on by default: toggled or set, and kept across selections', () => {
   const { toggleFollow, setFollow, select } = useApp.getState()
-  expect(useApp.getState().follow).toBe(false)
+  expect(useApp.getState().follow).toBe(true)
   toggleFollow()
-  expect(useApp.getState().follow).toBe(true)
-  select(null)
-  expect(useApp.getState().follow).toBe(true)
-  setFollow(false)
   expect(useApp.getState().follow).toBe(false)
+  select(null)
+  expect(useApp.getState().follow).toBe(false)
+  setFollow(true)
+  expect(useApp.getState().follow).toBe(true)
 })
 
 test('the probe can be put at a moment or cleared, with a satellite selected', () => {

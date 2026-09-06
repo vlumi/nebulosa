@@ -430,6 +430,48 @@ test('following keeps the selected satellite centered as time moves, until the m
   expect(center[0]).toBeCloseTo(expected.lon, 6)
   expect(center[1]).toBeCloseTo(expected.lat, 6)
 
-  mapInstance.handlers['dragstart']()
-  expect(onFollowBreak).toHaveBeenCalled()
+  mapInstance.handlers['mousedown']()
+  mapInstance.jumpTo.mockClear()
+  rerender(<MapView {...props} now={new Date(later.getTime() + 60_000)} />)
+  expect(mapInstance.jumpTo).not.toHaveBeenCalled()
+  const start = (event: string, e: object) => (mapInstance.handlers[event] as unknown as (e: object) => void)(e)
+  start('dragstart', { originalEvent: {} })
+  expect(onFollowBreak).toHaveBeenCalledTimes(1)
+  mapInstance.handlers['dragend']()
+  // The store has not turned follow off yet; the gesture must still not be answered with a recenter.
+  rerender(<MapView {...props} now={new Date(later.getTime() + 120_000)} />)
+  expect(mapInstance.jumpTo).not.toHaveBeenCalled()
+  rerender(<MapView {...props} follow={false} now={new Date(later.getTime() + 180_000)} />)
+  rerender(<MapView {...props} now={new Date(later.getTime() + 240_000)} />)
+  expect(mapInstance.jumpTo).toHaveBeenCalledTimes(1)
+
+  start('zoomstart', {})
+  expect(onFollowBreak).toHaveBeenCalledTimes(1)
+  start('zoomstart', { originalEvent: {} })
+  start('rotatestart', { originalEvent: {} })
+  expect(onFollowBreak).toHaveBeenCalledTimes(3)
+  mapInstance.handlers['wheel']()
+  expect(onFollowBreak).toHaveBeenCalledTimes(4)
+})
+test('a focus flies once and never again when following stops; a new focus flies while not following', () => {
+  const sats = [strix1].map(satelliteFrom)
+  const props = {
+    satellites: sats,
+    now: epochOf(strix1),
+    selected: strix1.NORAD_CAT_ID,
+    onSelect: vi.fn(),
+    places: [],
+    placeId: null,
+    onPlaceSelect: vi.fn(),
+    onPlaceMove: vi.fn(),
+    onPlaceAdd: vi.fn(),
+    onFollowBreak: vi.fn(),
+  }
+  const focus = { noradId: strix1.NORAD_CAT_ID, seq: 1 }
+  const { rerender } = render(<MapView {...props} follow focus={focus} />)
+  expect(mapInstance.easeTo).not.toHaveBeenCalled()
+  rerender(<MapView {...props} follow={false} focus={focus} />)
+  expect(mapInstance.easeTo).not.toHaveBeenCalled()
+  rerender(<MapView {...props} follow={false} focus={{ ...focus, seq: 2 }} />)
+  expect(mapInstance.easeTo).toHaveBeenCalledTimes(1)
 })

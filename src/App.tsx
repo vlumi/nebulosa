@@ -5,6 +5,7 @@ import { positionAt, satelliteFrom } from './orbit/orbit'
 import { type Pass } from './orbit/passes'
 import { inReach } from './orbit/swath'
 import { usePasses } from './orbit/usePasses'
+import { FollowButton } from './panels/FollowButton'
 import { Help } from './panels/Help'
 import { PassList } from './panels/PassList'
 import { PlaceList } from './panels/PlaceList'
@@ -188,8 +189,6 @@ function App() {
                   }}
                   span={app.span}
                   onSpanChange={app.setSpan}
-                  follow={app.follow}
-                  onFollowChange={app.setFollow}
                   nextPass={nextPass}
                   placeName={place?.name}
                   passes={allPasses.filter((p) => p.noradId === app.selection.noradId)}
@@ -264,6 +263,9 @@ function App() {
             }
           />
         </div>
+        {selectedSatellite && (
+          <FollowButton name={selectedSatellite.omm.OBJECT_NAME} on={app.follow} onToggle={app.toggleFollow} />
+        )}
         <LiveTimeBar />
         <Help open={app.helpOpen} onToggle={app.setHelpOpen}>
           <MapToggle on={app.globe} onToggle={app.toggleGlobe} title="Globe or flat map">
