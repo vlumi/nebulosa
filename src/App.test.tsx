@@ -159,6 +159,7 @@ test('on a phone the map comes first: one sheet at a time, and choosing somethin
   render(<App />)
   await screen.findByRole('button', { name: /^Passes/ })
   expect(screen.queryByRole('complementary')).toBeNull()
+  expect(within(screen.getByRole('banner')).getByRole('button', { name: 'Globe' })).toBeInTheDocument()
 
   await userEvent.click(screen.getByRole('button', { name: /^Satellites/ }))
   expect(screen.getByRole('complementary', { name: 'Constellation' })).toBeInTheDocument()
@@ -299,4 +300,30 @@ test('the follow button appears with a selected satellite; F and the button togg
   expect(screen.getByRole('button', { name: 'Follow STRIX-1' })).toHaveAttribute('aria-pressed', 'false')
   await userEvent.click(screen.getByRole('button', { name: 'Follow STRIX-1' }))
   expect(screen.getByRole('button', { name: 'Follow STRIX-1' })).toHaveAttribute('aria-pressed', 'true')
+})
+
+test('each pill clears its own choice from its right side, without opening the sheet', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
+  render(<App />)
+  await within(screen.getByRole('complementary', { name: 'Constellation' })).findByText('STRIX-1')
+  expect(screen.queryByRole('button', { name: /^Unselect STRIX/ })).toBeNull()
+  await userEvent.keyboard('{ArrowDown}')
+  await userEvent.click(screen.getByRole('button', { name: 'Unselect STRIX-1' }))
+  expect(useApp.getState().selection.noradId).toBeNull()
+  expect(screen.getByRole('button', { name: /^Satellites · 2/ })).toBeInTheDocument()
+
+  await userEvent.click(screen.getByRole('button', { name: 'Unselect Tokyo' }))
+  expect(useApp.getState().placeId).toBeNull()
+  expect(screen.getByRole('button', { name: /^Places · none picked/ })).toBeInTheDocument()
+})
+
+test('each sheet has a close button in its corner', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
+  render(<App />)
+  await within(screen.getByRole('complementary', { name: 'Constellation' })).findByText('STRIX-1')
+  await userEvent.click(screen.getByRole('button', { name: 'Close constellation' }))
+  expect(screen.queryByRole('complementary')).toBeNull()
+  await userEvent.keyboard('p')
+  await userEvent.click(screen.getByRole('button', { name: 'Close passes' }))
+  expect(screen.queryByRole('complementary')).toBeNull()
 })

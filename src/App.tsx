@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Hover } from './map/layers'
 import { loadElements, type Omm } from './orbit/elements'
 import { positionAt, satelliteFrom } from './orbit/orbit'
@@ -162,11 +162,23 @@ function App() {
     }
   }, [satellites, passes])
 
+  // The map toggles live in the title row, which has the room on every screen; the map corners are for the
+  // compass, the follow button and the help.
+  const toggles = (
+    <>
+      <MapToggle on={app.globe} onToggle={app.toggleGlobe} title="Globe or flat map">
+        Globe
+      </MapToggle>
+      <ReachToggle on={app.reachVisible} onToggle={app.toggleReach} />
+    </>
+  )
+
   return (
     <>
       <header>
         <h1>nebulosa</h1>
         <p>Ground tracks of the StriX SAR constellation</p>
+        <div className={styles.headerToggles}>{toggles}</div>
       </header>
       <main>
         <Suspense fallback={<div className="map" />}>
@@ -174,7 +186,7 @@ function App() {
         </Suspense>
         <div className={styles.shell}>
           {app.sheet === 'satellites' && (
-            <aside id="sheet" className={`${panel.panel} ${styles.sheet}`} aria-label="Constellation">
+            <Sheet label="Constellation" onClose={app.closeSheet}>
               {loaded === null && <p>Loading orbital elements…</p>}
               {loaded && 'error' in loaded && <p role="alert">{loaded.error}</p>}
               {satellites.length > 0 && (
@@ -196,10 +208,10 @@ function App() {
                   onProbe={app.setProbe}
                 />
               )}
-            </aside>
+            </Sheet>
           )}
           {app.sheet === 'places' && (
-            <aside id="sheet" className={`${panel.panel} ${styles.sheet}`} aria-label="Places">
+            <Sheet label="Places" onClose={app.closeSheet}>
               <PlaceList
                 places={app.places}
                 placeId={app.placeId}
@@ -212,15 +224,15 @@ function App() {
                 pinsLocked={app.pinsLocked}
                 onLockChange={app.setPinsLocked}
               />
-            </aside>
+            </Sheet>
           )}
           {app.sheet === 'passes' && satellites.length > 0 && !place && (
-            <aside id="sheet" className={`${panel.panel} ${styles.sheet}`} aria-label="Passes">
+            <Sheet label="Passes" onClose={app.closeSheet}>
               <p className="muted">Pick a place to see passes over it.</p>
-            </aside>
+            </Sheet>
           )}
           {app.sheet === 'passes' && satellites.length > 0 && place && (
-            <aside id="sheet" className={`${panel.panel} ${styles.sheet}`} aria-label="Passes">
+            <Sheet label="Passes" onClose={app.closeSheet}>
               <PassList
                 place={place}
                 passes={passes}
@@ -239,11 +251,14 @@ function App() {
                 activePass={app.selection.activePass}
                 now={now}
               />
-            </aside>
+            </Sheet>
           )}
           <Toolbar
             sheet={app.sheet}
             onToggle={app.toggleSheet}
+            onClearSatellite={() => app.select(null)}
+            onClearPlace={() => app.selectPlace(null)}
+            onClearPass={app.clearPass}
             satellites={{
               count: satellites.length,
               selected: selectedSatellite
@@ -267,17 +282,26 @@ function App() {
           <FollowButton name={selectedSatellite.omm.OBJECT_NAME} on={app.follow} onToggle={app.toggleFollow} />
         )}
         <LiveTimeBar />
-        <Help open={app.helpOpen} onToggle={app.setHelpOpen}>
-          <MapToggle on={app.globe} onToggle={app.toggleGlobe} title="Globe or flat map">
-            Globe
-          </MapToggle>
-          <ReachToggle on={app.reachVisible} onToggle={app.toggleReach} />
-        </Help>
+        <Help open={app.helpOpen} onToggle={app.setHelpOpen} />
       </main>
       <footer>
         Unofficial demo, not affiliated with Synspective. Orbital data: CelesTrak. Map: OpenFreeMap, © OpenStreetMap.
       </footer>
     </>
+  )
+}
+
+/** One sheet of the shell: a panel with a × in its corner, since the pill that opened it is not an obvious way back. */
+function Sheet({ label, onClose, children }: { label: string; onClose: () => void; children: ReactNode }) {
+  return (
+    <aside id="sheet" className={`${panel.panel} ${styles.sheet}`} aria-label={label}>
+      <button type="button" className={styles.close} aria-label={`Close ${label.toLowerCase()}`} onClick={onClose}>
+        <svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true">
+          <path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      </button>
+      {children}
+    </aside>
   )
 }
 

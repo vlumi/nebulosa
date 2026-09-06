@@ -52,6 +52,8 @@ interface Actions {
   probe: (deltaMs: number, fromMs: number) => void
   /** Put the track probe at a moment, or clear it. */
   setProbe: (timeMs: number | null) => void
+  /** Drop the shown pass, its ghost and the probe; keep the satellite. */
+  clearPass: () => void
   /** Help first; then pass, ghost and probe; then the satellite. */
   escape: () => void
   /** `name` from the map's labels when there is one nearby; else the coordinates. */
@@ -124,6 +126,7 @@ export const useApp = create<State & Actions>((set, get) => ({
     ),
   setProbe: (timeMs) =>
     set((s) => (s.selection.noradId === null ? {} : { selection: { ...s.selection, probeMs: timeMs } })),
+  clearPass: () => set((s) => ({ selection: { ...NOTHING, noradId: s.selection.noradId } })),
   escape: () => {
     const { helpOpen, selection, placeId } = get()
     if (helpOpen) set({ helpOpen: false })

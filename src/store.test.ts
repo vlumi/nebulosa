@@ -154,3 +154,10 @@ test('the probe can be put at a moment or cleared, with a satellite selected', (
   setProbe(null)
   expect(useApp.getState().selection.probeMs).toBeNull()
 })
+
+test('clearing the pass keeps the satellite', () => {
+  const { showPass, clearPass } = useApp.getState()
+  showPass(pass)
+  clearPass()
+  expect(useApp.getState().selection).toEqual({ ...NOTHING, noradId: 65971 })
+})

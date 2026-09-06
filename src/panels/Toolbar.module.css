@@ -1,32 +1,65 @@
 .toolbar {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
   flex: none;
+  min-width: 0;
+}
+
+/* On a phone the pills scroll sideways when they do not fit, so the page never does. On a desktop the row may run
+   past the sheet's width, as it always has. */
+@media (max-width: 720px), (max-height: 560px) {
+  .toolbar {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .toolbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* The other side of the pill: a divider, then the × that clears the choice. */
+.pill > .clear {
+  padding: 0 0.7rem 0 0.55rem;
+  border-left: 1px solid rgb(255 255 255 / 0.15);
+  color: var(--muted);
+}
+
+.pill > .clear:hover {
+  color: var(--text);
 }
 
 .pill {
   display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
+  align-items: stretch;
   height: 2rem;
-  padding: 0 0.8rem;
   border: 1px solid rgb(255 255 255 / 0.15);
   border-radius: 1rem;
   background: var(--panel);
-  color: var(--text);
-  font: inherit;
-  font-size: 0.875rem;
-  font-weight: 600;
   white-space: nowrap;
-  cursor: pointer;
 }
 
 .pill:hover {
   border-color: rgb(255 255 255 / 0.4);
 }
 
-.pill[aria-pressed='true'] {
+.pill[data-pressed] {
   border-color: var(--accent);
+}
+
+.pill > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.8rem;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .chosen {

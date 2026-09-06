@@ -18,10 +18,35 @@
 }
 
 .sheet {
+  position: relative;
   flex: 0 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
+}
+
+/* The way back out of a sheet, top right, where a close lives; the pill that opened it also closes it. */
+.close {
+  position: absolute;
+  z-index: 1;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.close:hover {
+  color: var(--text);
+  background: rgb(255 255 255 / 0.08);
 }
 
 @media (max-width: 720px), (max-height: 560px) {
@@ -36,4 +61,12 @@
   .sheet {
     max-height: 55vh;
   }
+}
+
+/* The map toggles at the right end of the title row; see App.tsx. */
+.headerToggles {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }

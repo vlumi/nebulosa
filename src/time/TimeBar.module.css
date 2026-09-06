@@ -56,6 +56,13 @@
   .bar input[type='range'] {
     flex: 1 1 8rem;
     width: auto;
+    min-width: 0;
+  }
+
+  /* A native date field is wide on a phone; let it shrink rather than push the bar past the screen. */
+  .bar input[type='date'] {
+    flex: 0 1 auto;
+    min-width: 0;
   }
 
   .bar output {

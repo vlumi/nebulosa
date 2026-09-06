@@ -1,9 +1,9 @@
-/* Above the corner pills, big enough for a thumb; on a phone below them, under the compass. */
+/* Above the help button, big enough for a thumb; on a phone under the compass. */
 .follow {
   position: absolute;
   z-index: 3;
   right: 0.75rem;
-  bottom: 5.75rem;
+  bottom: 5.5rem;
   width: 2.75rem;
   height: 2.75rem;
   border: 1px solid rgb(255 255 255 / 0.15);
@@ -29,7 +29,7 @@
 
 @media (max-width: 720px), (max-height: 560px) {
   .follow {
-    top: 6rem;
+    top: 3.2rem;
     right: 0.5rem;
     bottom: auto;
   }

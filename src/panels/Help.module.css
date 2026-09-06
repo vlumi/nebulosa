@@ -62,16 +62,9 @@
   color: var(--muted);
 }
 
-/* Phones have no keyboard; the other toggles stay, top right under the compass, clear of the sheet and the toolbar. */
+/* Phones have no keyboard, and the map toggles move to the title row; nothing of this is left to show. */
 @media (max-width: 720px), (max-height: 560px) {
   .help {
-    top: 3.2rem;
-    right: 0.5rem;
-    bottom: auto;
-  }
-
-  .legend,
-  .toggle {
     display: none;
   }
 }
