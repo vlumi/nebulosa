@@ -213,12 +213,17 @@ export function MapView({
     for (const event of ['mouseup', 'touchend', 'dragend'] as const)
       map.current.on(event, () => (pointerDown.current = false))
     // Any gesture of the reader's own lets go: a pan, a wheel or pinch zoom, a rotation, a tilt. The zoom
-    // buttons keep the center and carry no original event, so they keep following.
+    // buttons keep the center and carry no original event, so they keep following. The wheel is caught as
+    // the wheel event: it only queues the zoom for the next frame, and a recenter before that frame would
+    // discard the queue, so the zoom would never start.
+    const release = () => {
+      letGo.current = true
+      followBreak.current?.()
+    }
+    map.current.on('wheel', release)
     for (const event of ['dragstart', 'zoomstart', 'rotatestart', 'pitchstart'] as const)
       map.current.on(event, (e) => {
-        if (!e.originalEvent) return
-        letGo.current = true
-        followBreak.current?.()
+        if (e.originalEvent) release()
       })
     map.current.on('render', () => {
       ;(
