@@ -43,9 +43,9 @@ export const PALETTES: Record<Theme, Palette> = {
     text: [28, 31, 38],
     panel: [255, 255, 255, 230],
     pin: '#5b6270',
-    pinSelected: '#a86f00',
+    pinSelected: '#8f5f00',
     night: { color: 'rgb(30 40 70)', opacity: 0.28 },
-    family: { 'sun-synchronous': [176, 125, 0], 'mid-inclination': [0, 110, 170] },
+    family: { 'sun-synchronous': [150, 105, 0], 'mid-inclination': [0, 110, 170] },
   },
 }
 

@@ -494,5 +494,5 @@ test('a theme change swaps the basemap and recolors the pins', () => {
   expect(mapInstance.setStyle).not.toHaveBeenCalled()
   rerender(<MapView {...props} theme="light" />)
   expect(mapInstance.setStyle).toHaveBeenCalledWith('https://tiles.openfreemap.org/styles/positron')
-  expect(Marker).toHaveBeenLastCalledWith(expect.objectContaining({ color: '#a86f00' }))
+  expect(Marker).toHaveBeenLastCalledWith(expect.objectContaining({ color: '#8f5f00' }))
 })
