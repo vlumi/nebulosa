@@ -107,6 +107,7 @@ export const useApp = create<State & Actions>((set, get) => ({
   select: (noradId) => set((s) => (s.selection.noradId === noradId ? s : { selection: { ...NOTHING, noradId } })),
   selectFromList: (noradId) =>
     set((s) => ({ selection: { ...NOTHING, noradId }, focus: { noradId, seq: (s.focus?.seq ?? 0) + 1 } })),
+  // A pass is a moment elsewhere on the track; following would hold the camera on the satellite and hide the ghost.
   showPass: (pass) =>
     set((s) => ({
       selection: {
@@ -116,12 +117,14 @@ export const useApp = create<State & Actions>((set, get) => ({
         probeMs: null,
       },
       focus: { noradId: pass.noradId, seq: (s.focus?.seq ?? 0) + 1, timeMs: pass.peakMs },
+      follow: false,
     })),
   goToPass: (pass, realMs = Date.now()) =>
     set((s) => ({
       clock: withPaused(scrubbedTo(s.clock, pass.peakMs, realMs), true, realMs),
       selection: { noradId: pass.noradId, ghost: null, activePass: pass, probeMs: null },
       focus: { noradId: pass.noradId, seq: (s.focus?.seq ?? 0) + 1, timeMs: pass.peakMs },
+      follow: false,
     })),
   probe: (deltaMs, fromMs) =>
     set((s) =>
