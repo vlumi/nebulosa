@@ -70,13 +70,13 @@ export function hoverAt(track: TrackDatum, lonLat: LonLat): Hover {
 const GHOST_MARGIN_MS = 5 * 60_000
 
 /**
- * The time span a dashed continuation must cover so a ghost outside the drawn ±1-orbit track
- * connects to it; null when the ghost already sits on the drawn track.
+ * The time span a dashed continuation must cover so a ghost outside the drawn track connects to it, measured
+ * from the track's own first and last samples; null when the ghost already sits on the drawn track.
  */
-function ghostReach(sat: Satellite, ghostMs: number, nowMs: number, span: TrackSpan): [number, number] | null {
-  const periodMs = sat.periodMinutes * 60_000
-  const drawnEnd = nowMs + span.futureOrbits * periodMs
-  const drawnStart = nowMs - span.pastOrbits * periodMs
+function ghostReach(track: TrackDatum | undefined, ghostMs: number): [number, number] | null {
+  if (!track || track.samples.length === 0) return null
+  const drawnStart = track.samples[0].timeMs
+  const drawnEnd = track.samples[track.samples.length - 1].timeMs
   if (ghostMs > drawnEnd) return [drawnEnd, ghostMs + GHOST_MARGIN_MS]
   if (ghostMs < drawnStart) return [ghostMs - GHOST_MARGIN_MS, drawnStart]
   return null
@@ -150,19 +150,29 @@ function tailFade(age: number): number {
   return TAIL_STEP + (1 - TAIL_STEP) * t * t * (3 - 2 * t)
 }
 
-/** `selected` is a NORAD catalog number; everything else is dimmed while one is set. */
+export interface LayerOptions {
+  /** A NORAD catalog number; everything else is dimmed while one is set. */
+  selected?: number | null
+  hover?: Hover | null
+  ghost?: Ghost | null
+  globe?: boolean
+  /** On the globe, whether a point faces the camera; labels of points that do not are left out. */
+  onNearSide?: (lonLat: LonLat) => boolean
+  palette?: Palette
+}
+
 export function buildLayers(
   satellites: Satellite[],
   tracks: TrackDatum[],
   now: Date,
-  selected: number | null = null,
-  hover: Hover | null = null,
-  ghost: Ghost | null = null,
-  span: TrackSpan = DEFAULT_SPAN,
-  globe = false,
-  /** On the globe, whether a point faces the camera; labels of points that do not are left out. */
-  onNearSide: (lonLat: LonLat) => boolean = () => true,
-  palette: Palette = PALETTES.dark,
+  {
+    selected = null,
+    hover = null,
+    ghost = null,
+    globe = false,
+    onNearSide = () => true,
+    palette = PALETTES.dark,
+  }: LayerOptions = {},
 ): Layer[] {
   const nowMs = now.getTime()
   const segments = tracks.flatMap((track) => segmentsOf(track, nowMs))
@@ -249,7 +259,10 @@ export function buildLayers(
   const ghostPosition = ghostSat && positionAt(ghostSat, new Date(ghost.timeMs))
   if (ghostSat && ghostPosition) {
     const datum = { lonLat: [ghostPosition.lon, ghostPosition.lat] as LonLat, family: ghostSat.family }
-    const reach = ghostReach(ghostSat, ghost.timeMs, nowMs, span)
+    const reach = ghostReach(
+      tracks.find((t) => t.noradId === ghostSat.omm.NORAD_CAT_ID),
+      ghost.timeMs,
+    )
     if (reach) {
       // Sample on a grid through the ghost time itself, so the dashes pass through the marker.
       const stepMs = 30_000

@@ -392,21 +392,17 @@ export function MapView({
 
   useEffect(() => {
     overlay.current?.setProps({
-      layers: buildLayers(
-        satellites,
-        tracks,
-        now,
+      layers: buildLayers(satellites, tracks, now, {
         selected,
-        hover ?? probe,
+        hover: hover ?? probe,
         ghost,
-        span,
         globe,
-        globe ? onNearSide : undefined,
-        PALETTES[theme],
-      ),
+        onNearSide: globe ? onNearSide : undefined,
+        palette: PALETTES[theme],
+      }),
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [satellites, tracks, now, selected, hover, probe, ghost, span, globe, viewVersion, theme])
+  }, [satellites, tracks, now, selected, hover, probe, ghost, globe, viewVersion, theme])
 
   return <div ref={container} className="map" />
 }
