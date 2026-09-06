@@ -1,12 +1,14 @@
 /**
  * Simulated time as an anchor pair plus a rate: sim = anchorSim + (real - anchorReal) * rate.
- * Pausing freezes the simulated time and keeps the rate, so play resumes at the speed that was chosen.
+ * Pausing freezes the simulated time and keeps the rate, so play resumes at the speed that was chosen; a pause
+ * that began live remembers so, and play then returns to live instead of trailing real time by the pause.
  */
 export interface Clock {
   anchorReal: number
   anchorSim: number
   rate: number
   paused: boolean
+  liveOnResume?: true
 }
 
 export const RATES = [1, 10, 60, 600] as const
@@ -25,7 +27,10 @@ export function withRate(clock: Clock, rate: number, realMs: number): Clock {
 }
 
 export function withPaused(clock: Clock, paused: boolean, realMs: number): Clock {
-  return { ...clock, anchorReal: realMs, anchorSim: simTime(clock, realMs), paused }
+  if (!paused && clock.liveOnResume) return liveClock(realMs)
+  const { liveOnResume: _, ...rest } = clock
+  const held = { ...rest, anchorReal: realMs, anchorSim: simTime(clock, realMs), paused }
+  return paused && isLive(clock, realMs) ? { ...held, liveOnResume: true } : held
 }
 
 export function scrubbedTo(clock: Clock, simMs: number, realMs: number): Clock {
