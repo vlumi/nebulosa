@@ -1,6 +1,6 @@
 import { epochOf } from './elements'
 import { satelliteFrom } from './orbit'
-import { computePasses, lookAt, passesOver, upcomingPasses } from './passes'
+import { computePasses, lookAt, nextPassOf, passesOver, upcomingPasses, type Pass } from './passes'
 import { strix1, strix9 } from '../test/fixtures'
 
 const tokyo = { lat: 35.68, lon: 139.69 }
@@ -73,4 +73,15 @@ test('a pass in progress at the end of the horizon keeps its true set time', () 
   expect(last.endMs).toBe(cut.endMs)
   expect(last.peakMs).toBe(cut.peakMs)
   expect(short.every((p) => p.startMs < from.getTime() + hours * 3_600_000)).toBe(true)
+})
+
+test('the next pass at a moment is the first of that satellite still to end then, in progress or ahead', () => {
+  const pass = (noradId: number, startMs: number, endMs: number) => ({ noradId, startMs, endMs }) as Pass
+  const passes = [pass(1, 100, 200), pass(2, 150, 250), pass(1, 400, 500), pass(1, 700, 800)]
+  expect(nextPassOf(passes, 1, 0)).toBe(passes[0])
+  expect(nextPassOf(passes, 1, 150)).toBe(passes[0])
+  expect(nextPassOf(passes, 1, 300)).toBe(passes[2])
+  expect(nextPassOf(passes, 1, 500)).toBe(passes[3])
+  expect(nextPassOf(passes, 1, 900)).toBeNull()
+  expect(nextPassOf(passes, 3, 0)).toBeNull()
 })

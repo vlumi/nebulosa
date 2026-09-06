@@ -137,6 +137,11 @@ export function upcomingPasses(satellites: Satellite[], location: Location, from
 }
 
 /** A pass computation as sent to the worker: plain data only, so it survives structured cloning. */
+/** This satellite's first pass still to end at `atMs`, in progress or ahead; null when the list has none. */
+export function nextPassOf(passes: Pass[], noradId: number, atMs: number): Pass | null {
+  return passes.find((p) => p.noradId === noradId && p.endMs > atMs) ?? null
+}
+
 export interface PassRequest {
   id: number
   elements: Omm[]
