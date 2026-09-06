@@ -133,6 +133,15 @@ function segmentsOf(track: TrackDatum, nowMs: number): SegmentDatum[] {
  */
 const GLOBE_LIFT_M = 30_000
 
+/**
+ * Track alpha ahead of the satellite and at the oldest end of the flown half; the flown half fades between them.
+ * One table for both themes: the contrast only has to tell head from tail at a glance.
+ */
+const ALPHA = {
+  selected: { ahead: 255, oldest: 90 },
+  normal: { ahead: 215, oldest: 35 },
+  dimmed: { ahead: 28, oldest: 8 },
+}
 const WIDTH = { selected: 3, normal: 1.5, dimmed: 1.5 }
 
 /** A step to TAIL_STEP right behind the satellite, then a smoothstep to 1 at TAIL_FADE_SPAN of the way back. */
@@ -199,7 +208,7 @@ export function buildLayers(
       pickable: true,
       getPath: (d) => d.path,
       getColor: (d) => {
-        const { ahead, oldest } = palette.track[emphasis(d)]
+        const { ahead, oldest } = ALPHA[emphasis(d)]
         return color(d, d.half === 'future' ? ahead : Math.round(ahead + (oldest - ahead) * tailFade(d.age)))
       },
       getWidth: (d) => WIDTH[emphasis(d)],
