@@ -18,6 +18,7 @@ test('shows no detail block until a satellite is selected', () => {
       onSpanChange={vi.fn()}
       follow={false}
       onFollowChange={vi.fn()}
+      nextPass={null}
     />,
   )
   expect(screen.queryByRole('definition')).toBeNull()
@@ -34,6 +35,7 @@ test('describes the selected satellite in human terms', () => {
       onSpanChange={vi.fn()}
       follow={false}
       onFollowChange={vi.fn()}
+      nextPass={null}
     />,
   )
   const detail = within(screen.getByLabelText('STRIX-1 details'))
@@ -57,6 +59,7 @@ test('the track span selects report a new span', async () => {
       onSpanChange={onSpanChange}
       follow={false}
       onFollowChange={vi.fn()}
+      nextPass={null}
     />,
   )
   await userEvent.click(
@@ -81,8 +84,43 @@ test('the selected satellite offers a follow toggle', async () => {
       onSpanChange={vi.fn()}
       follow={false}
       onFollowChange={onFollowChange}
+      nextPass={null}
     />,
   )
   await userEvent.click(screen.getByRole('checkbox', { name: 'Follow' }))
   expect(onFollowChange).toHaveBeenCalledWith(true)
+})
+
+test('the selected satellite reads out where it is now, its next pass and its next terminator crossing', () => {
+  const nextPass = {
+    noradId: strix1.NORAD_CAT_ID,
+    name: 'STRIX-1',
+    startMs: Date.now() + 75 * 60_000,
+    peakMs: Date.now() + 80 * 60_000,
+    endMs: Date.now() + 85 * 60_000,
+    maxElevationDeg: 40,
+    peakAzimuthDeg: 90,
+    offNadirDeg: 45,
+  }
+  render(
+    <SatelliteList
+      satellites={sats}
+      now={now}
+      selected={strix1.NORAD_CAT_ID}
+      onSelect={vi.fn()}
+      span={{ pastOrbits: 1, futureOrbits: 1 }}
+      onSpanChange={vi.fn()}
+      follow={false}
+      onFollowChange={vi.fn()}
+      nextPass={nextPass}
+      placeName="Tokyo"
+    />,
+  )
+  const readout = within(screen.getByLabelText('STRIX-1 now'))
+  expect(readout.getByText(/^\d+\.\d+°[NS] \d+\.\d+°[EW]$/)).toBeInTheDocument()
+  expect(readout.getByText(/^\d{3} km$/)).toBeInTheDocument()
+  expect(readout.getByText(/^7\.\d\d km\/s$/)).toBeInTheDocument()
+  expect(readout.getByText(/^[NESW]{1,3} \d{1,3}°$/)).toBeInTheDocument()
+  expect(readout.getByText(/^in 1 h 1[45] min · \d\d:\d\d UTC over Tokyo$/)).toBeInTheDocument()
+  expect(readout.getByText(/^(day|night) in /)).toBeInTheDocument()
 })
