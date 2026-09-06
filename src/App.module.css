@@ -70,3 +70,12 @@
   align-items: center;
   gap: 0.5rem;
 }
+
+@media (max-width: 720px), (max-height: 560px) {
+  .close {
+    top: 0.25rem;
+    right: 0.25rem;
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}

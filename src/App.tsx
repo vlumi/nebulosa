@@ -16,17 +16,20 @@ import { Toolbar } from './panels/Toolbar'
 import { useNarrow } from './panels/useNarrow'
 import { resolveTheme, type Theme } from './shared/theme'
 import { useSystemDark } from './shared/useSystemDark'
-import { belongsToFocusedControl, releaseFocusAfterPointerClick, stepIndex } from './shortcuts'
+import {
+  belongsToFocusedControl,
+  PROBE_BIG_STEP_MS,
+  PROBE_STEP_MS,
+  releaseFocusAfterPointerClick,
+  stepIndex,
+} from './shortcuts'
 import styles from './App.module.css'
 import panel from './panels/panel.module.css'
-import { selectedPlace, useApp } from './store'
+import { selectedPlace, useApp, type Sheet as SheetKey } from './store'
 import { startFrameLoop, useFrame, useMinute } from './time/frame'
 import { TimeBar } from './time/TimeBar'
 
 type Loaded = { elements: Omm[] } | { error: string } | null
-
-const PROBE_STEP_MS = 30_000
-const PROBE_BIG_STEP_MS = 5 * 60_000
 
 // MapLibre and deck.gl are most of the bundle; the shell and the lists paint before they arrive.
 const LazyMapView = lazy(() => import('./map/MapView').then((m) => ({ default: m.MapView })))
@@ -227,7 +230,7 @@ function App() {
         </Suspense>
         <div className={styles.shell}>
           {app.sheet === 'satellites' && (
-            <Sheet label="Constellation" onClose={app.closeSheet}>
+            <Sheet label="Constellation" sheet="satellites" onClose={app.closeSheet}>
               {loaded === null && <p>Loading orbital elements…</p>}
               {loaded && 'error' in loaded && <p role="alert">{loaded.error}</p>}
               {satellites.length > 0 && (
@@ -252,7 +255,7 @@ function App() {
             </Sheet>
           )}
           {app.sheet === 'places' && (
-            <Sheet label="Places" onClose={app.closeSheet}>
+            <Sheet label="Places" sheet="places" onClose={app.closeSheet}>
               <PlaceList
                 places={app.places}
                 placeId={app.placeId}
@@ -268,12 +271,12 @@ function App() {
             </Sheet>
           )}
           {app.sheet === 'passes' && satellites.length > 0 && !place && (
-            <Sheet label="Passes" onClose={app.closeSheet}>
+            <Sheet label="Passes" sheet="passes" onClose={app.closeSheet}>
               <p className="muted">Pick a place to see passes over it.</p>
             </Sheet>
           )}
           {app.sheet === 'passes' && satellites.length > 0 && place && (
-            <Sheet label="Passes" onClose={app.closeSheet}>
+            <Sheet label="Passes" sheet="passes" onClose={app.closeSheet}>
               <PassList
                 place={place}
                 passes={passes}
@@ -334,10 +337,25 @@ function App() {
 }
 
 /** One sheet of the shell: a panel with a × in its corner, since the pill that opened it is not an obvious way back. */
-function Sheet({ label, onClose, children }: { label: string; onClose: () => void; children: ReactNode }) {
+function Sheet({
+  label,
+  sheet,
+  onClose,
+  children,
+}: {
+  label: string
+  sheet: SheetKey
+  onClose: () => void
+  children: ReactNode
+}) {
+  // Closing unmounts the button that had focus; the pill that owns the sheet is where a keyboard user came from.
+  const close = () => {
+    onClose()
+    document.querySelector<HTMLElement>(`[data-sheet="${sheet}"]`)?.focus()
+  }
   return (
     <aside id="sheet" className={`${panel.panel} ${styles.sheet}`} aria-label={label}>
-      <button type="button" className={styles.close} aria-label={`Close ${label.toLowerCase()}`} onClick={onClose}>
+      <button type="button" className={styles.close} aria-label={`Close ${label.toLowerCase()}`} onClick={close}>
         <svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true">
           <path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </svg>

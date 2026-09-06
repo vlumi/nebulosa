@@ -40,3 +40,21 @@ test('lists places with the selected one pressed; selecting, unselecting, renami
   await userEvent.click(screen.getByRole('button', { name: 'Remove Tokyo' }))
   expect(onRemove).toHaveBeenCalledWith('tokyo')
 })
+
+test('Escape cancels a rename and focus returns to the pencil', async () => {
+  render(
+    <PlaceList
+      places={[TOKYO, helsinki]}
+      placeId="tokyo"
+      onSelect={vi.fn()}
+      onRename={vi.fn()}
+      onRemove={vi.fn()}
+      pinsLocked={false}
+      onLockChange={vi.fn()}
+    />,
+  )
+  await userEvent.click(screen.getByRole('button', { name: 'Rename Helsinki' }))
+  await userEvent.keyboard('{Escape}')
+  expect(screen.queryByRole('textbox')).toBeNull()
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Rename Helsinki' }))
+})

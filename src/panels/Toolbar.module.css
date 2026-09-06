@@ -71,3 +71,16 @@
   border-left: 1px solid var(--border);
   font-weight: 400;
 }
+
+/* Thumb-sized on phones. */
+@media (max-width: 720px), (max-height: 560px) {
+  .pill {
+    height: 2.75rem;
+    border-radius: 1.375rem;
+  }
+
+  .pill > .clear {
+    min-width: 2.75rem;
+    justify-content: center;
+  }
+}

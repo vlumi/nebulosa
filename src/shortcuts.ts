@@ -1,3 +1,7 @@
+/** One arrow step of the track probe, and the step with Shift held. */
+export const PROBE_STEP_MS = 30_000
+export const PROBE_BIG_STEP_MS = 5 * 60_000
+
 /** The keyboard scheme, in one place: the handler dispatches on it and the legend renders from it. */
 export const SHORTCUTS = [
   { keys: '↑ ↓', does: 'step through the open panel' },

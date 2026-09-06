@@ -219,9 +219,9 @@ test('keyboard: arrows step through the open sheet, Enter goes to the pass, Spac
   expect(reopened.getByRole('checkbox', { name: /only STRIX-1/ })).toBeChecked()
 
   await userEvent.keyboard('?')
-  expect(screen.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBeInTheDocument()
+  expect(screen.getByRole('region', { name: 'Keyboard shortcuts' })).toBeInTheDocument()
   await userEvent.keyboard('{Escape}')
-  expect(screen.queryByRole('dialog')).toBeNull()
+  expect(screen.queryByRole('region', { name: 'Keyboard shortcuts' })).toBeNull()
 
   await userEvent.keyboard('{Escape}')
   expect(reopened.queryByRole('button', { current: true })).toBeNull()
@@ -325,7 +325,10 @@ test('each sheet has a close button in its corner', async () => {
   await within(screen.getByRole('complementary', { name: 'Constellation' })).findByText('STRIX-1')
   await userEvent.click(screen.getByRole('button', { name: 'Close constellation' }))
   expect(screen.queryByRole('complementary')).toBeNull()
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: /^Satellites/ }))
+  expect(screen.getByRole('button', { name: /^Satellites/ })).toHaveAttribute('aria-expanded', 'false')
   await userEvent.keyboard('p')
+  expect(screen.getByRole('button', { name: /^Passes/ })).toHaveAttribute('aria-expanded', 'true')
   await userEvent.click(screen.getByRole('button', { name: 'Close passes' }))
   expect(screen.queryByRole('complementary')).toBeNull()
 })

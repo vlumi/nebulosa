@@ -46,7 +46,7 @@ export function PassList({
           {STEERING.minDeg}–{STEERING.maxDeg}° steering range.
         </p>
         <div className={styles.controls}>
-          <label>
+          <span>
             Next{' '}
             <Segmented
               label="Hours ahead"
@@ -55,8 +55,8 @@ export function PassList({
               onChange={(horizonHours) => set({ horizonHours })}
               format={(h) => `${h} h`}
             />
-          </label>
-          <label title="Every pass in line of sight, or only those the radar can steer to; straight overhead is too close for a side-looking radar">
+          </span>
+          <span title="Every pass in line of sight, or only those the radar can steer to; straight overhead is too close for a side-looking radar">
             Show{' '}
             <Segmented
               label="Passes"
@@ -65,7 +65,7 @@ export function PassList({
               onChange={(within) => set({ within })}
               format={(scope) => (scope === 'horizon' ? 'above horizon' : 'in SAR reach')}
             />
-          </label>
+          </span>
           {selectedName && (
             <label>
               <input
