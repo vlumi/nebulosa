@@ -2,6 +2,16 @@
 
 One capture per milestone, taken from the deployed site with [`scripts/screenshot.mjs`](../../scripts/screenshot.mjs), newest first. The files carry a running number so they sort in order, then a name for what they show; the headings carry the dates. The README shows the latest desktop and phone captures in the dark theme; the rest stay here as a record of how the site grew.
 
+## 2026-09-06 · Japanese
+
+![Japanese](012-japanese.png)
+
+The interface in Japanese: the picker in the title row chose 日本語, and every word followed, the basemap's labels included, since the tiles carry a name per language. STRIX-3 selected over the Gulf of Mexico with its details and readout, the next pass over 東京, the pin renamed in the places sheet. Satellite names, catalog numbers, units and UTC times stay as they are.
+
+<img src="012-japanese-phone.png" alt="Japanese on a phone" width="260">
+
+The same on a phone (390×844): a STRIX-5 pass over 東京 shown from the passes sheet, which closed to hand the screen back to the map, the satellite ghosted at the pass's peak with its time, the pills in Japanese.
+
 ## 2026-09-06 · Theme
 
 ![Dark theme](011-theme-dark.png)
