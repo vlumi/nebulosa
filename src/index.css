@@ -77,3 +77,33 @@ main > .map {
     display: none;
   }
 }
+
+/* MapLibre's controls in the app's own dress: the panel behind them, a hairline border, light icons, and a needle
+   in the accent color, so the compass matches the follow button it sits above. */
+main .maplibregl-ctrl-group {
+  background: var(--panel);
+  border: 1px solid rgb(255 255 255 / 0.15);
+  border-radius: 1rem;
+  box-shadow: none;
+}
+
+main .maplibregl-ctrl-group:not(:empty) {
+  box-shadow: none;
+}
+
+main .maplibregl-ctrl-group button + button {
+  border-top-color: rgb(255 255 255 / 0.15);
+}
+
+main .maplibregl-ctrl-group button:hover {
+  background: rgb(255 255 255 / 0.08);
+}
+
+main .maplibregl-ctrl-group button.maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon,
+main .maplibregl-ctrl-group button.maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon {
+  filter: invert(0.85);
+}
+
+main .maplibregl-ctrl-group button.maplibregl-ctrl-compass .maplibregl-ctrl-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 29 29'%3E%3Cpath d='M10.5 14l4-8 4 8z' fill='%23eedd66'/%3E%3Cpath d='M10.5 16l4 8 4-8z' fill='%238a90a0'/%3E%3C/svg%3E");
+}

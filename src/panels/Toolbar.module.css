@@ -6,18 +6,24 @@
   min-width: 0;
 }
 
-/* The pills scroll sideways when they do not fit, so the page never does; the clear button stays put at the edge. */
 .pills {
   display: flex;
   gap: 0.5rem;
   flex: 1 1 auto;
   min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
 }
 
-.pills::-webkit-scrollbar {
-  display: none;
+/* On a phone the pills scroll sideways when they do not fit, so the page never does; the clear button stays put
+   at the edge. On a desktop the row may run past the sheet's width, as it always has. */
+@media (max-width: 720px), (max-height: 560px) {
+  .pills {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .pills::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .clear {
