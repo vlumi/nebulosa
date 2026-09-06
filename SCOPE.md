@@ -106,6 +106,7 @@ Where a satellite is, has been and will be, beyond a highlighted track.
 ### Small things noticed along the way
 
 - The last two quads at either end of a reach ribbon render more saturated than the rest; the geometry is verified clean, so it is a rendering effect.
+- The sheet shortcuts `S`, `W`, `P` are three unrelated letters. Consecutive keys would be easier: `1` `2` `3` in toolbar order, or another run of neighbouring keys; the arrows are taken by the probe and the lists.
 
 ### M10 — theme
 
