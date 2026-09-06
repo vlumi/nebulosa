@@ -4,6 +4,7 @@ import { compassPoint, formatAge, formatDuration, formatLocation, hhmm, utcMinut
 import { nextTerminatorCrossing, stateAt } from '../orbit/readout'
 import type { Pass } from '../orbit/passes'
 import { useFrame } from '../time/frame'
+import { Timeline } from './Timeline'
 import { familyCss } from '../shared/palette'
 import panel from './panel.module.css'
 import { Segmented } from '../shared/Segmented'
@@ -23,6 +24,10 @@ interface Props {
   /** The selected satellite's next pass over the selected place, if both exist. */
   nextPass: Pass | null
   placeName?: string
+  /** The selected satellite's passes over the selected place, for its timeline. */
+  passes: Pass[]
+  probeMs: number | null
+  onProbe: (timeMs: number | null) => void
 }
 
 const BEHIND_CHOICES = [...SPAN_CHOICES].reverse()
@@ -39,6 +44,9 @@ export function SatelliteList({
   onFollowChange,
   nextPass,
   placeName,
+  passes,
+  probeMs,
+  onProbe,
 }: Props) {
   const epoch = newestEpoch(satellites.map((s) => s.omm))
   return (
@@ -66,6 +74,7 @@ export function SatelliteList({
                 <>
                   <Detail satellite={s} now={now} />
                   <Readout satellite={s} nextPass={nextPass} placeName={placeName} />
+                  <Timeline satellite={s} span={span} passes={passes} probeMs={probeMs} onProbe={onProbe} />
                   <label
                     className={styles.follow}
                     title="Keep the map centered on it as time plays; dragging the map lets go"

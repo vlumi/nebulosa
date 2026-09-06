@@ -192,6 +192,9 @@ function App() {
                   onFollowChange={app.setFollow}
                   nextPass={nextPass}
                   placeName={place?.name}
+                  passes={allPasses.filter((p) => p.noradId === app.selection.noradId)}
+                  probeMs={app.selection.probeMs}
+                  onProbe={app.setProbe}
                 />
               )}
             </aside>

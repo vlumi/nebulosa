@@ -50,6 +50,8 @@ interface Actions {
   goToPass: (pass: Pass, realMs?: number) => void
   /** Move the track probe by `deltaMs`, starting from `fromMs` when there is none yet. */
   probe: (deltaMs: number, fromMs: number) => void
+  /** Put the track probe at a moment, or clear it. */
+  setProbe: (timeMs: number | null) => void
   /** Help first; then pass, ghost and probe; then the satellite. */
   escape: () => void
   /** `name` from the map's labels when there is one nearby; else the coordinates. */
@@ -120,6 +122,8 @@ export const useApp = create<State & Actions>((set, get) => ({
         ? {}
         : { selection: { ...s.selection, probeMs: (s.selection.probeMs ?? fromMs) + deltaMs } },
     ),
+  setProbe: (timeMs) =>
+    set((s) => (s.selection.noradId === null ? {} : { selection: { ...s.selection, probeMs: timeMs } })),
   escape: () => {
     const { helpOpen, selection, placeId } = get()
     if (helpOpen) set({ helpOpen: false })
