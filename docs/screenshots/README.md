@@ -1,6 +1,16 @@
 # Screenshots
 
-One capture per milestone, taken from the deployed site with [`scripts/screenshot.mjs`](../../scripts/screenshot.mjs), newest first. The files carry a running number so they sort in order, then a name for what they show; the headings carry the dates. The README shows the latest pair; the rest stay here as a record of how the site grew.
+One capture per milestone, taken from the deployed site with [`scripts/screenshot.mjs`](../../scripts/screenshot.mjs), newest first. The files carry a running number so they sort in order, then a name for what they show; the headings carry the dates. The README shows the latest desktop and phone captures in the dark theme; the rest stay here as a record of how the site grew.
+
+## 2026-09-06 · Theme
+
+![Dark theme](011-theme-dark.png)
+
+Dark, the default when the system is: fiord basemap, yellow and cyan tracks. STRIX-3 selected near the north cap with its readout and timeline strip, its reach band, the Tokyo pin, and the polish from the review round: two-sided pills, the sheet's close button, the follow button under the corner.
+
+![Light theme](011-theme-light.png)
+
+The same view in light: positron basemap, the tracks in amber and blue, the accent deepened so text and hairlines clear the contrast guidelines, the cap a neutral gray in both.
 
 ## 2026-09-06 · Focused satellite
 
