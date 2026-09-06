@@ -184,7 +184,7 @@ export function buildLayers(
   // away from the camera for half the globe, so labels skip both tests and far-side ones are dropped instead.
   const text = { modelMatrix, parameters: { depthCompare: 'always', cullMode: 'none' } } as const
   // Beyond ±85° the basemap has no data and draws a fan that picks up whatever touches it. Rather than patch
-  // the night and the reach into that, the caps are blank discs in the page color: honest holes.
+  // the night and the reach into that, the caps are blank dark discs: honest holes, in either theme.
   const caps = [...capCells(POLE_CAP), ...capCells(-POLE_CAP)]
   const layers: Layer[] = [
     new SolidPolygonLayer<LonLat[]>({
@@ -192,7 +192,7 @@ export function buildLayers(
       data: caps,
       wrapLongitude: !globe,
       getPolygon: (d) => d,
-      getFillColor: [...palette.bg, 255],
+      getFillColor: [...palette.cap, 255],
       pickable: false,
       ...surface,
     }),
