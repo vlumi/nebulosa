@@ -146,6 +146,8 @@ export function MapView({
   // Set the moment a gesture lets go, before the store hears of it: one more recenter would cancel the gesture.
   const letGo = useRef(false)
   const wasFollowing = useRef(follow)
+  // The follow's own recenter fires a move too; the layers are being rebuilt for this frame anyway.
+  const recentering = useRef(false)
 
   // A track shifted by under a minute is indistinguishable, and while scrubbing or fast-forwarding
   // a few tenths of a second of staleness is invisible; positions still move every frame.
@@ -220,7 +222,9 @@ export function MapView({
     map.current.on('zoom', applyProjection)
     // deck draws with its own depth and culling settings, and MapLibre caches GL state, so after each frame
     // MapLibre is told to re-apply everything; otherwise its far-side tiles can come through as dark wedges.
-    map.current.on('move', () => setViewVersion((v) => v + 1))
+    map.current.on('move', () => {
+      if (!recentering.current) setViewVersion((v) => v + 1)
+    })
     for (const event of ['mousedown', 'touchstart'] as const) map.current.on(event, () => (pointerDown.current = true))
     for (const event of ['mouseup', 'touchend', 'dragend'] as const)
       map.current.on(event, () => (pointerDown.current = false))
@@ -355,7 +359,10 @@ export function MapView({
     if (!follow || letGo.current || pointerDown.current || selected === null) return
     const sat = satellites.find((s) => s.omm.NORAD_CAT_ID === selected)
     const p = sat && positionAt(sat, now)
-    if (p) map.current?.jumpTo({ center: [p.lon, p.lat] })
+    if (!p) return
+    recentering.current = true
+    map.current?.jumpTo({ center: [p.lon, p.lat] })
+    recentering.current = false
   }, [follow, selected, satellites, now])
 
   // Each focus request flies once; while following, the follow already centers, and turning it off later must
