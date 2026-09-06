@@ -101,8 +101,10 @@ function capCells(rimLat: number): LonLat[][] {
 }
 
 const TAIL_CHUNKS = 60
-/** Share of the flown half over which the tail fades from full to floor; flat beyond it. */
-const TAIL_FADE_SPAN = 0.12
+/** Share of the flown half over which the tail fades to its floor; flat beyond it. */
+const TAIL_FADE_SPAN = 0.06
+/** Share of the drop taken at once behind the satellite, so the head has an edge even when zoomed in close. */
+const TAIL_STEP = 0.5
 
 /**
  * The track split at `now`. The half ahead is one segment; the flown half is a run of chunks with
@@ -133,10 +135,10 @@ const GLOBE_LIFT_M = 30_000
 
 const WIDTH = { selected: 3, normal: 1.5, dimmed: 1.5 }
 
-/** Smoothstep from 0 at the satellite to 1 at TAIL_FADE_SPAN of the way back, then 1. */
+/** A step to TAIL_STEP right behind the satellite, then a smoothstep to 1 at TAIL_FADE_SPAN of the way back. */
 function tailFade(age: number): number {
   const t = Math.min(1, age / TAIL_FADE_SPAN)
-  return t * t * (3 - 2 * t)
+  return TAIL_STEP + (1 - TAIL_STEP) * t * t * (3 - 2 * t)
 }
 
 /** `selected` is a NORAD catalog number; everything else is dimmed while one is set. */
@@ -198,7 +200,7 @@ export function buildLayers(
       getPath: (d) => d.path,
       getColor: (d) => {
         const { ahead, oldest } = palette.track[emphasis(d)]
-        return color(d, Math.round(ahead + (oldest - ahead) * tailFade(d.age)))
+        return color(d, d.half === 'future' ? ahead : Math.round(ahead + (oldest - ahead) * tailFade(d.age)))
       },
       getWidth: (d) => WIDTH[emphasis(d)],
       widthUnits: 'pixels',

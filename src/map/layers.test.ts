@@ -29,10 +29,11 @@ test('builds tracks, positions and labels for every satellite, colored by family
   expect(ages[0]).toBeGreaterThan(ages[ages.length - 1])
   expect(ages[ages.length - 1]).toBe(0)
   const { getColor } = tracks.props as unknown as { getColor: (d: unknown) => number[] }
-  const alphaAt = (age: number) => getColor({ ...strix1Rows[0], age })[3]
-  expect(alphaAt(0)).toBe(200)
-  expect(alphaAt(0.06)).toBe(120)
-  expect(alphaAt(0.12)).toBe(40)
+  const alphaAt = (age: number) => getColor({ ...strix1Rows[0], half: 'past', age })[3]
+  expect(getColor({ ...strix1Rows[0], half: 'future', age: 0 })[3]).toBe(200)
+  expect(alphaAt(0)).toBe(120)
+  expect(alphaAt(0.03)).toBe(80)
+  expect(alphaAt(0.06)).toBe(40)
   expect(alphaAt(1)).toBe(40)
 
   const positionData = positions.props.data as { name: string; family: string }[]
