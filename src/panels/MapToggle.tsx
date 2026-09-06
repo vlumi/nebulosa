@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import styles from './ReachToggle.module.css'
+import styles from './MapToggle.module.css'
 
 interface Props {
   on: boolean

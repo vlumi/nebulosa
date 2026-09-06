@@ -221,7 +221,8 @@ export function buildLayers(
   // away from the camera for half the globe, so labels skip both tests and far-side ones are dropped instead.
   const text = { modelMatrix, parameters: { depthCompare: 'always', cullMode: 'none' } } as const
   // Beyond ±85° the basemap has no data and draws a fan that picks up whatever touches it. Rather than patch
-  // the night and the reach into that, the caps are blank gray discs: honest holes, in a neutral neither theme nor the night uses.
+  // the night and the reach into that, the caps are blank gray discs: honest holes, in a neutral neither theme nor
+  // the night uses.
   const layers: Layer[] = [
     new SolidPolygonLayer<LonLat[]>({
       id: 'poles',
@@ -347,7 +348,7 @@ export function buildLayers(
         id: 'hover-marker',
         data: [hover],
         getPosition: (d) => d.lonLat,
-        getFillColor: [255, 255, 255],
+        getFillColor: palette.marker,
         getRadius: 4,
         radiusUnits: 'pixels',
         ...surface,

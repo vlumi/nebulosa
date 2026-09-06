@@ -23,6 +23,8 @@ export interface Palette {
   panel: Rgba
   pin: string
   pinSelected: string
+  /** The hover dot on a track, the same as the CSS `--marker`. */
+  marker: Rgb
   night: { color: string; opacity: number }
   family: Record<OrbitFamily, Rgb>
 }
@@ -35,6 +37,7 @@ export const PALETTES: Record<Theme, Palette> = {
     panel: [11, 13, 20, 220],
     pin: '#8a90a0',
     pinSelected: '#eedd66',
+    marker: [255, 255, 255],
     night: { color: 'rgb(0 4 20)', opacity: 90 / 255 },
     family: { 'sun-synchronous': [238, 221, 102], 'mid-inclination': [102, 204, 238] },
   },
@@ -45,6 +48,7 @@ export const PALETTES: Record<Theme, Palette> = {
     panel: [255, 255, 255, 230],
     pin: '#5b6270',
     pinSelected: '#8f5f00',
+    marker: [28, 31, 38],
     night: { color: 'rgb(30 40 70)', opacity: 0.28 },
     family: { 'sun-synchronous': [150, 105, 0], 'mid-inclination': [0, 110, 170] },
   },
