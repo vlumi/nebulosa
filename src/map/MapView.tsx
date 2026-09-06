@@ -137,6 +137,9 @@ export function MapView({
   const select = useLatest(onSelect)
   const currentTime = useLatest(now)
   const followBreak = useLatest(onFollowBreak)
+  // A recenter while a pointer is down cancels the drag MapLibre is about to start, so following pauses from
+  // pointer down to pointer up; the store hears of the break only once the drag has begun.
+  const pointerDown = useRef(false)
 
   // A track shifted by under a minute is indistinguishable, and while scrubbing or fast-forwarding
   // a few tenths of a second of staleness is invisible; positions still move every frame.
@@ -203,6 +206,9 @@ export function MapView({
     // deck draws with its own depth and culling settings, and MapLibre caches GL state, so after each frame
     // MapLibre is told to re-apply everything; otherwise its far-side tiles can come through as dark wedges.
     map.current.on('move', () => setViewVersion((v) => v + 1))
+    for (const event of ['mousedown', 'touchstart'] as const) map.current.on(event, () => (pointerDown.current = true))
+    for (const event of ['mouseup', 'touchend', 'dragend'] as const)
+      map.current.on(event, () => (pointerDown.current = false))
     map.current.on('dragstart', () => followBreak.current?.())
     map.current.on('render', () => {
       ;(
@@ -305,7 +311,7 @@ export function MapView({
   useEffect(applyProjection, [globe, applyProjection])
 
   useEffect(() => {
-    if (!follow || selected === null) return
+    if (!follow || pointerDown.current || selected === null) return
     const sat = satellites.find((s) => s.omm.NORAD_CAT_ID === selected)
     const p = sat && positionAt(sat, now)
     if (p) map.current?.jumpTo({ center: [p.lon, p.lat] })

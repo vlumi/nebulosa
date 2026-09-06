@@ -430,6 +430,13 @@ test('following keeps the selected satellite centered as time moves, until the m
   expect(center[0]).toBeCloseTo(expected.lon, 6)
   expect(center[1]).toBeCloseTo(expected.lat, 6)
 
+  mapInstance.handlers['mousedown']()
+  mapInstance.jumpTo.mockClear()
+  rerender(<MapView {...props} now={new Date(later.getTime() + 60_000)} />)
+  expect(mapInstance.jumpTo).not.toHaveBeenCalled()
   mapInstance.handlers['dragstart']()
   expect(onFollowBreak).toHaveBeenCalled()
+  mapInstance.handlers['dragend']()
+  rerender(<MapView {...props} now={new Date(later.getTime() + 120_000)} />)
+  expect(mapInstance.jumpTo).toHaveBeenCalled()
 })
