@@ -25,3 +25,6 @@ dist-ssr
 
 # Orbital elements: fetched, never committed (npm run elements)
 public/data/
+
+# Test coverage output (vitest --coverage)
+coverage/
