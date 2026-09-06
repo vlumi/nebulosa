@@ -2,7 +2,8 @@ import { create } from 'zustand'
 import type { Ghost } from './map/layers'
 import { DEFAULT_SPAN, type TrackSpan } from './orbit/orbit'
 import { DEFAULT_FILTERS, type Location, type Pass, type PassFilters } from './orbit/passes'
-import { loadPlaces, newPlace, savePlaces, SEED, type Place, type PlacesState } from './places/places'
+import { loadPlaces, newPlace, savePlaces, SEED, SEED_JA, type Place, type PlacesState } from './places/places'
+import { loadLang, saveLang, type Lang } from './i18n/strings'
 import { loadThemeChoice, saveThemeChoice, type ThemeChoice } from './shared/theme'
 import { liveClock, scrubbedTo, withPaused, type Clock } from './time/clock'
 
@@ -30,6 +31,7 @@ interface State extends PlacesState {
   /** Keep the selected satellite centered as time plays. */
   follow: boolean
   themeChoice: ThemeChoice
+  lang: Lang
   filters: PassFilters
   span: TrackSpan
   clock: Clock
@@ -79,6 +81,7 @@ interface Actions {
   setFollow: (follow: boolean) => void
   toggleFollow: () => void
   setThemeChoice: (choice: ThemeChoice) => void
+  setLang: (lang: Lang) => void
 }
 
 const nextSeq = (s: { camera: CameraRequest | null }) => (s.camera?.seq ?? 0) + 1
@@ -89,6 +92,7 @@ const initial = (places: PlacesState): State => ({
   camera: null,
   follow: true,
   themeChoice: loadThemeChoice(),
+  lang: loadLang(),
   filters: DEFAULT_FILTERS,
   span: DEFAULT_SPAN,
   clock: liveClock(Date.now()),
@@ -99,7 +103,7 @@ const initial = (places: PlacesState): State => ({
 })
 
 export const useApp = create<State & Actions>((set, get) => ({
-  ...initial(loadPlaces()),
+  ...initial(loadPlaces(undefined, loadLang() === 'ja' ? SEED_JA : SEED)),
 
   // Selecting the satellite already selected, by its dot, label, track or dashed continuation, keeps its pass, ghost
   // and probe: only a change of satellite starts over.
@@ -180,10 +184,12 @@ export const useApp = create<State & Actions>((set, get) => ({
   setFollow: (follow) => set((s) => (s.follow === follow ? s : { follow })),
   toggleFollow: () => set((s) => ({ follow: !s.follow })),
   setThemeChoice: (themeChoice) => set({ themeChoice }),
+  setLang: (lang) => set({ lang }),
 }))
 
 useApp.subscribe((s, previous) => {
   if (s.themeChoice !== previous.themeChoice) saveThemeChoice(s.themeChoice)
+  if (s.lang !== previous.lang) saveLang(s.lang)
   if (s.places !== previous.places || s.placeId !== previous.placeId || s.pinsLocked !== previous.pinsLocked)
     savePlaces({ places: s.places, placeId: s.placeId, pinsLocked: s.pinsLocked })
 })

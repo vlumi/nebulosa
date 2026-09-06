@@ -7,6 +7,8 @@ import { inReach } from './orbit/swath'
 import { usePasses } from './orbit/usePasses'
 import { FollowButton } from './panels/FollowButton'
 import { Help } from './panels/Help'
+import { FlatMapIcon, GlobeIcon, MoonIcon, SunIcon } from './panels/Icons'
+import { LanguageSelect } from './panels/LanguageSelect'
 import { PassList } from './panels/PassList'
 import { PlaceList } from './panels/PlaceList'
 import { MapToggle } from './panels/MapToggle'
@@ -14,6 +16,7 @@ import { ReachToggle } from './panels/ReachToggle'
 import { SatelliteList } from './panels/SatelliteList'
 import { Toolbar } from './panels/Toolbar'
 import { useNarrow } from './panels/useNarrow'
+import { useStrings } from './i18n/useStrings'
 import { resolveTheme, type Theme } from './shared/theme'
 import { useSystemDark } from './shared/useSystemDark'
 import { dispatchShortcut, releaseFocusAfterPointerClick } from './shortcuts'
@@ -32,6 +35,10 @@ function App() {
   const [loaded, setLoaded] = useState<Loaded>(null)
   const app = useApp()
   const narrow = useNarrow()
+  const s = useStrings()
+  useEffect(() => {
+    document.documentElement.lang = app.lang
+  }, [app.lang])
   // The toolbar and the time bar float over the foot of the map; the map centers and fits above them.
   const mainRef = useRef<HTMLElement>(null)
   const toolbarRef = useRef<HTMLDivElement>(null)
@@ -109,17 +116,18 @@ function App() {
   // compass, the follow button and the help.
   const toggles = (
     <>
-      <MapToggle on={app.globe} onToggle={app.toggleGlobe} title="Globe or flat map">
-        Globe
+      <MapToggle on={app.globe} onToggle={app.toggleGlobe} label={s.toggles.globe}>
+        {app.globe ? <GlobeIcon /> : <FlatMapIcon />}
       </MapToggle>
       <MapToggle
         on={theme === 'light'}
         onToggle={() => app.setThemeChoice(theme === 'light' ? 'dark' : 'light')}
-        title="Light or dark; follows the system until chosen"
+        label={s.toggles.theme}
       >
-        Light
+        {theme === 'light' ? <SunIcon /> : <MoonIcon />}
       </MapToggle>
       <ReachToggle on={app.reachVisible} onToggle={app.toggleReach} />
+      <LanguageSelect lang={app.lang} onChange={app.setLang} />
     </>
   )
 
@@ -127,7 +135,7 @@ function App() {
     <>
       <header>
         <h1>nebulosa</h1>
-        <p>Ground tracks of the StriX SAR constellation</p>
+        <p>{s.subtitle}</p>
         <div className={styles.headerToggles}>{toggles}</div>
       </header>
       <main ref={mainRef}>
@@ -141,8 +149,8 @@ function App() {
         </Suspense>
         <div className={styles.shell}>
           {app.sheet === 'satellites' && (
-            <Sheet label="Constellation" sheet="satellites" onClose={app.closeSheet}>
-              {loaded === null && <p>Loading orbital elements…</p>}
+            <Sheet label={s.sheet.constellation} sheet="satellites" onClose={app.closeSheet}>
+              {loaded === null && <p>{s.loading}</p>}
               {loaded && 'error' in loaded && <p role="alert">{loaded.error}</p>}
               {satellites.length > 0 && (
                 <SatelliteList
@@ -164,7 +172,7 @@ function App() {
             </Sheet>
           )}
           {app.sheet === 'places' && (
-            <Sheet label="Places" sheet="places" onClose={app.closeSheet}>
+            <Sheet label={s.sheet.places} sheet="places" onClose={app.closeSheet}>
               <PlaceList
                 places={app.places}
                 placeId={app.placeId}
@@ -180,12 +188,12 @@ function App() {
             </Sheet>
           )}
           {app.sheet === 'passes' && satellites.length > 0 && !place && (
-            <Sheet label="Passes" sheet="passes" onClose={app.closeSheet}>
-              <p className="muted">Pick a place to see passes over it.</p>
+            <Sheet label={s.sheet.passes} sheet="passes" onClose={app.closeSheet}>
+              <p className="muted">{s.pickPlace}</p>
             </Sheet>
           )}
           {app.sheet === 'passes' && satellites.length > 0 && place && (
-            <Sheet label="Passes" sheet="passes" onClose={app.closeSheet}>
+            <Sheet label={s.sheet.passes} sheet="passes" onClose={app.closeSheet}>
               <PassList
                 place={place}
                 passes={passes}
@@ -238,9 +246,7 @@ function App() {
         <LiveTimeBar />
         <Help open={app.helpOpen} onToggle={app.setHelpOpen} />
       </main>
-      <footer>
-        Unofficial demo, not affiliated with Synspective. Orbital data: CelesTrak. Map: OpenFreeMap, © OpenStreetMap.
-      </footer>
+      <footer>{s.footer}</footer>
     </>
   )
 }
@@ -257,6 +263,7 @@ function Sheet({
   onClose: () => void
   children: ReactNode
 }) {
+  const closeLabel = useStrings().close(label)
   // Closing unmounts the button that had focus; the pill that owns the sheet is where a keyboard user came from.
   const close = () => {
     onClose()
@@ -264,7 +271,7 @@ function Sheet({
   }
   return (
     <aside id="sheet" className={`${panel.panel} ${styles.sheet}`} aria-label={label}>
-      <button type="button" className={styles.close} aria-label={`Close ${label.toLowerCase()}`} onClick={close}>
+      <button type="button" className={styles.close} aria-label={closeLabel} onClick={close}>
         <svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true">
           <path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </svg>

@@ -1,4 +1,6 @@
+import { useStrings } from '../i18n/useStrings'
 import { describeOrbit, formatAltitude } from '../orbit/describe'
+import type { Strings } from '../i18n/strings'
 import { newestEpoch } from '../orbit/elements'
 import { compassPoint, formatAge, formatDuration, formatLocation, hhmm, utcMinute } from '../shared/format'
 import { nextTerminatorCrossing, stateAt, type TerminatorCrossing } from '../orbit/readout'
@@ -39,6 +41,7 @@ export function SatelliteList({
   placeName,
   passes,
 }: Props) {
+  const t = useStrings()
   const epoch = newestEpoch(satellites.map((s) => s.omm))
   return (
     <>
@@ -57,14 +60,14 @@ export function SatelliteList({
                 <span className={panel.swatch} style={{ background: familyCss(s.family) }} />
                 {s.omm.OBJECT_NAME}{' '}
                 <span className="muted">
-                  <span title="NORAD catalog number">#{id}</span> ·{' '}
-                  <span title="Inclination">{s.omm.INCLINATION.toFixed(1)}°</span>
+                  <span title={t.satellites.noradTitle}>#{id}</span> ·{' '}
+                  <span title={t.satellites.inclinationTitle}>{s.omm.INCLINATION.toFixed(1)}°</span>
                 </span>
               </button>
               {isSelected && (
                 <>
-                  <Detail satellite={s} now={now} />
-                  <Readout satellite={s} nextPass={nextPass} placeName={placeName} />
+                  <Detail satellite={s} now={now} t={t} />
+                  <Readout satellite={s} nextPass={nextPass} placeName={placeName} t={t} />
                   <Timeline satellite={s} span={span} passes={passes} />
                 </>
               )}
@@ -75,15 +78,15 @@ export function SatelliteList({
       <div className={`${styles.spanControls} muted`}>
         <span aria-hidden="true">◂</span>
         <Segmented
-          label="Track behind"
+          label={t.satellites.behind}
           options={BEHIND_CHOICES}
           value={span.pastOrbits}
           onChange={(pastOrbits) => onSpanChange({ ...span, pastOrbits })}
           format={fraction}
         />
-        orbits
+        {t.satellites.orbits}
         <Segmented
-          label="Track ahead"
+          label={t.satellites.ahead}
           options={SPAN_CHOICES}
           value={span.futureOrbits}
           onChange={(futureOrbits) => onSpanChange({ ...span, futureOrbits })}
@@ -92,25 +95,28 @@ export function SatelliteList({
         <span aria-hidden="true">▸</span>
       </div>
       <p className={`${styles.footer} muted`}>
-        Elements from {utcMinute(epoch)} UTC · {formatAge(epoch, now)} old
+        {t.satellites.elementsFrom(utcMinute(epoch), formatAge(epoch, now, t))}
       </p>
     </>
   )
 }
 
-function Detail({ satellite, now }: { satellite: Satellite; now: Date }) {
+function Detail({ satellite, now, t }: { satellite: Satellite; now: Date; t: Strings }) {
   const { omm, family } = satellite
   const d = describeOrbit(omm)
   const rows: [string, string][] = [
-    ['Launched', `${d.launchYear} · ${omm.OBJECT_ID}`],
-    ['Orbit', `${family}, ${d.inclinationDeg.toFixed(2)}°`],
-    ['Altitude', formatAltitude(d)],
-    ['Period', `${d.periodMinutes.toFixed(1)} min · ${omm.MEAN_MOTION.toFixed(2)} rev/day`],
-    ['Eccentricity', d.eccentricity.toFixed(4)],
-    ['Elements', `${utcMinute(d.epoch)} UTC · ${formatAge(d.epoch, now)} old`],
+    [t.satellites.launched, `${d.launchYear} · ${omm.OBJECT_ID}`],
+    [t.satellites.orbit, `${t.satellites.family[family]}, ${d.inclinationDeg.toFixed(2)}°`],
+    [t.satellites.altitude, formatAltitude(d)],
+    [
+      t.satellites.period,
+      `${d.periodMinutes.toFixed(1)} min · ${omm.MEAN_MOTION.toFixed(2)} ${t.satellites.revPerDay}`,
+    ],
+    [t.satellites.eccentricity, d.eccentricity.toFixed(4)],
+    [t.satellites.elements, `${utcMinute(d.epoch)} UTC · ${t.satellites.aged(formatAge(d.epoch, now, t))}`],
   ]
   return (
-    <dl className={styles.detail} aria-label={`${omm.OBJECT_NAME} details`}>
+    <dl className={styles.detail} aria-label={t.satellites.details(omm.OBJECT_NAME)}>
       {rows.map(([term, value]) => (
         <div key={term}>
           <dt>{term}</dt>
@@ -145,10 +151,12 @@ function Readout({
   satellite,
   nextPass,
   placeName,
+  t,
 }: {
   satellite: Satellite
   nextPass: Pass | null
   placeName?: string
+  t: Strings
 }) {
   const simMs = useFrame((f) => Math.floor(f.timeMs / 1000) * 1000)
   const state = stateAt(satellite, new Date(simMs))
@@ -156,27 +164,29 @@ function Readout({
   if (!state) return null
   const pass = nextPass && nextPass.endMs > simMs ? nextPass : null
   const rows: [string, string][] = [
-    ['Over', formatLocation(state)],
-    ['Height', `${Math.round(state.altKm)} km`],
-    ['Speed', `${state.speedKmS.toFixed(2)} km/s`],
-    ['Heading', `${compassPoint(state.headingDeg)} ${Math.round(state.headingDeg)}°`],
+    [t.satellites.over, formatLocation(state)],
+    [t.satellites.height, `${Math.round(state.altKm)} km`],
+    [t.satellites.speed, `${state.speedKmS.toFixed(2)} km/s`],
+    [t.satellites.heading, `${compassPoint(state.headingDeg, t)} ${Math.round(state.headingDeg)}°`],
     [
-      'Next pass',
+      t.satellites.nextPass,
       !placeName
-        ? 'no place selected'
+        ? t.satellites.noPlace
         : !pass
-          ? `none listed over ${placeName}`
+          ? t.satellites.noneListed(placeName)
           : pass.startMs <= simMs
-            ? `over ${placeName} now, until ${hhmm(pass.endMs)} UTC`
-            : `in ${formatDuration(pass.startMs - simMs)} · ${hhmm(pass.startMs)} UTC over ${placeName}`,
+            ? t.satellites.overNow(placeName, hhmm(pass.endMs))
+            : t.satellites.passIn(formatDuration(pass.startMs - simMs, t), hhmm(pass.startMs), placeName),
     ],
     [
-      'Terminator',
-      crossing ? `${crossing.into} in ${formatDuration(crossing.timeMs - simMs)}` : 'not crossed this orbit',
+      t.satellites.terminator,
+      crossing
+        ? t.satellites.crossing(crossing.into, formatDuration(crossing.timeMs - simMs, t))
+        : t.satellites.notCrossed,
     ],
   ]
   return (
-    <dl className={styles.detail} aria-label={`${satellite.omm.OBJECT_NAME} now`}>
+    <dl className={styles.detail} aria-label={t.satellites.now(satellite.omm.OBJECT_NAME)}>
       {rows.map(([term, value]) => (
         <div key={term}>
           <dt>{term}</dt>

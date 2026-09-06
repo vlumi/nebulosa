@@ -1,3 +1,4 @@
+import { useStrings } from '../i18n/useStrings'
 import { familyCss } from '../shared/palette'
 import panel from './panel.module.css'
 import { Segmented } from '../shared/Segmented'
@@ -6,7 +7,7 @@ import type { OrbitFamily } from '../orbit/orbit'
 import { compassPoint, dayLabel, hhmm, utcDayIndex } from '../shared/format'
 import { HORIZONS_H, PASS_SCOPES, type Pass, type PassFilters } from '../orbit/passes'
 import type { Place } from '../places/places'
-import { inReach, STEERING } from '../orbit/swath'
+import { inReach } from '../orbit/swath'
 
 interface Props {
   place: Place
@@ -36,34 +37,32 @@ export function PassList({
   activePass = null,
   now,
 }: Props) {
+  const t = useStrings()
   const isActive = (pass: Pass) => activePass?.noradId === pass.noradId && activePass.peakMs === pass.peakMs
   const set = (change: Partial<PassFilters>) => onFiltersChange({ ...filters, ...change })
   return (
     <>
       <div className={styles.header}>
-        <p className="muted">
-          Line of sight above the horizon over {place.name}. Drag the pin to move. Accent peaks are within the radar's{' '}
-          {STEERING.minDeg}–{STEERING.maxDeg}° steering range.
-        </p>
+        <p className="muted">{t.passes.header(place.name)}</p>
         <div className={styles.controls}>
           <span>
-            Next{' '}
+            {t.passes.next}{' '}
             <Segmented
-              label="Hours ahead"
+              label={t.passes.hoursAhead}
               options={HORIZONS_H}
               value={filters.horizonHours}
               onChange={(horizonHours) => set({ horizonHours })}
-              format={(h) => `${h} h`}
+              format={t.passes.hours}
             />
           </span>
-          <span title="Every pass in line of sight, or only those the radar can steer to; straight overhead is too close for a side-looking radar">
-            Show{' '}
+          <span>
+            {t.passes.show}{' '}
             <Segmented
-              label="Passes"
+              label={t.passes.scope}
               options={PASS_SCOPES}
               value={filters.within}
               onChange={(within) => set({ within })}
-              format={(scope) => (scope === 'horizon' ? 'above horizon' : 'in SAR reach')}
+              format={(scope) => (scope === 'horizon' ? t.passes.aboveHorizon : t.passes.inReach)}
             />
           </span>
           {selectedName && (
@@ -73,17 +72,17 @@ export function PassList({
                 checked={filters.onlySelected}
                 onChange={(e) => set({ onlySelected: e.target.checked })}
               />{' '}
-              only {selectedName}
+              {t.passes.only(selectedName)}
             </label>
           )}
         </div>
-        {passes.length === 0 && <p className="muted">None.</p>}
+        {passes.length === 0 && <p className="muted">{t.passes.none}</p>}
       </div>
       <ol className={`${panel.list} ${styles.list}`}>
         {passes.map((pass, i) => (
           <li key={`${pass.noradId}-${pass.startMs}`} data-dimmed={activePass && !isActive(pass) ? '' : undefined}>
             {utcDayIndex(pass.startMs) !== utcDayIndex(i === 0 ? now.getTime() : passes[i - 1].startMs) && (
-              <div className={`${styles.day} muted`}>{dayLabel(pass.startMs)} UTC</div>
+              <div className={`${styles.day} muted`}>{dayLabel(pass.startMs, t)} UTC</div>
             )}
             <div className={styles.passRow}>
               <button
@@ -91,7 +90,7 @@ export function PassList({
                 className={`${panel.row} ${styles.show}`}
                 aria-current={isActive(pass) ? 'true' : undefined}
                 onClick={() => onShow(pass)}
-                title="Show where the satellite will be at the peak"
+                title={t.passes.showTitle}
               >
                 <span className={panel.swatch} style={{ background: familyCss(familyOf(pass.noradId)) }} />
                 <span className={styles.time}>
@@ -101,15 +100,15 @@ export function PassList({
                 <span
                   className={`${styles.detail} muted`}
                   data-reach={inReach(pass.offNadirDeg) ? '' : undefined}
-                  title={`${Math.round(pass.offNadirDeg)}° off nadir at the peak${inReach(pass.offNadirDeg) ? ', within SAR reach' : ''}`}
+                  title={t.passes.offNadir(Math.round(pass.offNadirDeg), inReach(pass.offNadirDeg))}
                 >
-                  {Math.round(pass.maxElevationDeg)}° {compassPoint(pass.peakAzimuthDeg)}
+                  {Math.round(pass.maxElevationDeg)}° {compassPoint(pass.peakAzimuthDeg, t)}
                 </span>
               </button>
               <button
                 type="button"
                 className={`${panel.row} ${styles.goto}`}
-                aria-label={`Go to ${pass.name} pass at ${hhmm(pass.peakMs)}`}
+                aria-label={t.passes.goTo(pass.name, hhmm(pass.peakMs))}
                 onClick={() => onGoTo(pass)}
               >
                 ⏱

@@ -18,6 +18,8 @@ export interface PlacesState {
 
 export const TOKYO: Place = { id: 'tokyo', name: 'Tokyo', lat: 35.68, lon: 139.69 }
 export const SEED: PlacesState = { places: [TOKYO], placeId: TOKYO.id, pinsLocked: false }
+/** The same seed for a Japanese interface: place names are the reader's own words, so the first one is in theirs. */
+export const SEED_JA: PlacesState = { ...SEED, places: [{ ...TOKYO, name: '東京' }] }
 
 const KEY = 'nebulosa.places'
 
@@ -30,17 +32,17 @@ const isPlace = (p: unknown): p is Place =>
   Number.isFinite((p as Place).lon)
 
 /** The places kept in this browser, or the seed when there are none or they cannot be read. */
-export function loadPlaces(store = storage()): PlacesState {
+export function loadPlaces(store = storage(), seed = SEED): PlacesState {
   try {
     const raw = store?.getItem(KEY)
-    if (!raw) return SEED
+    if (!raw) return seed
     const parsed = JSON.parse(raw) as Partial<PlacesState>
     const places = Array.isArray(parsed.places) ? parsed.places.filter(isPlace) : []
-    if (places.length === 0) return SEED
+    if (places.length === 0) return seed
     const placeId = places.some((p) => p.id === parsed.placeId) ? (parsed.placeId as string) : null
     return { places, placeId, pinsLocked: parsed.pinsLocked === true }
   } catch {
-    return SEED
+    return seed
   }
 }
 

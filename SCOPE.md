@@ -4,7 +4,7 @@ Ground-track visualizer for the Synspective StriX SAR constellation, from public
 
 **The name:** *Strix nebulosa*, the great gray owl: same genus as the StriX satellites, the iconic owl of Finland, and Latin for "cloudy", so an owl named *cloudy* for satellites built to see through clouds. Owls see in the dark; so does SAR.
 
-**Status:** unofficial demo project, not affiliated with Synspective. All data is public (NORAD GP data via CelesTrak). Milestones M0 to M6 below were delivered on 2026-09-04, SAR reach and the globe on the two days after, the shell (M7) and places (M8) on 2026-09-05, the focused satellite (M9) and the theme (M10) on 2026-09-06; everything in [Next](#next) is done but the small things listed there, and [docs/screenshots](docs/screenshots/README.md) holds one capture per milestone.
+**Status:** unofficial demo project, not affiliated with Synspective. All data is public (NORAD GP data via CelesTrak). Milestones M0 to M6 below were delivered on 2026-09-04, SAR reach and the globe on the two days after, the shell (M7) and places (M8) on 2026-09-05, the focused satellite (M9) and the theme (M10) on 2026-09-06, the Japanese interface (M11) on 2026-09-07; everything in [Next](#next) is done but the one small thing listed there, and [docs/screenshots](docs/screenshots/README.md) holds one capture per milestone.
 
 ## Data
 
@@ -113,11 +113,11 @@ Where a satellite is, has been and will be, beyond a highlighted track.
 - OpenFreeMap serves five styles without a key: `fiord` (the current dark blue), `dark`, `positron` (light grey), `bright` and `liberty` (light, colored). Dark stays on fiord; light goes to positron, with bright as the alternative to compare. The night shading, the reach band, the track palette and the panel tokens each need a light variant; the family colors and the accent darken on the light ground to clear the contrast guidelines.
 - Conflicts: CSS tokens, `palette.ts`, `MapView`'s basemap and the surface paints. Small, and last.
 
-### M11 — Japanese
+### M11 — Japanese (done)
 
 The constellation is Japanese and so is much of its audience; the interface should read in Japanese as well as English.
 
-- **Two languages**, English and Japanese, following the browser's language until a toggle beside Light chooses; the choice kept in the browser like the theme.
+- **Two languages**, English and Japanese, following the browser's language until a picker of language names in the title row chooses; the choice kept in the browser like the theme.
 - **Strings, not layouts.** Every visible string, the legend, the titles and the readout's phrasing, comes from one dictionary per language, with the same keys; dates and times stay UTC and numeric, so only words change. Satellite names, NORAD numbers and units stay as they are.
 - **Place names** already come from the basemap in the local script; the seed place gets both names.
 - **Typography:** the system font stack already covers Japanese; check line lengths in the pills, the readout labels and the pass list, where Japanese is shorter and the CJK glyphs taller.

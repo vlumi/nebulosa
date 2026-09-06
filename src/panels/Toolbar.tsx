@@ -1,5 +1,6 @@
 import type { ReactNode, Ref } from 'react'
 import type { OrbitFamily } from '../orbit/orbit'
+import { useStrings } from '../i18n/useStrings'
 import { familyCss } from '../shared/palette'
 import { hhmm } from '../shared/format'
 import type { Sheet } from '../store'
@@ -35,15 +36,18 @@ export function Toolbar({
   onClearPass,
   ref,
 }: Props) {
+  const s = useStrings()
   return (
-    <div ref={ref} className={styles.toolbar} role="group" aria-label="Lists">
+    <div ref={ref} className={styles.toolbar} role="group" aria-label={s.toolbar.lists}>
       <Pill
         sheet="satellites"
         pressed={sheet === 'satellites'}
         onToggle={() => onToggle('satellites')}
-        clear={satellites.selected && { label: `Unselect ${satellites.selected.name}`, onClear: onClearSatellite }}
+        clear={
+          satellites.selected && { label: s.toolbar.unselect(satellites.selected.name), onClear: onClearSatellite }
+        }
       >
-        Satellites{' '}
+        {s.toolbar.satellites}{' '}
         {satellites.selected ? (
           <span className={styles.chosen}>
             <span className={panel.swatch} style={{ background: familyCss(satellites.selected.family) }} />
@@ -57,13 +61,13 @@ export function Toolbar({
         sheet="places"
         pressed={sheet === 'places'}
         onToggle={() => onToggle('places')}
-        clear={places.selected ? { label: `Unselect ${places.selected}`, onClear: onClearPlace } : undefined}
+        clear={places.selected ? { label: s.toolbar.unselect(places.selected), onClear: onClearPlace } : undefined}
       >
-        Places{' '}
+        {s.toolbar.places}{' '}
         {places.selected ? (
           <span className={styles.chosen}>{places.selected}</span>
         ) : (
-          <span className="muted">· {places.count > 0 ? 'none picked' : 'none'}</span>
+          <span className="muted">· {places.count > 0 ? s.toolbar.nonePicked : s.toolbar.none}</span>
         )}
       </Pill>
       {passes && (
@@ -71,9 +75,9 @@ export function Toolbar({
           sheet="passes"
           pressed={sheet === 'passes'}
           onToggle={() => onToggle('passes')}
-          clear={passes.active && { label: `Clear the ${passes.active.name} pass`, onClear: onClearPass }}
+          clear={passes.active && { label: s.toolbar.clearPass(passes.active.name), onClear: onClearPass }}
         >
-          Passes{' '}
+          {s.toolbar.passes}{' '}
           {passes.active ? (
             <span className={styles.chosen}>
               {passes.active.name} {hhmm(passes.active.peakMs)}
