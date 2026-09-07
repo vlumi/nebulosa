@@ -29,25 +29,28 @@ const FOV = { min: 20, max: 110, start: 60 }
 
 /** Where Mercator ends: a look-at point past this latitude is clamped by MapLibre and the camera comes apart. */
 const LOOK_AT_MAX_LAT = 84
-const PITCH_STEP = 2
 
 /**
  * The camera at the satellite, looking along `bearing` at `pitch` or, over the poles, as close to it as keeps the
  * look-at point on the map: MapLibre defines the camera by the ground point it looks at, in Mercator coordinates.
+ * The pitch that puts that point exactly on the limit is found by bisection, so the dip is continuous; stepping
+ * it would snap the view between two headings frame by frame, since meridians converge fast up there.
  * An explicit roll is passed because left out, the helper returns the key as undefined and the jump makes NaN of it.
  */
 function cameraAt(m: MapLibre, at: { lon: number; lat: number; altKm: number }, bearing: number, pitch: number) {
-  for (let p = pitch; ; p = Math.max(0, p - PITCH_STEP)) {
-    const options = m.calculateCameraOptionsFromCameraLngLatAltRotation(
-      [at.lon, at.lat],
-      at.altKm * 1000,
-      bearing,
-      p,
-      0,
-    )
-    const lat = (options.center as { lat: number }).lat
-    if (Math.abs(lat) <= LOOK_AT_MAX_LAT || p === 0) return options
+  const options = (p: number) =>
+    m.calculateCameraOptionsFromCameraLngLatAltRotation([at.lon, at.lat], at.altKm * 1000, bearing, p, 0)
+  const onMap = (o: ReturnType<typeof options>) => Math.abs((o.center as { lat: number }).lat) <= LOOK_AT_MAX_LAT
+  const wanted = options(pitch)
+  if (onMap(wanted)) return wanted
+  let low = 0
+  let high = pitch
+  for (let i = 0; i < 16; i++) {
+    const mid = (low + high) / 2
+    if (onMap(options(mid))) low = mid
+    else high = mid
   }
+  return options(low)
 }
 
 function trackFeature(satellite: Satellite, date: Date): Feature<MultiLineString> {
