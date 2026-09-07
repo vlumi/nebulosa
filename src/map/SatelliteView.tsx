@@ -27,6 +27,29 @@ const SPAN = { pastOrbits: 0.5, futureOrbits: 0.5 }
 const PITCH = { min: 0, max: 60, start: 60 }
 const FOV = { min: 20, max: 110, start: 60 }
 
+/** Where Mercator ends: a look-at point past this latitude is clamped by MapLibre and the camera comes apart. */
+const LOOK_AT_MAX_LAT = 84
+const PITCH_STEP = 2
+
+/**
+ * The camera at the satellite, looking along `bearing` at `pitch` or, over the poles, as close to it as keeps the
+ * look-at point on the map: MapLibre defines the camera by the ground point it looks at, in Mercator coordinates.
+ * An explicit roll is passed because left out, the helper returns the key as undefined and the jump makes NaN of it.
+ */
+function cameraAt(m: MapLibre, at: { lon: number; lat: number; altKm: number }, bearing: number, pitch: number) {
+  for (let p = pitch; ; p = Math.max(0, p - PITCH_STEP)) {
+    const options = m.calculateCameraOptionsFromCameraLngLatAltRotation(
+      [at.lon, at.lat],
+      at.altKm * 1000,
+      bearing,
+      p,
+      0,
+    )
+    const lat = (options.center as { lat: number }).lat
+    if (Math.abs(lat) <= LOOK_AT_MAX_LAT || p === 0) return options
+  }
+}
+
 function trackFeature(satellite: Satellite, date: Date): Feature<MultiLineString> {
   const pieces = splitAtAntimeridian(trackSamples(satellite, date, 30, SPAN).map((s) => s.lonLat))
   return { type: 'Feature', properties: {}, geometry: { type: 'MultiLineString', coordinates: pieces } }
@@ -63,18 +86,9 @@ export function SatelliteView({ satellite, theme, lang, onBack }: Props) {
       if (!ready) return
       const state = stateAt(satellite, new Date(timeMs))
       if (!state) return
-      const { yaw, pitch } = look.current
+      const { yaw } = look.current
       try {
-        m.jumpTo(
-          m.calculateCameraOptionsFromCameraLngLatAltRotation(
-            [state.lon, state.lat],
-            state.altKm * 1000,
-            state.headingDeg + yaw,
-            pitch,
-            // An explicit roll: left out, the helper returns the key as undefined and the jump turns the matrices to NaN.
-            0,
-          ),
-        )
+        m.jumpTo(cameraAt(m, state, state.headingDeg + yaw, look.current.pitch))
       } catch {
         return
       }
