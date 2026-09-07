@@ -156,6 +156,7 @@ function App() {
             satellite={selectedSatellite}
             theme={theme}
             lang={app.lang}
+            reach={app.reachVisible}
             onBack={() => app.setRide(false)}
           />
         )}

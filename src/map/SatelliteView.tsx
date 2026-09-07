@@ -17,6 +17,8 @@ interface Props {
   satellite: Satellite
   theme: Theme
   lang: Lang
+  /** Whether the reach band is drawn, as on the main map. */
+  reach: boolean
   onBack: () => void
 }
 
@@ -62,11 +64,13 @@ function trackFeature(satellite: Satellite, date: Date): Feature<MultiLineString
  * The view from the satellite's seat: its own MapLibre globe with the camera at the satellite's position and
  * height, looking along its heading until dragged, with the night, the reach band and the own track as fills.
  */
-export function SatelliteView({ satellite, theme, lang, onBack }: Props) {
+export function SatelliteView({ satellite, theme, lang, reach, onBack }: Props) {
   const t = useStrings()
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<MapLibre>(null)
   const look = useRef({ yaw: 0, pitch: PITCH.start })
+  const reachShown = useRef(reach)
+  reachShown.current = reach
   const [hud, setHud] = useState<{ timeMs: number; nowMs: number; altKm: number; headingDeg: number } | null>(null)
 
   useEffect(() => {
@@ -126,6 +130,7 @@ export function SatelliteView({ satellite, theme, lang, onBack }: Props) {
         id: REACH_LAYER,
         type: 'fill',
         source: REACH_LAYER,
+        layout: { visibility: reachShown.current ? 'visible' : 'none' },
         paint: {
           'fill-color': reachFill(satellite.family, theme),
           'fill-opacity': REACH_OPACITY * 1.6,
@@ -164,6 +169,11 @@ export function SatelliteView({ satellite, theme, lang, onBack }: Props) {
   useEffect(() => {
     if (map.current?.isStyleLoaded()) labelLanguage(map.current, lang)
   }, [lang])
+
+  useEffect(() => {
+    if (map.current?.getLayer(REACH_LAYER))
+      map.current.setLayoutProperty(REACH_LAYER, 'visibility', reach ? 'visible' : 'none')
+  }, [reach])
 
   // A finger or the mouse turns the view; the field of view is fixed, since zooming from a seat read as odd.
   const last = useRef<{ x: number; y: number } | null>(null)
