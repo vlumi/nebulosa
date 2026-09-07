@@ -189,7 +189,13 @@ export function MapView({
         id: REACH_LAYER,
         type: 'fill',
         source: REACH_LAYER,
-        paint: { 'fill-color': surfaces.current.reachColor, 'fill-opacity': REACH_OPACITY, 'fill-antialias': false },
+        paint: {
+          'fill-color': surfaces.current.reachColor,
+          // No fade between colors: the band would pass through the other family's color when the selection changes.
+          'fill-color-transition': { duration: 0 },
+          'fill-opacity': REACH_OPACITY,
+          'fill-antialias': false,
+        },
       })
     })
     map.current.on('zoom', applyProjection)
