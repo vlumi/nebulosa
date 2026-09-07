@@ -2,6 +2,16 @@
 
 One capture per milestone, taken from the deployed site with [`scripts/screenshot.mjs`](../../scripts/screenshot.mjs), newest first. The files carry a running number so they sort in order, then a name for what they show; the headings carry the dates. The README shows the latest desktop and phone captures in the dark theme; the rest stay here as a record of how the site grew.
 
+## 2026-09-08 · The seat
+
+![The seat](013-seat.png)
+
+The view from STRIX-6: the camera at the satellite's height and heading on a globe of its own, the horizon across the top, the own track running ahead and the reach band on both sides of it with the gap of unreachable ground under the track, coming in over Vancouver and Seattle on the night side. The HUD gives the time and its offset, the height and the heading; the time bar stays at the foot; the arrow or Esc returns to the map as it was. Dragging turns the view from straight down to a little below the horizon.
+
+<img src="013-seat-phone.png" alt="The seat on a phone" width="260">
+
+The same on a phone (390×844) half a minute later, the HUD wrapped under the title row.
+
 ## 2026-09-06 · Japanese
 
 ![Japanese](012-japanese.png)
