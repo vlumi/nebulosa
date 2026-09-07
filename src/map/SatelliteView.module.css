@@ -1,7 +1,8 @@
+/* Over the map and its bars, under the time bar, which keeps its place at the foot. */
 .view {
-  position: fixed;
+  position: absolute;
   inset: 0;
-  z-index: 100;
+  z-index: 4;
   background: var(--bg);
   color: var(--text);
   touch-action: none;

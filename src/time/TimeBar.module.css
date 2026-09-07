@@ -1,6 +1,7 @@
 .bar {
   position: absolute;
-  z-index: 3;
+  /* Above the shell and the ride view: the clock stays at hand from the satellite's seat too. */
+  z-index: 5;
   bottom: 0.75rem;
   left: 0.75rem;
   display: flex;

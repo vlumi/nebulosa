@@ -142,9 +142,6 @@ function App() {
         <p>{s.subtitle}</p>
         <div className={styles.headerToggles}>{toggles}</div>
       </header>
-      {app.ride && selectedSatellite && (
-        <SatelliteView satellite={selectedSatellite} theme={theme} lang={app.lang} onBack={() => app.setRide(false)} />
-      )}
       <main ref={mainRef}>
         <Suspense fallback={<div className="map" />}>
           <LiveMap
@@ -154,6 +151,14 @@ function App() {
             bottomInset={bottomInset}
           />
         </Suspense>
+        {app.ride && selectedSatellite && (
+          <SatelliteView
+            satellite={selectedSatellite}
+            theme={theme}
+            lang={app.lang}
+            onBack={() => app.setRide(false)}
+          />
+        )}
         <div className={styles.shell}>
           {app.sheet === 'satellites' && (
             <Sheet label={s.sheet.constellation} sheet="satellites" onClose={app.closeSheet}>

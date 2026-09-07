@@ -23,7 +23,8 @@ interface Props {
 const TRACK_LAYER = 'own-track'
 /** Half an orbit each way is what the seat can see before the horizon; the fills stay small. */
 const SPAN = { pastOrbits: 0.5, futureOrbits: 0.5 }
-const PITCH = { min: 0, max: 85, start: 60 }
+/** Looking further up than the start shows more sky than globe and MapLibre's globe gets odd there, so the start is the ceiling. */
+const PITCH = { min: 0, max: 60, start: 60 }
 const FOV = { min: 20, max: 110, start: 60 }
 
 function trackFeature(satellite: Satellite, date: Date): Feature<MultiLineString> {
@@ -49,6 +50,8 @@ export function SatelliteView({ satellite, theme, lang, onBack }: Props) {
       style: BASEMAPS[theme],
       interactive: false,
       maxPitch: PITCH.max,
+      // Coarser tiles than the height would pick: fewer to fetch as the ground streams past, and detail is not the point.
+      maxZoom: 6,
       attributionControl: { compact: true },
       canvasContextAttributes: { antialias: true },
     })
@@ -126,7 +129,8 @@ export function SatelliteView({ satellite, theme, lang, onBack }: Props) {
     const unsubscribe = useFrame.subscribe((f) => {
       const state = place(f.timeMs)
       surfaces(f.timeMs)
-      const second = Math.floor(f.timeMs / 1000)
+      // Once a real second: at 600× a simulated second would mean hundreds of renders.
+      const second = Math.floor(f.nowMs / 1000)
       if (state && second !== shownSecond) {
         shownSecond = second
         setHud({ timeMs: f.timeMs, nowMs: f.nowMs, altKm: state.altKm, headingDeg: state.headingDeg })
