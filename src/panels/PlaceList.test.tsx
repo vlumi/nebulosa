@@ -110,6 +110,7 @@ test('once the located place exists its row carries the refresh and the add row 
   expect(screen.getByRole('button', { name: 'Update my location' })).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'Use my location' })).toBeNull()
   expect(screen.getByRole('button', { name: 'Remove My location' })).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Rename My location' })).toBeNull()
   rerender(view([TOKYO]))
   expect(screen.getByRole('button', { name: 'Use my location' })).toBeInTheDocument()
 })

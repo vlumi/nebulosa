@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Location } from '../orbit/passes'
 import type { Place } from '../places/places'
+import { placeName } from '../i18n/placeName'
 import { useStrings } from '../i18n/useStrings'
 import { formatLocation } from '../shared/format'
 import panel from './panel.module.css'
@@ -99,7 +100,8 @@ export function PlaceList({
                     data-selected={isSelected ? '' : undefined}
                     data-located={place.located ? '' : undefined}
                   />
-                  {place.name} <span className={`${styles.coords} muted`}>{formatLocation(place)}</span>
+                  <span className={styles.name}>{placeName(place, t)}</span>{' '}
+                  <span className={`${styles.coords} muted`}>{formatLocation(place)}</span>
                 </button>
               )}
               {place.located && (
@@ -113,22 +115,24 @@ export function PlaceList({
                   ↻
                 </button>
               )}
+              {!place.located && (
+                <button
+                  type="button"
+                  className={styles.action}
+                  aria-label={t.places.rename(place.name)}
+                  ref={(el) => {
+                    if (el) pencils.current.set(place.id, el)
+                    else pencils.current.delete(place.id)
+                  }}
+                  onClick={() => (renaming === place.id ? stopRenaming(place.id) : setRenaming(place.id))}
+                >
+                  ✎
+                </button>
+              )}
               <button
                 type="button"
                 className={styles.action}
-                aria-label={t.places.rename(place.name)}
-                ref={(el) => {
-                  if (el) pencils.current.set(place.id, el)
-                  else pencils.current.delete(place.id)
-                }}
-                onClick={() => (renaming === place.id ? stopRenaming(place.id) : setRenaming(place.id))}
-              >
-                ✎
-              </button>
-              <button
-                type="button"
-                className={styles.action}
-                aria-label={t.places.remove(place.name)}
+                aria-label={t.places.remove(placeName(place, t))}
                 onClick={() => onRemove(place.id)}
               >
                 ×
