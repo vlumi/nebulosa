@@ -1,4 +1,4 @@
-import { Map as MapLibre, type GeoJSONSource } from 'maplibre-gl'
+import { Map as MapLibre, type GeoJSONSource, type StyleSpecification } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import type { Feature, MultiLineString } from 'geojson'
@@ -34,6 +34,7 @@ const SPAN = { pastOrbits: 0.5, futureOrbits: 0.5 }
 /** Looking further up than the start shows more sky than globe and MapLibre's globe gets odd there, so the start is the ceiling. */
 const PITCH = { min: 0, max: 60, start: 60 }
 const FOV = 60
+const TILE_MAX_ZOOM = 6
 
 /** Where Mercator ends: a look-at point past this latitude is clamped by MapLibre and the camera comes apart. */
 const LOOK_AT_MAX_LAT = 84
@@ -83,11 +84,8 @@ export function SatelliteView({ satellite, theme, lang, reach, onBack }: Props) 
     if (!container.current) return
     const m = new MapLibre({
       container: container.current,
-      style: BASEMAPS[theme],
       interactive: false,
       maxPitch: PITCH.max,
-      // Coarser tiles than the height would pick: fewer to fetch as the ground streams past, and detail is not the point.
-      maxZoom: 6,
       attributionControl: { compact: true },
       canvasContextAttributes: { antialias: true },
     })
@@ -154,6 +152,19 @@ export function SatelliteView({ satellite, theme, lang, reach, onBack }: Props) 
       place(timeMs)
     })
     let shownSecond = -1
+    // Coarser tiles than the height would pick, so fewer stream past the camera at speed. On the source, not the
+    // map: a map zoom cap would hold the camera up at nadir, where the helper needs a higher zoom than at the horizon.
+    m.setStyle(BASEMAPS[theme], {
+      transformStyle: (_previous: StyleSpecification | undefined, next: StyleSpecification) => ({
+        ...next,
+        sources: Object.fromEntries(
+          Object.entries(next.sources).map(([id, source]) => [
+            id,
+            source.type === 'vector' ? { ...source, maxzoom: TILE_MAX_ZOOM } : source,
+          ]),
+        ),
+      }),
+    })
     const unsubscribe = useFrame.subscribe((f) => {
       const state = place(f.timeMs)
       surfaces(f.timeMs)
