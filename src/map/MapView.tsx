@@ -5,7 +5,7 @@ import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&ur
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { buildLayers, hoverAt, trackData, type Ghost, type Hover, type SatelliteDatum, type TrackDatum } from './layers'
 import type { LonLat } from '../orbit/orbit'
-import type { Lang } from '../i18n/strings'
+import { STRINGS, type Lang } from '../i18n/strings'
 import { BASEMAPS, PALETTES, type Theme } from '../shared/theme'
 import {
   EMPTY,
@@ -348,10 +348,11 @@ export function MapView({
         globe,
         onNearSide: globe ? onNearSide : undefined,
         palette: PALETTES[theme],
+        strings: STRINGS[lang],
       }),
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [satellites, tracks, now, selected, hover, probe, ghost, globe, viewVersion, theme])
+  }, [satellites, tracks, now, selected, hover, probe, ghost, globe, viewVersion, theme, lang])
 
   return <div ref={container} className="map" />
 }

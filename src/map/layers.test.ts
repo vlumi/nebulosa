@@ -1,3 +1,5 @@
+import { ja } from '../i18n/strings'
+import { formatOffset } from '../shared/format'
 import { epochOf } from '../orbit/elements'
 import { strix1, strix9 } from '../test/fixtures'
 import { PALETTES } from '../shared/theme'
@@ -88,7 +90,14 @@ test('a ghost draws a hollow marker where the satellite will be at the given tim
   const layers = buildLayers(sats, trackData(sats, at), at, { ghost: { noradId: strix1.NORAD_CAT_ID, timeMs: later } })
   expect(layers.map((l) => l.id)).toEqual(['poles', 'tracks', 'positions', 'labels', 'ghost', 'ghost-label'])
   const { getText } = layers[5].props as unknown as { getText: () => string }
-  expect(getText()).toBe(`STRIX-1 · ${new Date(later).toISOString().slice(11, 16)} UTC`)
+  expect(getText()).toBe(`STRIX-1 · ${new Date(later).toISOString().slice(11, 16)} UTC · +15 min`)
+  const inJapanese = buildLayers(sats, trackData(sats, at), at, {
+    ghost: { noradId: strix1.NORAD_CAT_ID, timeMs: later },
+    strings: ja,
+  })
+  expect((inJapanese[5].props as unknown as { getText: () => string }).getText()).toBe(
+    `STRIX-1 · ${new Date(later).toISOString().slice(11, 16)} UTC · ${formatOffset(later, at.getTime(), ja)}`,
+  )
 })
 
 test('a ghost beyond the drawn track gets a dashed continuation reaching it', () => {
