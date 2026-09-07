@@ -68,6 +68,12 @@ export interface Strings {
   places: {
     header: string
     lockPins: string
+    useLocation: string
+    relocate: string
+    locating: string
+    locationDenied: string
+    locationFailed: string
+    myLocation: string
     placeName: string
     save: string
     rename: (name: string) => string
@@ -194,6 +200,12 @@ export const en: Strings = {
     header:
       'Double-click the map, or press and hold on a phone, to add a place. Passes are computed for the selected one.',
     lockPins: 'Lock pins',
+    useLocation: 'Use my location',
+    relocate: 'Update my location',
+    locating: 'Locating…',
+    locationDenied: 'The browser was not allowed to share the location.',
+    locationFailed: 'The location could not be found.',
+    myLocation: 'My location',
     placeName: 'Place name',
     save: 'Save',
     rename: (name) => `Rename ${name}`,
@@ -318,6 +330,12 @@ export const ja: Strings = {
   places: {
     header: '地図をダブルクリック（スマートフォンでは長押し）して地点を追加。パスは選択中の地点について計算されます。',
     lockPins: 'ピンを固定',
+    useLocation: '現在地を使う',
+    relocate: '現在地を更新',
+    locating: '現在地を取得中…',
+    locationDenied: '位置情報の利用が許可されていません。',
+    locationFailed: '現在地を取得できませんでした。',
+    myLocation: '現在地',
     placeName: '地点名',
     save: '保存',
     rename: (name) => `${name}の名前を変更`,

@@ -1,3 +1,4 @@
+import { placeName } from '../i18n/placeName'
 import { useStrings } from '../i18n/useStrings'
 import { familyCss } from '../shared/palette'
 import panel from './panel.module.css'
@@ -43,7 +44,7 @@ export function PassList({
   return (
     <>
       <div className={styles.header}>
-        <p className="muted">{t.passes.header(place.name)}</p>
+        <p className="muted">{t.passes.header(placeName(place, t))}</p>
         <div className={styles.controls}>
           <span>
             {t.passes.next}{' '}
