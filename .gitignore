@@ -28,3 +28,8 @@ public/data/
 
 # Test coverage output (vitest --coverage)
 coverage/
+
+# Playwright output (npm run test:e2e)
+test-results/
+playwright-report/
+blob-report/
