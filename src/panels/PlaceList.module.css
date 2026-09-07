@@ -52,7 +52,6 @@
 .coords {
   flex: none;
   display: inline-flex;
-  gap: 0.4em;
   font-variant-numeric: tabular-nums;
 }
 
