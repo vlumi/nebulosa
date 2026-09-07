@@ -515,7 +515,7 @@ test('a camera request flies once and never again when following stops; a new on
   expect(mapInstance.easeTo).toHaveBeenCalledTimes(1)
 })
 
-test('a theme change swaps the basemap and recolors the pins', () => {
+test('a theme change swaps the basemap and recolors the pins; the new style gets the fills in its paints, the projection and the labels', () => {
   const props = {
     satellites: [],
     now: epochOf(strix1),
@@ -532,6 +532,13 @@ test('a theme change swaps the basemap and recolors the pins', () => {
   rerender(<MapView {...props} theme="light" />)
   expect(mapInstance.setStyle).toHaveBeenCalledWith('https://tiles.openfreemap.org/styles/positron')
   expect(Marker).toHaveBeenLastCalledWith(expect.objectContaining({ color: '#8f5f00' }))
+
+  act(() => mapInstance.handlers['style.load']())
+  const layers = mapInstance.addLayer.mock.calls.map(([layer]) => layer) as { id: string; paint?: unknown }[]
+  expect(layers.slice(-2).map((layer) => layer.id)).toEqual(['night', 'reach'])
+  expect(layers.at(-2)!.paint).toMatchObject({ 'fill-color': 'rgb(30 40 70)', 'fill-opacity': 0.28 })
+  expect(mapInstance.setProjection).toHaveBeenCalled()
+  expect(mapInstance.setLayoutProperty).toHaveBeenCalled()
 })
 
 test('basemap labels that show a name follow the language, once the style loads and when it changes', () => {
