@@ -242,7 +242,7 @@ export const en: Strings = {
   ride: {
     open: 'View from the satellite',
     back: 'Back to the map',
-    look: 'Drag to look around, scroll to zoom',
+    look: 'Drag to look around',
   },
   follow: {
     follow: (name) => `Follow ${name}`,
@@ -378,7 +378,7 @@ export const ja: Strings = {
   ride: {
     open: '衛星からの視点',
     back: '地図に戻る',
-    look: 'ドラッグで見回し、スクロールでズーム',
+    look: 'ドラッグで見回せます',
   },
   follow: {
     follow: (name) => `${name}を追跡`,

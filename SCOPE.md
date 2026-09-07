@@ -4,7 +4,7 @@ Ground-track visualizer for the Synspective StriX SAR constellation, from public
 
 **The name:** *Strix nebulosa*, the great gray owl: same genus as the StriX satellites, the iconic owl of Finland, and Latin for "cloudy", so an owl named *cloudy* for satellites built to see through clouds. Owls see in the dark; so does SAR.
 
-**Status:** unofficial demo project, not affiliated with Synspective. All data is public (NORAD GP data via CelesTrak). Milestones M0 to M6 below were delivered on 2026-09-04, SAR reach and the globe on the two days after, the shell (M7) and places (M8) on 2026-09-05, the focused satellite (M9) and the theme (M10) on 2026-09-06, the Japanese interface (M11) on 2026-09-07; everything in [Next](#next) is done, and [docs/screenshots](docs/screenshots/README.md) holds one capture per milestone.
+**Status:** unofficial demo project, not affiliated with Synspective. All data is public (NORAD GP data via CelesTrak). Milestones M0 to M6 below were delivered on 2026-09-04, SAR reach and the globe on the two days after, the shell (M7) and places (M8) on 2026-09-05, the focused satellite (M9) and the theme (M10) on 2026-09-06, the Japanese interface (M11) on 2026-09-07, the view from the seat (M12) on 2026-09-08; everything in [Next](#next) is done, and [docs/screenshots](docs/screenshots/README.md) holds one capture per milestone.
 
 ## Data
 
@@ -119,6 +119,15 @@ The constellation is Japanese and so is much of its audience; the interface shou
 - **Place names** come from the basemap, which carries a name per language: its labels switch with the interface, and a new place is named in the chosen language; the seed place gets both names.
 - **Typography:** the system font stack already covers Japanese; check line lengths in the pills, the readout labels and the pass list, where Japanese is shorter and the CJK glyphs taller.
 - Conflicts: every panel, so land it when nothing else is in flight against them.
+
+### M12 — the seat (done)
+
+Sit on a satellite and look around.
+
+- **Its own map:** a second MapLibre globe over the first, with the camera at the satellite's height and heading, the night, the reach band and the own track drawn on it; back to the main map as it was.
+- **Look around** by dragging, from straight down to a little below the horizon; no zoom. The time bar stays, so the clock can be moved from the seat.
+- **Over the poles** the view dips toward the ground for a minute, because MapLibre cannot look past 85° latitude, and comes back.
+- Entry from the button under the selected satellite's readout or `V`; `Esc` leaves.
 
 ## Non-goals
 

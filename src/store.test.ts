@@ -210,3 +210,17 @@ test('locating adds one located place, selected and flown to; locating again mov
   expect(s().places[1]).toMatchObject({ id: 'located', name: 'Home', lat: 60.17, lon: 24.94 })
   expect(s().camera).toEqual({ kind: 'point', lat: 60.17, lon: 24.94, seq: 2 })
 })
+
+test('the ride needs a selected satellite, and Esc leaves it before anything else', () => {
+  const s = () => useApp.getState()
+  s().setRide(true)
+  expect(s().ride).toBe(false)
+  s().select(53815)
+  s().setHelpOpen(true)
+  s().setRide(true)
+  expect(s().ride).toBe(true)
+  s().escape()
+  expect(s().ride).toBe(false)
+  expect(s().helpOpen).toBe(true)
+  expect(s().selection.noradId).toBe(53815)
+})

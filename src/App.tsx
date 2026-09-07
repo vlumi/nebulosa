@@ -176,6 +176,10 @@ function App() {
                   }}
                   span={app.span}
                   onSpanChange={app.setSpan}
+                  onRide={() => {
+                    app.setRide(true)
+                    closeOnPhone()
+                  }}
                   nextPass={nextPass}
                   placeName={place ? placeName(place, s) : undefined}
                   passes={allPasses.filter((p) => p.noradId === app.selection.noradId)}

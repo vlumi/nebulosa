@@ -1,6 +1,6 @@
 import { Map as MapLibre, type GeoJSONSource } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { useEffect, useRef, useState, type PointerEvent, type WheelEvent } from 'react'
+import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import type { Feature, MultiLineString } from 'geojson'
 import type { Lang } from '../i18n/strings'
 import { useStrings } from '../i18n/useStrings'
@@ -25,7 +25,7 @@ const TRACK_LAYER = 'own-track'
 const SPAN = { pastOrbits: 0.5, futureOrbits: 0.5 }
 /** Looking further up than the start shows more sky than globe and MapLibre's globe gets odd there, so the start is the ceiling. */
 const PITCH = { min: 0, max: 60, start: 60 }
-const FOV = { min: 20, max: 110, start: 60 }
+const FOV = 60
 
 /** Where Mercator ends: a look-at point past this latitude is clamped by MapLibre and the camera comes apart. */
 const LOOK_AT_MAX_LAT = 84
@@ -66,7 +66,7 @@ export function SatelliteView({ satellite, theme, lang, onBack }: Props) {
   const t = useStrings()
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<MapLibre>(null)
-  const look = useRef({ yaw: 0, pitch: PITCH.start, fov: FOV.start })
+  const look = useRef({ yaw: 0, pitch: PITCH.start })
   const [hud, setHud] = useState<{ timeMs: number; nowMs: number; altKm: number; headingDeg: number } | null>(null)
 
   useEffect(() => {
@@ -109,7 +109,7 @@ export function SatelliteView({ satellite, theme, lang, onBack }: Props) {
     }
     m.on('style.load', () => {
       m.setProjection({ type: 'globe' })
-      m.setVerticalFieldOfView(look.current.fov)
+      m.setVerticalFieldOfView(FOV)
       labelLanguage(m, lang)
       const { timeMs } = useFrame.getState()
       const date = new Date(timeMs)
@@ -165,26 +165,24 @@ export function SatelliteView({ satellite, theme, lang, onBack }: Props) {
     if (map.current?.isStyleLoaded()) labelLanguage(map.current, lang)
   }, [lang])
 
-  const drag = useRef<{ x: number; y: number } | null>(null)
+  // A finger or the mouse turns the view; the field of view is fixed, since zooming from a seat read as odd.
+  const last = useRef<{ x: number; y: number } | null>(null)
   const onPointerDown = (e: PointerEvent) => {
-    drag.current = { x: e.clientX, y: e.clientY }
-    e.currentTarget.setPointerCapture(e.pointerId)
+    last.current = { x: e.clientX, y: e.clientY }
+    e.currentTarget.setPointerCapture?.(e.pointerId)
   }
   const onPointerMove = (e: PointerEvent) => {
-    if (!drag.current) return
-    const dx = e.clientX - drag.current.x
-    const dy = e.clientY - drag.current.y
-    drag.current = { x: e.clientX, y: e.clientY }
-    const scale = look.current.fov / 400
-    look.current.yaw += dx * scale
-    look.current.pitch = Math.max(PITCH.min, Math.min(PITCH.max, look.current.pitch + dy * scale))
+    if (!last.current) return
+    const scale = FOV / 400
+    look.current.yaw += (e.clientX - last.current.x) * scale
+    look.current.pitch = Math.max(
+      PITCH.min,
+      Math.min(PITCH.max, look.current.pitch + (e.clientY - last.current.y) * scale),
+    )
+    last.current = { x: e.clientX, y: e.clientY }
   }
   const onPointerUp = () => {
-    drag.current = null
-  }
-  const onWheel = (e: WheelEvent) => {
-    look.current.fov = Math.max(FOV.min, Math.min(FOV.max, look.current.fov + e.deltaY * 0.05))
-    map.current?.setVerticalFieldOfView(look.current.fov)
+    last.current = null
   }
 
   return (
@@ -194,7 +192,6 @@ export function SatelliteView({ satellite, theme, lang, onBack }: Props) {
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
-      onWheel={onWheel}
     >
       <div ref={container} className={styles.map} />
       <button type="button" className={styles.back} aria-label={t.ride.back} title={t.ride.back} onClick={onBack}>

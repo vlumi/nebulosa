@@ -351,3 +351,17 @@ test('the language picker switches every word and the document language, and the
   await userEvent.selectOptions(screen.getByRole('combobox', { name: '言語' }), 'en')
   expect(document.documentElement.lang).toBe('en')
 })
+
+test('V, or the button under the readout, opens the view from the selected satellite; Escape and the back button leave it', async () => {
+  renderApp()
+  const panel = within(screen.getByRole('complementary', { name: 'Constellation' }))
+  await userEvent.click(await panel.findByRole('button', { name: /STRIX-1/ }))
+  await userEvent.click(panel.getByRole('button', { name: 'View from the satellite' }))
+  expect(screen.getByRole('button', { name: 'Back to the map' })).toBeInTheDocument()
+  await userEvent.keyboard('{Escape}')
+  expect(screen.queryByRole('button', { name: 'Back to the map' })).toBeNull()
+  expect(panel.getByRole('button', { name: /STRIX-1/ })).toHaveAttribute('aria-pressed', 'true')
+  await userEvent.keyboard('v')
+  await userEvent.click(screen.getByRole('button', { name: 'Back to the map' }))
+  expect(screen.queryByRole('button', { name: 'Back to the map' })).toBeNull()
+})
