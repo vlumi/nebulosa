@@ -51,9 +51,14 @@ vi.mock('@deck.gl/maplibre', () => ({
 afterEach(() => vi.unstubAllGlobals())
 beforeEach(resetApp)
 
+/** The app over a stubbed elements file, StriX-1 and StriX-9 unless said otherwise. */
+const renderApp = (elements: unknown[] = [strix1, strix9]) => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify(elements))))
+  return render(<App />)
+}
+
 test('lists the constellation from /data/elements.json with the epoch age', async () => {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
-  render(<App />)
+  renderApp()
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('nebulosa')
   const panel = within(screen.getByRole('complementary', { name: 'Constellation' }))
   expect(await panel.findByText('STRIX-1')).toBeInTheDocument()
@@ -64,8 +69,7 @@ test('lists the constellation from /data/elements.json with the epoch age', asyn
 })
 
 test('selecting a satellite in the panel highlights it and dims the rest', async () => {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
-  render(<App />)
+  renderApp()
   const panel = within(screen.getByRole('complementary', { name: 'Constellation' }))
   const strix9Button = await panel.findByRole('button', { name: /STRIX-9/ })
   const strix1Button = panel.getByRole('button', { name: /STRIX-1/ })
@@ -98,8 +102,7 @@ const openPasses = async () => {
 }
 
 test('showing a pass selects the satellite without touching the clock; going to it pauses at the peak', async () => {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
-  render(<App />)
+  renderApp()
   const passes = await openPasses()
   expect(passes.getByText(/over Tokyo/)).toBeInTheDocument()
   const firstRow = (await passes.findAllByRole('listitem'))[0]
@@ -120,8 +123,7 @@ test('showing a pass selects the satellite without touching the clock; going to 
 })
 
 test('selecting a satellite narrows the pass list to it until the filter is turned off', async () => {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
-  render(<App />)
+  renderApp()
   let passes = await openPasses()
   const all = (await passes.findAllByRole('listitem')).length
   expect(all).toBeGreaterThan(1)
@@ -141,8 +143,7 @@ test('selecting a satellite narrows the pass list to it until the filter is turn
 })
 
 test('the swath filter keeps only the passes the radar can steer to', async () => {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
-  render(<App />)
+  renderApp()
   const passes = await openPasses()
   const all = (await passes.findAllByRole('listitem')).length
   await userEvent.click(passes.getByRole('radio', { name: 'in SAR reach' }))
@@ -177,8 +178,7 @@ test('on a phone the map comes first: one sheet at a time, and choosing somethin
 })
 
 test('keyboard: arrows step through the open sheet, Enter goes to the pass, Space pauses, 1 and 3 switch sheets, Esc clears', async () => {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
-  render(<App />)
+  renderApp()
   const panel = within(screen.getByRole('complementary', { name: 'Constellation' }))
   await panel.findByText('STRIX-1')
   await screen.findByRole('button', { name: /^Passes · / })
@@ -235,8 +235,7 @@ test('keyboard: arrows step through the open sheet, Enter goes to the pass, Spac
 })
 
 test('shortcuts keep working after clicking a button with the mouse', async () => {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
-  render(<App />)
+  renderApp()
   const panel = within(screen.getByRole('complementary', { name: 'Constellation' }))
   await userEvent.click(await panel.findByRole('button', { name: /STRIX-9/ }))
   expect(document.activeElement).toBe(document.body)
@@ -245,8 +244,7 @@ test('shortcuts keep working after clicking a button with the mouse', async () =
 })
 
 test('places: the pill names the selected place; with none, passes wait for one; removing a place unselects it', async () => {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
-  render(<App />)
+  renderApp()
   expect(screen.getByRole('button', { name: /^Places Tokyo/ })).toBeInTheDocument()
   await userEvent.click(screen.getByRole('button', { name: /^Places/ }))
   const places = within(screen.getByRole('complementary', { name: 'Places' }))
@@ -262,8 +260,7 @@ test('places: the pill names the selected place; with none, passes wait for one;
 })
 
 test('keyboard: 2 opens the places sheet and the arrows then step through the places, flying to each', async () => {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
-  render(<App />)
+  renderApp()
   useApp.setState({ places: [TOKYO, { id: 'helsinki', name: 'Helsinki', lat: 60.17, lon: 24.94 }] })
   await screen.findByRole('button', { name: /^Passes · / })
 
@@ -291,8 +288,7 @@ test('keyboard: 2 opens the places sheet and the arrows then step through the pl
 })
 
 test('the follow button appears with a selected satellite; F and the button toggle it', async () => {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
-  render(<App />)
+  renderApp()
   const panel = within(screen.getByRole('complementary', { name: 'Constellation' }))
   await panel.findByText('STRIX-1')
   await userEvent.keyboard('f')
@@ -306,8 +302,7 @@ test('the follow button appears with a selected satellite; F and the button togg
 })
 
 test('each pill clears its own choice from its right side, without opening the sheet', async () => {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
-  render(<App />)
+  renderApp()
   await within(screen.getByRole('complementary', { name: 'Constellation' })).findByText('STRIX-1')
   expect(screen.queryByRole('button', { name: /^Unselect STRIX/ })).toBeNull()
   await userEvent.keyboard('{ArrowDown}')
@@ -321,8 +316,7 @@ test('each pill clears its own choice from its right side, without opening the s
 })
 
 test('each sheet has a close button in its corner', async () => {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
-  render(<App />)
+  renderApp()
   await within(screen.getByRole('complementary', { name: 'Constellation' })).findByText('STRIX-1')
   await userEvent.click(screen.getByRole('button', { name: 'Close constellation' }))
   expect(screen.queryByRole('complementary')).toBeNull()
@@ -335,8 +329,7 @@ test('each sheet has a close button in its corner', async () => {
 })
 
 test('keyboard: T switches between light and dark, stamped on the document', async () => {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
-  render(<App />)
+  renderApp()
   expect(document.documentElement.dataset.theme).toBe('dark')
   await userEvent.keyboard('t')
   expect(document.documentElement.dataset.theme).toBe('light')
@@ -346,8 +339,7 @@ test('keyboard: T switches between light and dark, stamped on the document', asy
 })
 
 test('the language picker switches every word and the document language, and the choice is kept', async () => {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([strix1, strix9]))))
-  render(<App />)
+  renderApp()
   await within(screen.getByRole('complementary', { name: 'Constellation' })).findByText('STRIX-1')
   expect(document.documentElement.lang).toBe('en')
   await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Language' }), 'ja')
