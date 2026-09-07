@@ -13,6 +13,7 @@ import { PassList } from './panels/PassList'
 import { PlaceList } from './panels/PlaceList'
 import { MapToggle } from './panels/MapToggle'
 import { ReachToggle } from './panels/ReachToggle'
+import { SatelliteView } from './map/SatelliteView'
 import { SatelliteList } from './panels/SatelliteList'
 import { Toolbar } from './panels/Toolbar'
 import { useNarrow } from './panels/useNarrow'
@@ -141,6 +142,9 @@ function App() {
         <p>{s.subtitle}</p>
         <div className={styles.headerToggles}>{toggles}</div>
       </header>
+      {app.ride && selectedSatellite && (
+        <SatelliteView satellite={selectedSatellite} theme={theme} lang={app.lang} onBack={() => app.setRide(false)} />
+      )}
       <main ref={mainRef}>
         <Suspense fallback={<div className="map" />}>
           <LiveMap

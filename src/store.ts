@@ -47,6 +47,8 @@ interface State extends PlacesState {
   /** The one list open above the toolbar, if any. */
   sheet: Sheet | null
   helpOpen: boolean
+  /** The view from the selected satellite's seat, over the whole screen. */
+  ride: boolean
   /** The radar's reach drawn beside the selected satellite's track. */
   reachVisible: boolean
   globe: boolean
@@ -66,6 +68,7 @@ interface Actions {
   clearPass: () => void
   /** Help first; then pass, ghost and probe; then the place; then the satellite. */
   escape: () => void
+  setRide: (ride: boolean) => void
   /** `name` from the map's labels when there is one nearby; else the coordinates. */
   addPlace: (location: Location, name?: string) => void
   /** The one located place, added or moved to the browser's position, selected, and flown to. */
@@ -109,6 +112,7 @@ const initial = (places: PlacesState): State => ({
   clock: liveClock(Date.now()),
   sheet: 'satellites',
   helpOpen: false,
+  ride: false,
   reachVisible: true,
   globe: true,
 })
@@ -150,8 +154,9 @@ export const useApp = create<State & Actions>((set, get) => ({
     set((s) => (s.selection.noradId === null ? {} : { selection: { ...s.selection, probeMs: timeMs } })),
   clearPass: () => set((s) => ({ selection: { ...NOTHING, noradId: s.selection.noradId } })),
   escape: () => {
-    const { helpOpen, selection, placeId } = get()
-    if (helpOpen) set({ helpOpen: false })
+    const { helpOpen, ride, selection, placeId } = get()
+    if (ride) set({ ride: false })
+    else if (helpOpen) set({ helpOpen: false })
     else if (selection.activePass || selection.ghost || selection.probeMs !== null)
       set({ selection: { ...NOTHING, noradId: selection.noradId } })
     else if (placeId !== null) set({ placeId: null })
@@ -202,6 +207,7 @@ export const useApp = create<State & Actions>((set, get) => ({
   toggleSheet: (sheet) => set((s) => ({ sheet: s.sheet === sheet ? null : sheet })),
   closeSheet: () => set({ sheet: null }),
   setHelpOpen: (helpOpen) => set({ helpOpen }),
+  setRide: (ride) => set((s) => ({ ride: ride && s.selection.noradId !== null })),
   toggleReach: () => set((s) => ({ reachVisible: !s.reachVisible })),
   toggleGlobe: () => set((s) => ({ globe: !s.globe })),
   setFollow: (follow) => set((s) => (s.follow === follow ? s : { follow })),
