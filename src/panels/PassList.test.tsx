@@ -3,6 +3,7 @@ import { userEvent } from '@testing-library/user-event'
 import { PassList } from './PassList'
 import { DEFAULT_FILTERS, type Pass } from '../orbit/passes'
 import { TOKYO } from '../places/places'
+import { useFrame } from '../time/frame'
 
 const t0 = Date.UTC(2026, 8, 4, 12, 0, 0)
 const pass = (name: string, noradId: number, startMin: number, maxEl: number): Pass => ({
@@ -107,4 +108,22 @@ test('a peak inside the steering range is marked and titled with its look angle;
   expect(screen.getByTitle('60° off nadir at the peak')).not.toHaveAttribute('data-reach')
   await userEvent.click(screen.getByRole('radio', { name: 'in SAR reach' }))
   expect(onFiltersChange).toHaveBeenCalledWith({ ...DEFAULT_FILTERS, within: 'swath' })
+})
+
+test('the time range is titled with its offset from the displayed moment, as the labels on the map are', () => {
+  useFrame.setState({ timeMs: t0 + 10 * 60_000 })
+  render(
+    <PassList
+      place={TOKYO}
+      passes={[pass('STRIX-1', 53815, 5, 47.4), pass('STRIX-9', 100561, 90, 12.2)]}
+      filters={{ ...DEFAULT_FILTERS, onlySelected: false }}
+      onFiltersChange={vi.fn()}
+      familyOf={() => 'sun-synchronous'}
+      onShow={vi.fn()}
+      onGoTo={vi.fn()}
+      now={new Date(t0)}
+    />,
+  )
+  expect(screen.getByTitle('−5 min')).toHaveTextContent('12:05–12:13')
+  expect(screen.getByTitle('+1 h 20 min')).toHaveTextContent('13:30–13:38')
 })
