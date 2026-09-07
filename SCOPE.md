@@ -18,7 +18,7 @@ Ground-track visualizer for the Synspective StriX SAR constellation, from public
 - **App:** React + TypeScript + Vite
 - **Propagation:** satellite.js (SGP4)
 - **Rendering:** deck.gl interleaved into a MapLibre GL basemap (OpenFreeMap vector tiles, free, no API key), flat or globe
-- **Testing:** Vitest + React Testing Library; the map wiring is tested with the map libraries mocked; headless Chrome captures over the DevTools protocol check the rendered result and report page errors
+- **Testing:** Vitest + React Testing Library; the map wiring is tested with the map libraries mocked; Playwright drives the built app in headless Chromium for the browser tests; headless Chrome captures over the DevTools protocol check the rendered result by eye
 - **CI:** GitHub Actions, lint/test/build on push and pull requests
 - **Hosting:** static files, so any web server will do; the reference deployment is [nebulosa.misaki.fi](https://nebulosa.misaki.fi) behind nginx, where `deploy.sh` publishes releases under a web root and cron refreshes the data
 - **License:** MIT

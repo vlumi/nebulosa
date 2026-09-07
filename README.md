@@ -53,10 +53,11 @@ npm install
 npm run elements # fetch public/data/elements.json from CelesTrak (not committed; do this first)
 npm run dev      # Vite dev server
 npm test         # Vitest
+npm run test:e2e # Playwright, in headless Chromium against the built app
 npm run lint     # oxlint
 ```
 
-Stack: React, TypeScript and Vite; zustand for state; CSS Modules; satellite.js for SGP4; deck.gl interleaved into a MapLibre GL basemap with OpenFreeMap tiles; Vitest and React Testing Library. `scripts/screenshot.mjs` captures the site with headless Chrome over the DevTools protocol and reports page errors, with options to act on the page first, sweep the pointer across the map, and pick a viewport size.
+Stack: React, TypeScript and Vite; zustand for state; CSS Modules; satellite.js for SGP4; deck.gl interleaved into a MapLibre GL basemap with OpenFreeMap tiles; Vitest and React Testing Library for the unit and component tests, Playwright for the browser tests in `e2e/`. `scripts/screenshot.mjs` captures the site with headless Chrome over the DevTools protocol and reports page errors, with options to act on the page first, sweep the pointer across the map, and pick a viewport size.
 
 ## Deploy
 
