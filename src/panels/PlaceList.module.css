@@ -51,6 +51,18 @@
 
 .coords {
   flex: none;
+  display: inline-flex;
+  gap: 0.4em;
+  font-variant-numeric: tabular-nums;
+}
+
+.coords > span {
+  min-width: 7ch;
+  text-align: right;
+}
+
+.coords > span:last-child {
+  min-width: 8ch;
 }
 
 .action {

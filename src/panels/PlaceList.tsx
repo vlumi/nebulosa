@@ -70,6 +70,7 @@ export function PlaceList({
       <ul className={`${panel.list} ${styles.list}`}>
         {places.map((place) => {
           const isSelected = place.id === placeId
+          const [lat, lon] = formatLocation(place).split(' ')
           return (
             <li key={place.id} className={styles.row}>
               {renaming === place.id ? (
@@ -101,7 +102,9 @@ export function PlaceList({
                     data-located={place.located ? '' : undefined}
                   />
                   <span className={styles.name}>{placeName(place, t)}</span>{' '}
-                  <span className={`${styles.coords} muted`}>{formatLocation(place)}</span>
+                  <span className={`${styles.coords} muted`}>
+                    <span>{lat}</span> <span>{lon}</span>
+                  </span>
                 </button>
               )}
               {place.located && (
