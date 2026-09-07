@@ -186,6 +186,10 @@ function App() {
                 onRemove={app.removePlace}
                 pinsLocked={app.pinsLocked}
                 onLockChange={app.setPinsLocked}
+                onLocate={(location, name) => {
+                  app.locatePlace(location, name)
+                  closeOnPhone()
+                }}
               />
             </Sheet>
           )}

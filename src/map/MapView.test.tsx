@@ -403,6 +403,26 @@ test('a pin behind the globe is invisible and cannot be grabbed', () => {
   expect(markerInstance.element.style.pointerEvents).toBe('')
 })
 
+test('a located place is a target that is never draggable, whatever the lock says', () => {
+  const props = {
+    satellites: [],
+    now: epochOf(strix1),
+    selected: null,
+    onSelect: vi.fn(),
+    places: [{ id: 'located', name: 'My location', lat: 35.5, lon: 139.6, located: true as const }],
+    placeId: 'located',
+    onPlaceSelect: vi.fn(),
+    onPlaceMove: vi.fn(),
+    onPlaceAdd: vi.fn(),
+  }
+  const { rerender } = render(<MapView {...props} pinsLocked={false} />)
+  const options = vi.mocked(Marker).mock.calls.at(-1)![0] as { draggable: boolean; element?: HTMLElement }
+  expect(options.draggable).toBe(false)
+  expect(options.element?.querySelector('svg circle')).not.toBeNull()
+  rerender(<MapView {...props} pinsLocked={false} places={[{ ...props.places[0], lat: 36 }]} />)
+  expect(markerInstance.setDraggable).toHaveBeenLastCalledWith(false)
+})
+
 test('locked pins are not draggable, and unlocking makes them draggable again', () => {
   const props = {
     satellites: [],

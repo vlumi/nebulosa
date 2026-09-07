@@ -32,6 +32,15 @@
   background: var(--accent);
 }
 
+.pin[data-located] {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--muted);
+}
+
+.pin[data-located][data-selected] {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
 .coords {
   flex: 1 1 auto;
   min-width: 0;

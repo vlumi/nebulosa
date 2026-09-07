@@ -194,3 +194,19 @@ test('showing or going to a pass lets go of following, so the flight to the ghos
   goToPass(pass, 100_000)
   expect(useApp.getState().follow).toBe(false)
 })
+
+test('locating adds one located place, selected and flown to; locating again moves that same place and keeps its name', () => {
+  const s = () => useApp.getState()
+  s().locatePlace({ lat: 35.5, lon: 139.6 }, 'My location')
+  const located = s().places[1]
+  expect(located).toMatchObject({ id: 'located', name: 'My location', lat: 35.5, lon: 139.6, located: true })
+  expect(s().placeId).toBe('located')
+  expect(s().camera).toEqual({ kind: 'point', lat: 35.5, lon: 139.6, seq: 1 })
+  s().renamePlace('located', 'Home')
+  s().movePlace('located', { lat: 0, lon: 0 })
+  expect(s().places[1]).toMatchObject({ lat: 35.5, lon: 139.6 })
+  s().locatePlace({ lat: 60.17, lon: 24.94 }, 'My location')
+  expect(s().places).toHaveLength(2)
+  expect(s().places[1]).toMatchObject({ id: 'located', name: 'Home', lat: 60.17, lon: 24.94 })
+  expect(s().camera).toEqual({ kind: 'point', lat: 60.17, lon: 24.94, seq: 2 })
+})
