@@ -23,6 +23,12 @@ interface Props {
 }
 
 const TRACK_LAYER = 'own-track'
+/**
+ * Seen along the ground, tiles rasterized up to their own edge leave hairline seams between them; a small buffer lets
+ * each fill overrun its edge, and MapLibre's stencil clips the overlap. Small, so the wrapped copies of a fill at the
+ * antimeridian overlap in no more than a sliver.
+ */
+const SEAM_BUFFER = 8
 /** Half an orbit each way is what the seat can see before the horizon; the fills stay small. */
 const SPAN = { pastOrbits: 0.5, futureOrbits: 0.5 }
 /** Looking further up than the start shows more sky than globe and MapLibre's globe gets odd there, so the start is the ceiling. */
@@ -117,11 +123,11 @@ export function SatelliteView({ satellite, theme, lang, reach, onBack }: Props) 
       labelLanguage(m, lang)
       const { timeMs } = useFrame.getState()
       const date = new Date(timeMs)
-      m.addSource(NIGHT_LAYER, { type: 'geojson', data: nightFeature(date), buffer: 0, tolerance: 0 })
+      m.addSource(NIGHT_LAYER, { type: 'geojson', data: nightFeature(date), buffer: SEAM_BUFFER, tolerance: 0 })
       m.addSource(REACH_LAYER, {
         type: 'geojson',
         data: reachFeature(trackSamples(satellite, date, 30, SPAN)),
-        buffer: 0,
+        buffer: SEAM_BUFFER,
         tolerance: 0,
       })
       m.addSource(TRACK_LAYER, { type: 'geojson', data: trackFeature(satellite, date) })
