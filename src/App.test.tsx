@@ -279,6 +279,7 @@ test('keyboard: 2 opens the places sheet and the arrows then step through the pl
   expect(places.getAllByRole('listitem').map((li) => li.textContent)).toEqual([
     expect.stringMatching(/^Helsinki/),
     expect.stringMatching(/^Tokyo/),
+    expect.stringMatching(/^Use my location/),
   ])
   expect(places.getByRole('button', { name: /^Tokyo/ })).toHaveAttribute('aria-pressed', 'true')
 

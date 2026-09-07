@@ -16,6 +16,7 @@ import { ReachToggle } from './panels/ReachToggle'
 import { SatelliteList } from './panels/SatelliteList'
 import { Toolbar } from './panels/Toolbar'
 import { useNarrow } from './panels/useNarrow'
+import { placeName } from './i18n/placeName'
 import { useStrings } from './i18n/useStrings'
 import { resolveTheme, type Theme } from './shared/theme'
 import { useSystemDark } from './shared/useSystemDark'
@@ -167,7 +168,7 @@ function App() {
                   span={app.span}
                   onSpanChange={app.setSpan}
                   nextPass={nextPass}
-                  placeName={place?.name}
+                  placeName={place ? placeName(place, s) : undefined}
                   passes={allPasses.filter((p) => p.noradId === app.selection.noradId)}
                 />
               )}
@@ -186,6 +187,10 @@ function App() {
                 onRemove={app.removePlace}
                 pinsLocked={app.pinsLocked}
                 onLockChange={app.setPinsLocked}
+                onLocate={(location, name) => {
+                  app.locatePlace(location, name)
+                  closeOnPhone()
+                }}
               />
             </Sheet>
           )}
@@ -229,7 +234,7 @@ function App() {
                 ? { name: selectedSatellite.omm.OBJECT_NAME, family: selectedSatellite.family }
                 : undefined,
             }}
-            places={{ count: app.places.length, selected: place?.name }}
+            places={{ count: app.places.length, selected: place ? placeName(place, s) : undefined }}
             passes={
               satellites.length > 0
                 ? {

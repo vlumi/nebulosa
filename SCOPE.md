@@ -91,6 +91,7 @@ The two panels cover the whole screen on a phone, and choosing something should 
 - **Several pins**, not one. Add a place with a long press on a phone or a double click on desktop; name it from the reverse geocode if cheap, else from its coordinates; remove it from the list.
 - **One place selected at a time, or none.** Passes are computed for the selected place; with none selected the passes button says so and the list is empty. Unselecting is a tap on the selected place.
 - **Jump to a place** from its row, the same way a satellite row centers the map.
+- **My location** (added 2026-09-07): the last row of the list places one pin from the browser's location, refreshed from its row, drawn as a target and never dragged; opt-in, nothing asks on load.
 - Places persist in the browser (`localStorage`), no account. Tokyo remains the seed on first visit.
 - Conflicts: store, `usePasses` and the pass worker request, `MapView` markers, and the places sheet from M7. Wait for M7.
 

@@ -32,12 +32,36 @@
   background: var(--accent);
 }
 
-.coords {
+.pin[data-located] {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--muted);
+}
+
+.pin[data-located][data-selected] {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.name {
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: left;
+}
+
+.coords {
+  flex: none;
+  display: inline-flex;
+  font-variant-numeric: tabular-nums;
+}
+
+.coords > span {
+  min-width: 7ch;
+  text-align: right;
+}
+
+.coords > span:last-child {
+  min-width: 8ch;
 }
 
 .action {

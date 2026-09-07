@@ -14,6 +14,16 @@ interface Options {
   onMove: (id: string, location: Location) => void
 }
 
+/** A located place is a target rather than a pin: it marks where the reader is, not a spot they chose. */
+function targetElement(color: string): HTMLElement {
+  const el = document.createElement('div')
+  el.innerHTML =
+    `<svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="${color}" stroke-width="2">` +
+    `<circle cx="11" cy="11" r="7"/><circle cx="11" cy="11" r="2.5" fill="${color}" stroke="none"/>` +
+    `<path d="M11 0v4M11 18v4M0 11h4M18 11h4"/></svg>`
+  return el
+}
+
 /** One draggable pin per place, the selected one in the accent color; pins come and go with the list. */
 export function usePins(
   map: RefObject<MapLibre | null>,
@@ -33,12 +43,18 @@ export function usePins(
     }
     for (const place of places) {
       const color = place.id === placeId ? PALETTES[theme].pinSelected : PALETTES[theme].pin
+      const draggable = !pinsLocked && !place.located
       let marker = markers.current.get(place.id)
       if (!marker || marker.getElement().dataset.color !== color) {
         marker?.remove()
         // MapLibre only dims a pin behind the globe; here it vanishes, and the map view's render hook also stops it
         // taking the pointer, or a hidden pin could be grabbed and dragged onto the near side.
-        marker = new Marker({ draggable: !pinsLocked, color, opacityWhenCovered: '0' })
+        marker = new Marker({
+          draggable,
+          color,
+          opacityWhenCovered: '0',
+          ...(place.located ? { element: targetElement(color) } : {}),
+        })
           .setLngLat([place.lon, place.lat])
           .addTo(m)
         marker.getElement().dataset.color = color
@@ -53,7 +69,7 @@ export function usePins(
         markers.current.set(place.id, marker)
       } else {
         marker.setLngLat([place.lon, place.lat])
-        marker.setDraggable(!pinsLocked)
+        marker.setDraggable(draggable)
       }
     }
   }, [map, markers, places, placeId, pinsLocked, theme, select, move])

@@ -6,6 +6,8 @@ import { storage } from '../shared/storage'
 export interface Place extends Location {
   id: string
   name: string
+  /** Placed from the browser's own location: drawn as a target, never dragged, moved only by locating again. */
+  located?: true
 }
 
 export interface PlacesState {
@@ -52,6 +54,12 @@ export function savePlaces(state: PlacesState, store = storage()): void {
   } catch {
     // Storage full or forbidden: the places live on for this visit only.
   }
+}
+
+export const LOCATED_ID = 'located'
+
+export function locatedPlace(location: Location, name: string): Place {
+  return { id: LOCATED_ID, name, lat: location.lat, lon: location.lon, located: true }
 }
 
 export function newPlace(location: Location, name = formatLocation(location)): Place {

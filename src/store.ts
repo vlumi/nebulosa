@@ -2,7 +2,16 @@ import { create } from 'zustand'
 import type { Ghost } from './map/layers'
 import { DEFAULT_SPAN, type TrackSpan } from './orbit/orbit'
 import { DEFAULT_FILTERS, type Location, type Pass, type PassFilters } from './orbit/passes'
-import { loadPlaces, newPlace, savePlaces, SEED, SEED_JA, type Place, type PlacesState } from './places/places'
+import {
+  loadPlaces,
+  locatedPlace,
+  newPlace,
+  savePlaces,
+  SEED,
+  SEED_JA,
+  type Place,
+  type PlacesState,
+} from './places/places'
 import { loadLang, saveLang, type Lang } from './i18n/strings'
 import { loadThemeChoice, saveThemeChoice, type ThemeChoice } from './shared/theme'
 import { liveClock, scrubbedTo, withPaused, type Clock } from './time/clock'
@@ -59,6 +68,8 @@ interface Actions {
   escape: () => void
   /** `name` from the map's labels when there is one nearby; else the coordinates. */
   addPlace: (location: Location, name?: string) => void
+  /** The one located place, added or moved to the browser's position, selected, and flown to. */
+  locatePlace: (location: Location, name: string) => void
   /** Select a place, or none; from the list the map also centers on it. */
   selectPlace: (id: string | null, fly?: boolean) => void
   setPinsLocked: (locked: boolean) => void
@@ -155,8 +166,20 @@ export const useApp = create<State & Actions>((set, get) => ({
         camera: fly && place ? { kind: 'point', lat: place.lat, lon: place.lon, seq: nextSeq(s) } : s.camera,
       }
     }),
+  locatePlace: (location, name) =>
+    set((s) => {
+      const existing = s.places.find((p) => p.located)
+      const place = existing ? { ...existing, lat: location.lat, lon: location.lon } : locatedPlace(location, name)
+      return {
+        places: existing ? s.places.map((p) => (p.located ? place : p)) : [...s.places, place],
+        placeId: place.id,
+        camera: { kind: 'point', lat: place.lat, lon: place.lon, seq: nextSeq(s) },
+      }
+    }),
   movePlace: (id, location) =>
-    set((s) => ({ places: s.places.map((p) => (p.id === id ? { ...p, lat: location.lat, lon: location.lon } : p)) })),
+    set((s) => ({
+      places: s.places.map((p) => (p.id === id && !p.located ? { ...p, lat: location.lat, lon: location.lon } : p)),
+    })),
   renamePlace: (id, name) => set((s) => ({ places: s.places.map((p) => (p.id === id ? { ...p, name } : p)) })),
   setPinsLocked: (pinsLocked) => set({ pinsLocked }),
   reorderPlace: (id, delta) =>
