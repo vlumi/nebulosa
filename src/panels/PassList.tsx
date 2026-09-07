@@ -5,7 +5,8 @@ import panel from './panel.module.css'
 import { Segmented } from '../shared/Segmented'
 import styles from './PassList.module.css'
 import type { OrbitFamily } from '../orbit/orbit'
-import { compassPoint, dayLabel, hhmm, utcDayIndex } from '../shared/format'
+import { compassPoint, dayLabel, formatOffset, hhmm, utcDayIndex } from '../shared/format'
+import { useFrame } from '../time/frame'
 import { HORIZONS_H, PASS_SCOPES, type Pass, type PassFilters } from '../orbit/passes'
 import type { Place } from '../places/places'
 import { inReach } from '../orbit/swath'
@@ -39,6 +40,8 @@ export function PassList({
   now,
 }: Props) {
   const t = useStrings()
+  // The offsets in the time tooltips count from the displayed moment, as the labels on the map do.
+  const displayedMinute = useFrame((f) => Math.floor(f.timeMs / 60_000))
   const isActive = (pass: Pass) => activePass?.noradId === pass.noradId && activePass.peakMs === pass.peakMs
   const set = (change: Partial<PassFilters>) => onFiltersChange({ ...filters, ...change })
   return (
@@ -94,7 +97,7 @@ export function PassList({
                 title={t.passes.showTitle}
               >
                 <span className={panel.swatch} style={{ background: familyCss(familyOf(pass.noradId)) }} />
-                <span className={styles.time}>
+                <span className={styles.time} title={formatOffset(pass.startMs, displayedMinute * 60_000, t)}>
                   {hhmm(pass.startMs)}–{hhmm(pass.endMs)}
                 </span>
                 {pass.name}
