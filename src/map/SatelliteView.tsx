@@ -201,7 +201,8 @@ export function SatelliteView({ satellite, theme, lang, reach, onBack }: Props) 
   const onPointerMove = (e: PointerEvent) => {
     if (!last.current) return
     const scale = FOV / 400
-    look.current.yaw += (e.clientX - last.current.x) * scale
+    // The ground follows the pointer both ways: dragging right turns the view left, as dragging down tilts it up.
+    look.current.yaw -= (e.clientX - last.current.x) * scale
     look.current.pitch = Math.max(
       PITCH.min,
       Math.min(PITCH.max, look.current.pitch + (e.clientY - last.current.y) * scale),
