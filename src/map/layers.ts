@@ -3,6 +3,7 @@ import { Matrix4 } from '@math.gl/core'
 import { PathStyleExtension, type PathStyleExtensionProps } from '@deck.gl/extensions'
 import { PathLayer, ScatterplotLayer, SolidPolygonLayer, TextLayer } from '@deck.gl/layers'
 import { formatOffset, hhmm, hhmmss } from '../shared/format'
+import { en, type Strings } from '../i18n/strings'
 import {
   DEFAULT_SPAN,
   nearestSample,
@@ -180,6 +181,8 @@ export interface LayerOptions {
   /** On the globe, whether a point faces the camera; labels of points that do not are left out. */
   onNearSide?: (lonLat: LonLat) => boolean
   palette?: Palette
+  /** The words of the labels' offsets, in the reader's language. */
+  strings?: Strings
 }
 
 export function buildLayers(
@@ -193,6 +196,7 @@ export function buildLayers(
     globe = false,
     onNearSide = () => true,
     palette = PALETTES.dark,
+    strings = en,
   }: LayerOptions = {},
 ): Layer[] {
   const nowMs = now.getTime()
@@ -327,7 +331,8 @@ export function buildLayers(
         id: 'ghost-label',
         data: onNearSide(datum.lonLat) ? [datum] : [],
         getPosition: (d) => d.lonLat,
-        getText: () => `${ghostSat.omm.OBJECT_NAME} · ${hhmm(ghost.timeMs)} UTC`,
+        getText: () =>
+          `${ghostSat.omm.OBJECT_NAME} · ${hhmm(ghost.timeMs)} UTC · ${formatOffset(ghost.timeMs, nowMs, strings)}`,
         getColor: palette.text,
         getSize: 12,
         getPixelOffset: [0, 18],
@@ -357,7 +362,7 @@ export function buildLayers(
         id: 'hover-label',
         data: [hover],
         getPosition: (d) => d.lonLat,
-        getText: () => `${name} · ${hhmmss(hover.timeMs)} UTC · ${formatOffset(hover.timeMs, nowMs)}`,
+        getText: () => `${name} · ${hhmmss(hover.timeMs)} UTC · ${formatOffset(hover.timeMs, nowMs, strings)}`,
         getColor: palette.text,
         getSize: 12,
         getPixelOffset: [0, 16],
