@@ -32,6 +32,8 @@ Passes are geometric visibility above the horizon, not imaging opportunities. Wh
 
 **Following.** With a satellite selected the map keeps it centered as time plays, on the globe by turning the planet. Any gesture of your own, a drag, a wheel, a pinch, lets go; `F` or the round button on the map turns it back on.
 
+**From the seat.** With a satellite selected, the button under its readout, or `V`, puts the camera on it: its own globe, looking along the heading from the satellite's height, the horizon across the top, the reach band beside the track and the night ahead or behind. Drag to look around, straight down to a little below the horizon. The time bar stays at the foot, so the clock can be scrubbed or played from the seat; at high speed the ground streams in behind the camera. The back arrow or `Esc` returns to the map as it was.
+
 **Places.** Double-click the map, or press and hold on a phone, to drop a pin named after the nearest place label on the basemap. Drag a pin to move it, or lock all pins against stray drags. In the places sheet, rename, reorder with `Shift ↑ ↓`, or remove; the last row places a pin at the browser's own location, only when asked, drawn as a target and moved only from its own refresh. Places stay in the browser and go nowhere else.
 
 **Passes.** The passes sheet lists the passes over the selected place, grouped by day, with a filter for the hours ahead and for the passes the radar can steer to; `O` narrows it to the selected satellite. Show a pass to mark where the satellite will be at its peak, or go to it (`⏎`) to move the clock there as well. Hover a time range for its distance from the displayed moment, and a peak's angle for its look angle off nadir.

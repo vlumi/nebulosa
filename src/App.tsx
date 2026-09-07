@@ -13,6 +13,7 @@ import { PassList } from './panels/PassList'
 import { PlaceList } from './panels/PlaceList'
 import { MapToggle } from './panels/MapToggle'
 import { ReachToggle } from './panels/ReachToggle'
+import { SatelliteView } from './map/SatelliteView'
 import { SatelliteList } from './panels/SatelliteList'
 import { Toolbar } from './panels/Toolbar'
 import { useNarrow } from './panels/useNarrow'
@@ -150,6 +151,15 @@ function App() {
             bottomInset={bottomInset}
           />
         </Suspense>
+        {app.ride && selectedSatellite && (
+          <SatelliteView
+            satellite={selectedSatellite}
+            theme={theme}
+            lang={app.lang}
+            reach={app.reachVisible}
+            onBack={() => app.setRide(false)}
+          />
+        )}
         <div className={styles.shell}>
           {app.sheet === 'satellites' && (
             <Sheet label={s.sheet.constellation} sheet="satellites" onClose={app.closeSheet}>
@@ -167,6 +177,10 @@ function App() {
                   }}
                   span={app.span}
                   onSpanChange={app.setSpan}
+                  onRide={() => {
+                    app.setRide(true)
+                    closeOnPhone()
+                  }}
                   nextPass={nextPass}
                   placeName={place ? placeName(place, s) : undefined}
                   passes={allPasses.filter((p) => p.noradId === app.selection.noradId)}

@@ -104,3 +104,22 @@ test('a located place is a target at the browser position that a drag does not m
   await page.mouse.up()
   await expect(row).toContainText('35.50°N 139.60°E')
 })
+
+test('the view from the satellite opens over the map, turns with a drag, and comes back', async ({ page }) => {
+  await open(page)
+  const satellites = sheet(page, 'Constellation')
+  await satellites.getByRole('button', { name: /^STRIX-1 / }).click()
+  await satellites.getByRole('button', { name: 'View from the satellite' }).click()
+  const back = page.getByRole('button', { name: 'Back to the map' })
+  await expect(back).toBeVisible()
+  await expect(page.getByText(/Height \d+ km · Heading/)).toBeVisible()
+  await expect(page.locator('.maplibregl-canvas')).toHaveCount(2)
+  const box = (await page.getByText(/Height \d+ km/).boundingBox())!
+  await page.mouse.move(box.x + 200, box.y + 400)
+  await page.mouse.down()
+  await page.mouse.move(box.x + 400, box.y + 450, { steps: 8 })
+  await page.mouse.up()
+  await page.keyboard.press('Escape')
+  await expect(back).toHaveCount(0)
+  await expect(page.locator('.maplibregl-canvas')).toHaveCount(1)
+})

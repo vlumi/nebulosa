@@ -42,3 +42,18 @@
     max-height: 45vh;
   }
 }
+
+.ride {
+  margin: 0.5rem 0 0.25rem 1.5rem;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.ride:hover {
+  background: var(--hover);
+}

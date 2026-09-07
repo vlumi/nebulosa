@@ -105,6 +105,7 @@ export interface Strings {
     date: string
     now: string
   }
+  ride: { open: string; back: string; look: string }
   follow: { follow: (name: string) => string; following: (name: string) => string }
   help: {
     title: string
@@ -120,6 +121,7 @@ export interface Strings {
     globe: string
     theme: string
     follow: string
+    ride: string
     escape: string
     help: string
   }
@@ -237,6 +239,11 @@ export const en: Strings = {
     date: 'Date (UTC)',
     now: 'now',
   },
+  ride: {
+    open: 'View from the satellite',
+    back: 'Back to the map',
+    look: 'Drag to look around',
+  },
   follow: {
     follow: (name) => `Follow ${name}`,
     following: (name) => `Following ${name}; drag the map to let go`,
@@ -255,6 +262,7 @@ export const en: Strings = {
     globe: 'globe / flat map',
     theme: 'light / dark',
     follow: 'follow the selected satellite',
+    ride: 'the view from the selected satellite',
     escape: 'clear the pass, then the place, then the satellite',
     help: 'this help',
   },
@@ -367,6 +375,11 @@ export const ja: Strings = {
     date: '日付 (UTC)',
     now: '現在',
   },
+  ride: {
+    open: '衛星からの視点',
+    back: '地図に戻る',
+    look: 'ドラッグで見回せます',
+  },
   follow: {
     follow: (name) => `${name}を追跡`,
     following: (name) => `${name}を追跡中。地図をドラッグすると解除`,
@@ -385,6 +398,7 @@ export const ja: Strings = {
     globe: '地球儀 / 平面地図',
     theme: 'ライト / ダーク',
     follow: '選択中の衛星を追跡',
+    ride: '選択中の衛星からの視点',
     escape: 'パス、地点、衛星の順に解除',
     help: 'このヘルプ',
   },

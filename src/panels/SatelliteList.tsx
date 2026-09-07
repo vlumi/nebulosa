@@ -25,6 +25,8 @@ interface Props {
   placeName?: string
   /** The selected satellite's passes over the selected place, for its timeline. */
   passes: Pass[]
+  /** Opens the view from the selected satellite's seat. */
+  onRide: () => void
 }
 
 const BEHIND_CHOICES = [...SPAN_CHOICES].reverse()
@@ -40,6 +42,7 @@ export function SatelliteList({
   nextPass,
   placeName,
   passes,
+  onRide,
 }: Props) {
   const t = useStrings()
   const epoch = newestEpoch(satellites.map((s) => s.omm))
@@ -69,6 +72,9 @@ export function SatelliteList({
                   <Detail satellite={s} now={now} t={t} />
                   <Readout satellite={s} nextPass={nextPass} placeName={placeName} t={t} />
                   <Timeline satellite={s} span={span} passes={passes} />
+                  <button type="button" className={styles.ride} onClick={onRide}>
+                    {t.ride.open}
+                  </button>
                 </>
               )}
             </li>

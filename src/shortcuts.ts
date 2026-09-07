@@ -19,6 +19,7 @@ export const SHORTCUTS: { keys: string; does: keyof Strings['help'] }[] = [
   { keys: '1 2 3', does: 'sheets' },
   { keys: 'O', does: 'onlySelected' },
   { keys: 'F', does: 'follow' },
+  { keys: 'V', does: 'ride' },
   { keys: 'R', does: 'reach' },
   { keys: 'G', does: 'globe' },
   { keys: 'T', does: 'theme' },
@@ -138,6 +139,10 @@ export function dispatchShortcut(
     case 'f':
     case 'F':
       if (s.selection.noradId !== null) s.toggleFollow()
+      break
+    case 'v':
+    case 'V':
+      s.setRide(!s.ride)
       break
     case 't':
     case 'T':

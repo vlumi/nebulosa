@@ -1,0 +1,61 @@
+/* Over the map and its bars, under the time bar, which keeps its place at the foot. */
+.view {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background: var(--bg);
+  color: var(--text);
+  touch-action: none;
+  cursor: grab;
+}
+
+.view:active {
+  cursor: grabbing;
+}
+
+.map {
+  position: absolute;
+  inset: 0;
+}
+
+.hud {
+  position: absolute;
+  top: 0.75rem;
+  left: 3.5rem;
+  right: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--panel);
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+  width: fit-content;
+}
+
+.back {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.hint {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--panel);
+  pointer-events: none;
+}
