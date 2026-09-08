@@ -1,13 +1,14 @@
-/* The corner under the help button; on a phone, above the bars, whose height main carries as a variable. */
+/* The corner, on the time bar's top edge so a wide bar and the buttons never meet; on a phone above all the bars.
+ * main carries both heights as variables. */
 .about {
   position: absolute;
   z-index: 3;
   right: 0.75rem;
-  bottom: 0.75rem;
+  bottom: calc(var(--timebar-inset, 0px) + 0.5rem);
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.5rem;
+  gap: 1rem;
 }
 
 .toggle {
@@ -15,6 +16,8 @@
   height: 1.8rem;
   border: 1px solid var(--border);
   border-radius: 50%;
+  /* iOS gives buttons side padding, which would make a round one oval. */
+  padding: 0;
   background: var(--panel);
   color: var(--muted);
   font: inherit;

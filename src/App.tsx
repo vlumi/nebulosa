@@ -46,10 +46,14 @@ function App() {
   const mainRef = useRef<HTMLElement>(null)
   const toolbarRef = useRef<HTMLDivElement>(null)
   const [bottomInset, setBottomInset] = useState(0)
+  // The time bar's own height too, for the corner buttons that sit on it.
+  const [timeBarInset, setTimeBarInset] = useState(0)
   useEffect(() => {
     const main = mainRef.current?.getBoundingClientRect()
     const toolbar = toolbarRef.current?.getBoundingClientRect()
+    const bar = mainRef.current?.querySelector('[data-timebar]')?.getBoundingClientRect()
     if (main && toolbar) setBottomInset(Math.max(0, Math.round(main.bottom - toolbar.top)))
+    if (main && bar) setTimeBarInset(Math.max(0, Math.round(main.bottom - bar.top)))
   }, [narrow])
   const systemDark = useSystemDark()
   const theme = resolveTheme(app.themeChoice, systemDark)
@@ -143,7 +147,10 @@ function App() {
         <p>{s.subtitle}</p>
         <div className={styles.headerToggles}>{toggles}</div>
       </header>
-      <main ref={mainRef} style={{ '--bottom-inset': `${bottomInset}px` } as CSSProperties}>
+      <main
+        ref={mainRef}
+        style={{ '--bottom-inset': `${bottomInset}px`, '--timebar-inset': `${timeBarInset}px` } as CSSProperties}
+      >
         <Suspense fallback={<div className="map" />}>
           <LiveMap
             satellites={satellites}
