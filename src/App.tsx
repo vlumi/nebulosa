@@ -19,6 +19,7 @@ import { Toolbar } from './panels/Toolbar'
 import { useNarrow } from './panels/useNarrow'
 import { placeName } from './i18n/placeName'
 import { useStrings } from './i18n/useStrings'
+import { attributionLine, COPYRIGHT, REPO_URL } from './shared/site'
 import { resolveTheme, type Theme } from './shared/theme'
 import { useSystemDark } from './shared/useSystemDark'
 import { dispatchShortcut, releaseFocusAfterPointerClick } from './shortcuts'
@@ -149,6 +150,7 @@ function App() {
             selectedSatellite={selectedSatellite}
             theme={theme}
             bottomInset={bottomInset}
+            attribution={narrow ? attributionLine(s) : undefined}
           />
         </Suspense>
         {app.ride && selectedSatellite && (
@@ -270,7 +272,7 @@ function App() {
       <footer>
         <span>{s.footer}</span>
         <span className={styles.colophon}>
-          <a href="https://github.com/vlumi/nebulosa">{s.source}</a> · © 2026 Ville Misaki · MIT
+          <a href={REPO_URL}>{s.source}</a> · {COPYRIGHT}
         </span>
       </footer>
     </>
@@ -313,11 +315,13 @@ function LiveMap({
   selectedSatellite,
   theme,
   bottomInset,
+  attribution,
 }: {
   satellites: ReturnType<typeof satelliteFrom>[]
   selectedSatellite: ReturnType<typeof satelliteFrom> | undefined
   theme: Theme
   bottomInset: number
+  attribution?: string
 }) {
   const timeMs = useFrame((f) => f.timeMs)
   const time = useMemo(() => new Date(timeMs), [timeMs])
@@ -366,6 +370,7 @@ function LiveMap({
       theme={theme}
       lang={lang}
       bottomInset={bottomInset}
+      attribution={attribution}
     />
   )
 }

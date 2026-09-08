@@ -9,6 +9,7 @@ vi.mock('maplibre-gl', () => ({
   Map: vi.fn(function () {
     return {
       addControl: vi.fn(),
+      removeControl: vi.fn(),
       remove: vi.fn(),
       easeTo: vi.fn(),
       jumpTo: vi.fn(),
@@ -40,6 +41,7 @@ vi.mock('maplibre-gl', () => ({
     return marker
   }),
   NavigationControl: vi.fn(),
+  AttributionControl: vi.fn(),
   setWorkerUrl: vi.fn(),
 }))
 vi.mock('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url', () => ({ default: '/worker.js' }))

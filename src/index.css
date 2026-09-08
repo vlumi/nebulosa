@@ -107,6 +107,11 @@ main > .map {
     display: none;
   }
 
+  /* The time bar spans the whole width here and would cover the corner; the map hands its bars' height over. */
+  main .maplibregl-ctrl-bottom-right {
+    bottom: calc(var(--bottom-inset, 0px) + 0.5rem);
+  }
+
   /* With the zoom buttons gone the compass is alone, but it keeps the divider MapLibre gives a third button. */
   main .maplibregl-ctrl-group button.maplibregl-ctrl-compass {
     border-top: 0;

@@ -1,6 +1,6 @@
 import { act, render } from '@testing-library/react'
 import { MapLibreOverlay } from '@deck.gl/maplibre'
-import { Map as MapLibre, Marker } from 'maplibre-gl'
+import { AttributionControl, Map as MapLibre, Marker } from 'maplibre-gl'
 import { epochOf } from '../orbit/elements'
 import { strix1, strix9 } from '../test/fixtures'
 
@@ -32,6 +32,7 @@ const { mapInstance, overlayInstance, markerInstance } = vi.hoisted(() => {
   return {
     mapInstance: {
       addControl: vi.fn(),
+      removeControl: vi.fn(),
       remove: vi.fn(),
       easeTo: vi.fn(),
       jumpTo: vi.fn(),
@@ -88,6 +89,7 @@ vi.mock('maplibre-gl', () => ({
     return markerInstance
   }),
   NavigationControl: vi.fn(),
+  AttributionControl: vi.fn(),
   setWorkerUrl: vi.fn(),
 }))
 vi.mock('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url', () => ({ default: '/worker.js' }))
@@ -570,4 +572,30 @@ test('basemap labels that show a name follow the language, once the style loads 
     ['get', 'name:latin'],
     ['get', 'name'],
   ])
+})
+
+test('the attribution takes the site line it is given and is rebuilt when the line changes', () => {
+  const props = {
+    satellites: [],
+    now: epochOf(strix1),
+    selected: null,
+    onSelect: vi.fn(),
+    places: [],
+    placeId: null,
+    onPlaceSelect: vi.fn(),
+    onPlaceMove: vi.fn(),
+    onPlaceAdd: vi.fn(),
+  }
+  const { rerender } = render(<MapView {...props} />)
+  expect(AttributionControl).toHaveBeenLastCalledWith({
+    compact: true,
+    customAttribution: expect.stringContaining('maplibre.org'),
+  })
+  rerender(<MapView {...props} attribution="Unofficial demo. <a href='x'>Source</a>" />)
+  expect(mapInstance.removeControl).toHaveBeenCalledTimes(1)
+  expect(AttributionControl).toHaveBeenLastCalledWith({
+    compact: true,
+    customAttribution: [expect.stringContaining('maplibre.org'), "Unofficial demo. <a href='x'>Source</a>"],
+  })
+  expect(mapInstance.addControl).toHaveBeenLastCalledWith(expect.anything(), 'bottom-right')
 })

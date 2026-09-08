@@ -1,8 +1,15 @@
 import { MapLibreOverlay } from '@deck.gl/maplibre'
-import { Map as MapLibre, NavigationControl, setWorkerUrl, type GeoJSONSource, type Marker } from 'maplibre-gl'
+import {
+  AttributionControl,
+  Map as MapLibre,
+  NavigationControl,
+  setWorkerUrl,
+  type GeoJSONSource,
+  type Marker,
+} from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { buildLayers, hoverAt, trackData, type Ghost, type Hover, type SatelliteDatum, type TrackDatum } from './layers'
 import type { LonLat } from '../orbit/orbit'
 import { STRINGS, type Lang } from '../i18n/strings'
@@ -70,9 +77,14 @@ interface Props {
   theme?: Theme
   /** The basemap's labels and a new place's name come in this language. */
   lang?: Lang
+  /** The site's own line for the map's attribution, as HTML, where the footer that carries it is hidden. */
+  attribution?: string
   /** Height of the bars floating over the map's foot; the camera centers and the fit is taken above them. */
   bottomInset?: number
 }
+
+/** MapLibre's own credit, as its default control carries it: a control built by hand starts without it. */
+const MAPLIBRE_CREDIT = '<a href="https://maplibre.org/" target="_blank">MapLibre</a>'
 
 export function MapView({
   satellites,
@@ -95,6 +107,7 @@ export function MapView({
   onFollowBreak,
   theme = 'dark',
   lang = 'en',
+  attribution,
   bottomInset = 0,
 }: Props) {
   const container = useRef<HTMLDivElement>(null)
@@ -154,6 +167,8 @@ export function MapView({
       // MapLibre's own lines are antialiased in the shader and it leaves multisampling off; deck.gl's paths and
       // discs share the context in interleaved mode and would render with jagged edges without it.
       canvasContextAttributes: { antialias: true },
+      // The attribution is added below, with the site's own line in it where the footer is hidden.
+      attributionControl: false,
       center: [139.7, 35.7],
       zoom: fitZoom(
         container.current!.clientWidth,
@@ -294,6 +309,21 @@ export function MapView({
     if (map.current && styleReady.current) labelLanguage(map.current, lang)
   }, [lang])
 
+  // The map's attribution: the basemap credits, plus the site's own line where the footer is hidden. MapLibre makes it
+  // a compact ⓘ on narrow maps, which expands on a tap.
+  useEffect(() => {
+    const m = map.current
+    if (!m) return
+    const control = new AttributionControl({
+      compact: true,
+      customAttribution: attribution ? [MAPLIBRE_CREDIT, attribution] : MAPLIBRE_CREDIT,
+    })
+    m.addControl(control, 'bottom-right')
+    return () => {
+      if (map.current === m) m.removeControl(control)
+    }
+  }, [attribution])
+
   // The projection is part of the style; before the style has loaded, the load handler above applies it.
   useEffect(applyProjection, [globe, applyProjection])
 
@@ -360,5 +390,6 @@ export function MapView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [satellites, tracks, now, selected, hover, probe, ghost, globe, viewVersion, theme, lang])
 
-  return <div ref={container} className="map" />
+  // The bars' height, so the map's corner controls can sit above them where the bars span the whole width.
+  return <div ref={container} className="map" style={{ '--bottom-inset': `${bottomInset}px` } as CSSProperties} />
 }
