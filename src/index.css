@@ -91,10 +91,6 @@ main > .map {
   color: var(--muted);
 }
 
-.maplibregl-ctrl-attrib {
-  font-size: 0.7rem;
-}
-
 /* Small viewports: phones, and windows too short for two panels above each other. Keep in step with useNarrow.ts. */
 @media (max-width: 720px), (max-height: 560px) {
   /* Pinch replaces the zoom buttons; the compass stays, because touch rotates the map easily. */
@@ -102,11 +98,6 @@ main > .map {
   main .maplibregl-ctrl-group button.maplibregl-ctrl-zoom-in,
   main .maplibregl-ctrl-group button.maplibregl-ctrl-zoom-out {
     display: none;
-  }
-
-  /* The time bar spans the whole width here and would cover the corner; the map hands its bars' height over. */
-  main .maplibregl-ctrl-bottom-right {
-    bottom: calc(var(--bottom-inset, 0px) + 0.5rem);
   }
 
   /* With the zoom buttons gone the compass is alone, but it keeps the divider MapLibre gives a third button. */

@@ -369,3 +369,17 @@ test('V, or the button under the readout, opens the view from the selected satel
   await userEvent.click(screen.getByRole('button', { name: 'Back to the map' }))
   expect(screen.queryByRole('button', { name: 'Back to the map' })).toBeNull()
 })
+
+test('the ⓘ opens the credits with the disclaimer, the data, map and library links and the source; Escape closes it', async () => {
+  renderApp()
+  await userEvent.click(screen.getByRole('button', { name: 'About this site' }))
+  const about = within(screen.getByRole('region', { name: 'About this site' }))
+  expect(about.getByText('Unofficial demo, not affiliated with Synspective.')).toBeInTheDocument()
+  expect(about.getByRole('link', { name: 'CelesTrak' })).toHaveAttribute('href', 'https://celestrak.org/')
+  expect(about.getByRole('link', { name: '© OpenStreetMap contributors' })).toBeInTheDocument()
+  expect(about.getByRole('link', { name: 'deck.gl' })).toBeInTheDocument()
+  expect(about.getByRole('link', { name: 'Source' })).toHaveAttribute('href', 'https://github.com/vlumi/nebulosa')
+  expect(about.getByText(/© 2026 Ville Misaki · MIT/)).toBeInTheDocument()
+  await userEvent.keyboard('{Escape}')
+  expect(screen.queryByRole('region', { name: 'About this site' })).toBeNull()
+})

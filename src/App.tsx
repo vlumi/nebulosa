@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import type { Hover } from './map/layers'
 import { loadElements, type Omm } from './orbit/elements'
 import { positionAt, satelliteFrom } from './orbit/orbit'
@@ -6,6 +6,7 @@ import { nextPassOf, type Pass } from './orbit/passes'
 import { inReach } from './orbit/swath'
 import { usePasses } from './orbit/usePasses'
 import { FollowButton } from './panels/FollowButton'
+import { About } from './panels/About'
 import { Help } from './panels/Help'
 import { FlatMapIcon, GlobeIcon, MoonIcon, SunIcon } from './panels/Icons'
 import { LanguageSelect } from './panels/LanguageSelect'
@@ -19,7 +20,6 @@ import { Toolbar } from './panels/Toolbar'
 import { useNarrow } from './panels/useNarrow'
 import { placeName } from './i18n/placeName'
 import { useStrings } from './i18n/useStrings'
-import { attributionLine } from './shared/site'
 import { resolveTheme, type Theme } from './shared/theme'
 import { useSystemDark } from './shared/useSystemDark'
 import { dispatchShortcut, releaseFocusAfterPointerClick } from './shortcuts'
@@ -143,14 +143,13 @@ function App() {
         <p>{s.subtitle}</p>
         <div className={styles.headerToggles}>{toggles}</div>
       </header>
-      <main ref={mainRef}>
+      <main ref={mainRef} style={{ '--bottom-inset': `${bottomInset}px` } as CSSProperties}>
         <Suspense fallback={<div className="map" />}>
           <LiveMap
             satellites={satellites}
             selectedSatellite={selectedSatellite}
             theme={theme}
             bottomInset={bottomInset}
-            attribution={attributionLine(s)}
           />
         </Suspense>
         {app.ride && selectedSatellite && (
@@ -268,6 +267,7 @@ function App() {
         )}
         <LiveTimeBar />
         <Help open={app.helpOpen} onToggle={app.setHelpOpen} />
+        <About open={app.aboutOpen} onToggle={app.setAboutOpen} />
       </main>
     </>
   )
@@ -309,13 +309,11 @@ function LiveMap({
   selectedSatellite,
   theme,
   bottomInset,
-  attribution,
 }: {
   satellites: ReturnType<typeof satelliteFrom>[]
   selectedSatellite: ReturnType<typeof satelliteFrom> | undefined
   theme: Theme
   bottomInset: number
-  attribution?: string
 }) {
   const timeMs = useFrame((f) => f.timeMs)
   const time = useMemo(() => new Date(timeMs), [timeMs])
@@ -364,7 +362,6 @@ function LiveMap({
       theme={theme}
       lang={lang}
       bottomInset={bottomInset}
-      attribution={attribution}
     />
   )
 }

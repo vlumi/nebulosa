@@ -42,7 +42,7 @@ Passes are geometric visibility above the horizon, not imaging opportunities. Wh
 
 **Sheets and toolbar.** Three pills, satellites, places and passes, each showing what is chosen in it and opening its sheet with `1`, `2`, `3` or a tap; `↑ ↓` step through the open one. While something is chosen the pill has a × that clears it, and every sheet has its own ×. On a phone one sheet is open at a time and choosing something closes it. `Esc` peels the selection back a layer at a time: pass, then place, then satellite.
 
-**Toggles.** In the title row: globe or flat map (`G`), light or dark (`T`, following the system until chosen), `SAR` reach on or off (`R`), and the language, English or Japanese, following the browser until chosen; every word changes, the basemap's labels included. `?` lists every key.
+**Toggles.** In the title row: globe or flat map (`G`), light or dark (`T`, following the system until chosen), `SAR` reach on or off (`R`), and the language, English or Japanese, following the browser until chosen; every word changes, the basemap's labels included. `?` lists every key, and the ⓘ in the corner opens the credits: data, map, libraries, source and license.
 
 ## Data
 
