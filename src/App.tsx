@@ -267,7 +267,12 @@ function App() {
         <LiveTimeBar />
         <Help open={app.helpOpen} onToggle={app.setHelpOpen} />
       </main>
-      <footer>{s.footer}</footer>
+      <footer>
+        <span>{s.footer}</span>
+        <span className={styles.colophon}>
+          <a href="https://github.com/vlumi/nebulosa">{s.source}</a> · © 2026 Ville Misaki · MIT
+        </span>
+      </footer>
     </>
   )
 }
