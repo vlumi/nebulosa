@@ -24,6 +24,7 @@ export const SHORTCUTS: { keys: string; does: keyof Strings['help'] }[] = [
   { keys: 'G', does: 'globe' },
   { keys: 'T', does: 'theme' },
   { keys: 'Esc', does: 'escape' },
+  { keys: 'I', does: 'about' },
   { keys: '?', does: 'help' },
 ]
 
@@ -143,6 +144,10 @@ export function dispatchShortcut(
     case 'v':
     case 'V':
       s.setRide(!s.ride)
+      break
+    case 'i':
+    case 'I':
+      s.setAboutOpen(!s.aboutOpen)
       break
     case 't':
     case 'T':

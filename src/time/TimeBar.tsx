@@ -22,7 +22,7 @@ export function TimeBar({ clock, now, onChange }: Props) {
   const playing = !clock.paused
 
   return (
-    <div className={styles.bar}>
+    <div className={styles.bar} data-timebar>
       <button type="button" onClick={() => onChange(liveClock(realMs))} disabled={isLive(clock, realMs)}>
         {s.time.live}
       </button>

@@ -1,12 +1,13 @@
+/* Beside the about button, which holds the corner itself; each panel opens above its own button. */
 .help {
   position: absolute;
   z-index: 3;
-  right: 0.75rem;
-  bottom: 3rem;
+  right: 3.3rem;
+  bottom: calc(var(--timebar-inset, 0px) + 0.5rem);
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.5rem;
+  gap: 1rem;
 }
 
 .buttons {
@@ -20,6 +21,8 @@
   height: 1.8rem;
   border: 1px solid var(--border);
   border-radius: 50%;
+  /* iOS gives buttons side padding, which would make a round one oval. */
+  padding: 0;
   background: var(--panel);
   color: var(--muted);
   font: inherit;
@@ -62,8 +65,16 @@
   color: var(--muted);
 }
 
-/* Phones have no keyboard, and the map toggles move to the title row; nothing of this is left to show. */
+/* In the phone layout the bars span the width; the buttons sit above them, as the about button does. */
 @media (max-width: 720px), (max-height: 560px) {
+  .help {
+    bottom: calc(var(--bottom-inset, 0px) + 0.75rem);
+  }
+}
+
+/* A touch-only device has no keyboard to speak of, whatever its size: a pointer that cannot hover is a finger, and a
+ * keyboard rarely comes without a mouse or trackpad, which can. A window too short for the legend hides it too. */
+@media (hover: none), (max-height: 560px) {
   .help {
     display: none;
   }

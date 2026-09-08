@@ -1,7 +1,8 @@
 /* Dark by default; the light set follows below. The numeric twins for WebGL live in shared/theme.ts. */
 :root {
   --bg: #0b0d14;
-  --panel: #0b0d14;
+  /* A step above the page, so a panel reads as a box over it and not only over the map. */
+  --panel: #141826;
   --text: #d6d9e0;
   --muted: #8a90a0;
   --accent: #eedd66;
@@ -53,8 +54,7 @@ body {
   flex-direction: column;
 }
 
-header,
-footer {
+header {
   padding: 0.5rem 1rem;
   display: flex;
   align-items: baseline;
@@ -68,8 +68,7 @@ header h1 {
   color: var(--accent);
 }
 
-header p,
-footer {
+header p {
   margin: 0;
   color: var(--muted);
   font-size: 0.8rem;
@@ -93,15 +92,10 @@ main > .map {
   color: var(--muted);
 }
 
-.maplibregl-ctrl-attrib {
-  font-size: 0.7rem;
-}
-
 /* Small viewports: phones, and windows too short for two panels above each other. Keep in step with useNarrow.ts. */
 @media (max-width: 720px), (max-height: 560px) {
   /* Pinch replaces the zoom buttons; the compass stays, because touch rotates the map easily. */
   header p,
-  footer,
   main .maplibregl-ctrl-group button.maplibregl-ctrl-zoom-in,
   main .maplibregl-ctrl-group button.maplibregl-ctrl-zoom-out {
     display: none;

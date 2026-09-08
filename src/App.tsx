@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import type { Hover } from './map/layers'
 import { loadElements, type Omm } from './orbit/elements'
 import { positionAt, satelliteFrom } from './orbit/orbit'
@@ -6,6 +6,7 @@ import { nextPassOf, type Pass } from './orbit/passes'
 import { inReach } from './orbit/swath'
 import { usePasses } from './orbit/usePasses'
 import { FollowButton } from './panels/FollowButton'
+import { About } from './panels/About'
 import { Help } from './panels/Help'
 import { FlatMapIcon, GlobeIcon, MoonIcon, SunIcon } from './panels/Icons'
 import { LanguageSelect } from './panels/LanguageSelect'
@@ -45,10 +46,14 @@ function App() {
   const mainRef = useRef<HTMLElement>(null)
   const toolbarRef = useRef<HTMLDivElement>(null)
   const [bottomInset, setBottomInset] = useState(0)
+  // The time bar's own height too, for the corner buttons that sit on it.
+  const [timeBarInset, setTimeBarInset] = useState(0)
   useEffect(() => {
     const main = mainRef.current?.getBoundingClientRect()
     const toolbar = toolbarRef.current?.getBoundingClientRect()
+    const bar = mainRef.current?.querySelector('[data-timebar]')?.getBoundingClientRect()
     if (main && toolbar) setBottomInset(Math.max(0, Math.round(main.bottom - toolbar.top)))
+    if (main && bar) setTimeBarInset(Math.max(0, Math.round(main.bottom - bar.top)))
   }, [narrow])
   const systemDark = useSystemDark()
   const theme = resolveTheme(app.themeChoice, systemDark)
@@ -142,7 +147,10 @@ function App() {
         <p>{s.subtitle}</p>
         <div className={styles.headerToggles}>{toggles}</div>
       </header>
-      <main ref={mainRef}>
+      <main
+        ref={mainRef}
+        style={{ '--bottom-inset': `${bottomInset}px`, '--timebar-inset': `${timeBarInset}px` } as CSSProperties}
+      >
         <Suspense fallback={<div className="map" />}>
           <LiveMap
             satellites={satellites}
@@ -266,8 +274,8 @@ function App() {
         )}
         <LiveTimeBar />
         <Help open={app.helpOpen} onToggle={app.setHelpOpen} />
+        <About open={app.aboutOpen} onToggle={app.setAboutOpen} />
       </main>
-      <footer>{s.footer}</footer>
     </>
   )
 }

@@ -1,0 +1,60 @@
+/* The corner, on the time bar's top edge so a wide bar and the buttons never meet; on a phone above all the bars.
+ * main carries both heights as variables. */
+.about {
+  position: absolute;
+  z-index: 3;
+  right: 0.75rem;
+  bottom: calc(var(--timebar-inset, 0px) + 0.5rem);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.toggle {
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  /* iOS gives buttons side padding, which would make a round one oval. */
+  padding: 0;
+  background: var(--panel);
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  font-style: italic;
+  cursor: pointer;
+}
+
+.toggle:hover,
+.toggle[aria-expanded='true'] {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.panel {
+  max-width: 22rem;
+  padding: 0.75rem 1rem;
+  background: var(--panel);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.panel p {
+  margin: 0;
+}
+
+.panel p + p {
+  margin-top: 0.4rem;
+}
+
+.panel a {
+  color: var(--text);
+}
+
+@media (max-width: 720px), (max-height: 560px) {
+  .about {
+    bottom: calc(var(--bottom-inset, 0px) + 0.75rem);
+  }
+}

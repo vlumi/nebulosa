@@ -9,7 +9,8 @@ export const LANGS: Lang[] = ['en', 'ja']
  */
 export interface Strings {
   subtitle: string
-  footer: string
+  builtWith: string
+  about: { title: string; disclaimer: string; data: string; map: string }
   loading: string
   pickPlace: string
   sheet: { constellation: string; places: string; passes: string }
@@ -123,6 +124,7 @@ export interface Strings {
     follow: string
     ride: string
     escape: string
+    about: string
     help: string
   }
   units: {
@@ -142,8 +144,13 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 export const en: Strings = {
   subtitle: 'Ground tracks of the StriX SAR constellation',
-  footer:
-    'Unofficial demo, not affiliated with Synspective. Orbital data: CelesTrak. Map: OpenFreeMap, © OpenStreetMap.',
+  about: {
+    title: 'About this site',
+    disclaimer: 'Unofficial demo, not affiliated with Synspective.',
+    data: 'Orbital data',
+    map: 'Map',
+  },
+  builtWith: 'Built with',
   loading: 'Loading orbital elements…',
   pickPlace: 'Pick a place to see passes over it.',
   sheet: { constellation: 'Constellation', places: 'Places', passes: 'Passes' },
@@ -264,6 +271,7 @@ export const en: Strings = {
     follow: 'follow the selected satellite',
     ride: 'the view from the selected satellite',
     escape: 'clear the pass, then the place, then the satellite',
+    about: 'about this site',
     help: 'this help',
   },
   units: {
@@ -280,7 +288,13 @@ export const en: Strings = {
 
 export const ja: Strings = {
   subtitle: 'StriX SAR衛星群の地上軌跡',
-  footer: '非公式のデモで、Synspective社とは無関係です。軌道データ: CelesTrak。地図: OpenFreeMap、© OpenStreetMap。',
+  about: {
+    title: 'このサイトについて',
+    disclaimer: '非公式のデモで、Synspective社とは無関係です。',
+    data: '軌道データ',
+    map: '地図',
+  },
+  builtWith: '使用ライブラリ:',
   loading: '軌道要素を読み込んでいます…',
   pickPlace: 'パスを見るには地点を選んでください。',
   sheet: { constellation: '衛星群', places: '地点', passes: 'パス' },
@@ -400,6 +414,7 @@ export const ja: Strings = {
     follow: '選択中の衛星を追跡',
     ride: '選択中の衛星からの視点',
     escape: 'パス、地点、衛星の順に解除',
+    about: 'このサイトについて',
     help: 'このヘルプ',
   },
   units: {

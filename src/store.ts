@@ -47,6 +47,8 @@ interface State extends PlacesState {
   /** The one list open above the toolbar, if any. */
   sheet: Sheet | null
   helpOpen: boolean
+  /** The credits panel behind the ⓘ button. */
+  aboutOpen: boolean
   /** The view from the selected satellite's seat, over the whole screen. */
   ride: boolean
   /** The radar's reach drawn beside the selected satellite's track. */
@@ -69,6 +71,7 @@ interface Actions {
   /** Help first; then pass, ghost and probe; then the place; then the satellite. */
   escape: () => void
   setRide: (ride: boolean) => void
+  setAboutOpen: (open: boolean) => void
   /** `name` from the map's labels when there is one nearby; else the coordinates. */
   addPlace: (location: Location, name?: string) => void
   /** The one located place, added or moved to the browser's position, selected, and flown to. */
@@ -112,6 +115,7 @@ const initial = (places: PlacesState): State => ({
   clock: liveClock(Date.now()),
   sheet: 'satellites',
   helpOpen: false,
+  aboutOpen: false,
   ride: false,
   reachVisible: true,
   globe: true,
@@ -154,8 +158,9 @@ export const useApp = create<State & Actions>((set, get) => ({
     set((s) => (s.selection.noradId === null ? {} : { selection: { ...s.selection, probeMs: timeMs } })),
   clearPass: () => set((s) => ({ selection: { ...NOTHING, noradId: s.selection.noradId } })),
   escape: () => {
-    const { helpOpen, ride, selection, placeId } = get()
-    if (ride) set({ ride: false })
+    const { aboutOpen, helpOpen, ride, selection, placeId } = get()
+    if (aboutOpen) set({ aboutOpen: false })
+    else if (ride) set({ ride: false })
     else if (helpOpen) set({ helpOpen: false })
     else if (selection.activePass || selection.ghost || selection.probeMs !== null)
       set({ selection: { ...NOTHING, noradId: selection.noradId } })
@@ -206,7 +211,9 @@ export const useApp = create<State & Actions>((set, get) => ({
   goLive: (realMs = Date.now()) => set({ clock: liveClock(realMs) }),
   toggleSheet: (sheet) => set((s) => ({ sheet: s.sheet === sheet ? null : sheet })),
   closeSheet: () => set({ sheet: null }),
-  setHelpOpen: (helpOpen) => set({ helpOpen }),
+  // One corner panel at a time: the two share the corner and the later one would cover the other.
+  setHelpOpen: (helpOpen) => set((s) => ({ helpOpen, aboutOpen: helpOpen ? false : s.aboutOpen })),
+  setAboutOpen: (aboutOpen) => set((s) => ({ aboutOpen, helpOpen: aboutOpen ? false : s.helpOpen })),
   setRide: (ride) => set((s) => ({ ride: ride && s.selection.noradId !== null })),
   toggleReach: () => set((s) => ({ reachVisible: !s.reachVisible })),
   toggleGlobe: () => set((s) => ({ globe: !s.globe })),

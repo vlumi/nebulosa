@@ -9,6 +9,9 @@ vi.mock('maplibre-gl', () => ({
   Map: vi.fn(function () {
     return {
       addControl: vi.fn(),
+      removeControl: vi.fn(),
+      once: vi.fn(),
+      getContainer: vi.fn(() => document.createElement('div')),
       remove: vi.fn(),
       easeTo: vi.fn(),
       jumpTo: vi.fn(),
@@ -40,6 +43,7 @@ vi.mock('maplibre-gl', () => ({
     return marker
   }),
   NavigationControl: vi.fn(),
+  AttributionControl: vi.fn(),
   setWorkerUrl: vi.fn(),
 }))
 vi.mock('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url', () => ({ default: '/worker.js' }))
@@ -364,4 +368,18 @@ test('V, or the button under the readout, opens the view from the selected satel
   await userEvent.keyboard('v')
   await userEvent.click(screen.getByRole('button', { name: 'Back to the map' }))
   expect(screen.queryByRole('button', { name: 'Back to the map' })).toBeNull()
+})
+
+test('the ⓘ opens the credits: the name as the link to the source, the copyright, the disclaimer, the data, map and library links; Escape closes it', async () => {
+  renderApp()
+  await userEvent.click(screen.getByRole('button', { name: 'About this site' }))
+  const about = within(screen.getByRole('region', { name: 'About this site' }))
+  expect(about.getByText('Unofficial demo, not affiliated with Synspective.')).toBeInTheDocument()
+  expect(about.getByRole('link', { name: 'CelesTrak' })).toHaveAttribute('href', 'https://celestrak.org/')
+  expect(about.getByRole('link', { name: '© OpenStreetMap contributors' })).toBeInTheDocument()
+  expect(about.getByRole('link', { name: 'deck.gl' })).toBeInTheDocument()
+  expect(about.getByRole('link', { name: 'nebulosa' })).toHaveAttribute('href', 'https://github.com/vlumi/nebulosa')
+  expect(about.getByText(/© 2026 Ville Misaki · MIT/)).toBeInTheDocument()
+  await userEvent.keyboard('{Escape}')
+  expect(screen.queryByRole('region', { name: 'About this site' })).toBeNull()
 })

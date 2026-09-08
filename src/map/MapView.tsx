@@ -154,6 +154,8 @@ export function MapView({
       // MapLibre's own lines are antialiased in the shader and it leaves multisampling off; deck.gl's paths and
       // discs share the context in interleaved mode and would render with jagged edges without it.
       canvasContextAttributes: { antialias: true },
+      // The credits, the basemap's included, live in the About panel; MapLibre's own control is not used.
+      attributionControl: false,
       center: [139.7, 35.7],
       zoom: fitZoom(
         container.current!.clientWidth,

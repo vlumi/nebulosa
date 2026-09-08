@@ -32,6 +32,9 @@ const { mapInstance, overlayInstance, markerInstance } = vi.hoisted(() => {
   return {
     mapInstance: {
       addControl: vi.fn(),
+      removeControl: vi.fn(),
+      once: vi.fn(),
+      getContainer: vi.fn(() => document.createElement('div')),
       remove: vi.fn(),
       easeTo: vi.fn(),
       jumpTo: vi.fn(),
@@ -88,6 +91,7 @@ vi.mock('maplibre-gl', () => ({
     return markerInstance
   }),
   NavigationControl: vi.fn(),
+  AttributionControl: vi.fn(),
   setWorkerUrl: vi.fn(),
 }))
 vi.mock('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url', () => ({ default: '/worker.js' }))
