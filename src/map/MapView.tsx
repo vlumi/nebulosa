@@ -285,11 +285,18 @@ export function MapView({
     map.current?.setPadding({ top: 0, left: 0, right: 0, bottom: bottomInset })
   }, [bottomInset])
 
-  // A new basemap for a new theme: the style.load handler above re-adds the surfaces with the theme's paints.
+  // A new basemap for a new theme: the style.load handler above re-adds the surfaces with the theme's paints. The
+  // projection goes into the new style before it loads: a style without one drops the map to Mercator until the
+  // load handler restores the globe, and Mercator meanwhile forces the camera to fit the world, center to the
+  // equator and zoom to the minimum, which the globe then keeps. Near the poles every theme change shrank the globe.
   useEffect(() => {
-    if (theme === initialTheme.current) return
+    const m = map.current
+    if (!m || theme === initialTheme.current) return
     initialTheme.current = theme
-    map.current?.setStyle(BASEMAPS[theme])
+    const current = m.getProjection()?.type ?? 'mercator'
+    m.setStyle(BASEMAPS[theme], {
+      transformStyle: (_previous, next) => ({ ...next, projection: { type: current } }),
+    })
   }, [theme])
 
   useEffect(() => {
