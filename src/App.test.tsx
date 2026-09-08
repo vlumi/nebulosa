@@ -23,6 +23,7 @@ vi.mock('maplibre-gl', () => ({
       getSource: vi.fn(),
       getLayer: vi.fn(),
       setProjection: vi.fn(),
+      getProjection: vi.fn(() => ({ type: 'globe' })),
       getCenter: () => ({ lng: 139.7, lat: 35.7 }),
       getZoom: () => 1.5,
       getCanvas: () => ({ clientWidth: 1400, clientHeight: 900 }),

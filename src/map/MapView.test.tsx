@@ -534,7 +534,19 @@ test('a theme change swaps the basemap and recolors the pins; the new style gets
   const { rerender } = render(<MapView {...props} theme="dark" />)
   expect(mapInstance.setStyle).not.toHaveBeenCalled()
   rerender(<MapView {...props} theme="light" />)
-  expect(mapInstance.setStyle).toHaveBeenCalledWith('https://tiles.openfreemap.org/styles/positron')
+  expect(mapInstance.setStyle).toHaveBeenCalledWith(
+    'https://tiles.openfreemap.org/styles/positron',
+    expect.objectContaining({ transformStyle: expect.any(Function) }),
+  )
+  // The new style arrives with the current projection, so the swap never passes through Mercator's constraints.
+  const [, { transformStyle }] = mapInstance.setStyle.mock.calls[0] as [
+    string,
+    { transformStyle: (p: unknown, n: object) => object },
+  ]
+  expect(transformStyle(undefined, { version: 8, layers: [] })).toMatchObject({
+    version: 8,
+    projection: { type: mapInstance.projection?.type ?? 'mercator' },
+  })
   expect(Marker).toHaveBeenLastCalledWith(expect.objectContaining({ color: '#8f5f00' }))
 
   act(() => mapInstance.handlers['style.load']())
