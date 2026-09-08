@@ -9,7 +9,6 @@ export const LANGS: Lang[] = ['en', 'ja']
  */
 export interface Strings {
   subtitle: string
-  source: string
   builtWith: string
   about: { title: string; disclaimer: string; data: string; map: string }
   loading: string
@@ -125,6 +124,7 @@ export interface Strings {
     follow: string
     ride: string
     escape: string
+    about: string
     help: string
   }
   units: {
@@ -150,7 +150,6 @@ export const en: Strings = {
     data: 'Orbital data',
     map: 'Map',
   },
-  source: 'Source',
   builtWith: 'Built with',
   loading: 'Loading orbital elements…',
   pickPlace: 'Pick a place to see passes over it.',
@@ -272,6 +271,7 @@ export const en: Strings = {
     follow: 'follow the selected satellite',
     ride: 'the view from the selected satellite',
     escape: 'clear the pass, then the place, then the satellite',
+    about: 'about this site',
     help: 'this help',
   },
   units: {
@@ -294,7 +294,6 @@ export const ja: Strings = {
     data: '軌道データ',
     map: '地図',
   },
-  source: 'ソースコード',
   builtWith: '使用ライブラリ:',
   loading: '軌道要素を読み込んでいます…',
   pickPlace: 'パスを見るには地点を選んでください。',
@@ -415,6 +414,7 @@ export const ja: Strings = {
     follow: '選択中の衛星を追跡',
     ride: '選択中の衛星からの視点',
     escape: 'パス、地点、衛星の順に解除',
+    about: 'このサイトについて',
     help: 'このヘルプ',
   },
   units: {

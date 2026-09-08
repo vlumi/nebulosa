@@ -27,18 +27,18 @@ export function About({ open, onToggle }: Props) {
     <div className={styles.about}>
       {open && (
         <div className={styles.panel} role="region" aria-label={s.about.title}>
+          <p>
+            <a href={REPO_URL} target="_blank" rel="noopener">
+              nebulosa
+            </a>{' '}
+            · {COPYRIGHT}
+          </p>
           <p>{s.about.disclaimer}</p>
           <p>
             {s.about.data}: <Links credits={DATA_CREDITS} />. {s.about.map}: <Links credits={MAP_CREDITS} />.
           </p>
           <p>
             {s.builtWith} <Links credits={LIBRARIES} />.
-          </p>
-          <p>
-            <a href={REPO_URL} target="_blank" rel="noopener">
-              {s.source}
-            </a>{' '}
-            · {COPYRIGHT}
           </p>
         </div>
       )}

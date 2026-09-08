@@ -1,7 +1,8 @@
 /* Dark by default; the light set follows below. The numeric twins for WebGL live in shared/theme.ts. */
 :root {
   --bg: #0b0d14;
-  --panel: #0b0d14;
+  /* A step above the page, so a panel reads as a box over it and not only over the map. */
+  --panel: #141826;
   --text: #d6d9e0;
   --muted: #8a90a0;
   --accent: #eedd66;

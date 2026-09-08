@@ -34,7 +34,7 @@ export const PALETTES: Record<Theme, Palette> = {
     bg: [11, 13, 20],
     cap: [88, 92, 100],
     text: [214, 217, 224],
-    panel: [11, 13, 20, 220],
+    panel: [20, 24, 38, 220],
     pin: '#8a90a0',
     pinSelected: '#eedd66',
     marker: [255, 255, 255],

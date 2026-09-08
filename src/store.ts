@@ -211,8 +211,9 @@ export const useApp = create<State & Actions>((set, get) => ({
   goLive: (realMs = Date.now()) => set({ clock: liveClock(realMs) }),
   toggleSheet: (sheet) => set((s) => ({ sheet: s.sheet === sheet ? null : sheet })),
   closeSheet: () => set({ sheet: null }),
-  setHelpOpen: (helpOpen) => set({ helpOpen }),
-  setAboutOpen: (aboutOpen) => set({ aboutOpen }),
+  // One corner panel at a time: the two share the corner and the later one would cover the other.
+  setHelpOpen: (helpOpen) => set((s) => ({ helpOpen, aboutOpen: helpOpen ? false : s.aboutOpen })),
+  setAboutOpen: (aboutOpen) => set((s) => ({ aboutOpen, helpOpen: aboutOpen ? false : s.helpOpen })),
   setRide: (ride) => set((s) => ({ ride: ride && s.selection.noradId !== null })),
   toggleReach: () => set((s) => ({ reachVisible: !s.reachVisible })),
   toggleGlobe: () => set((s) => ({ globe: !s.globe })),
