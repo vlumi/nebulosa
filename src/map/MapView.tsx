@@ -77,7 +77,7 @@ interface Props {
   theme?: Theme
   /** The basemap's labels and a new place's name come in this language. */
   lang?: Lang
-  /** The site's own line for the map's attribution, as HTML, where the footer that carries it is hidden. */
+  /** The site's own line for the map's attribution, as HTML: the disclaimer, the source and the copyright. */
   attribution?: string
   /** Height of the bars floating over the map's foot; the camera centers and the fit is taken above them. */
   bottomInset?: number
@@ -167,7 +167,7 @@ export function MapView({
       // MapLibre's own lines are antialiased in the shader and it leaves multisampling off; deck.gl's paths and
       // discs share the context in interleaved mode and would render with jagged edges without it.
       canvasContextAttributes: { antialias: true },
-      // The attribution is added below, with the site's own line in it where the footer is hidden.
+      // The attribution is added below, with the site's own line in it.
       attributionControl: false,
       center: [139.7, 35.7],
       zoom: fitZoom(
@@ -309,8 +309,9 @@ export function MapView({
     if (map.current && styleReady.current) labelLanguage(map.current, lang)
   }, [lang])
 
-  // The map's attribution: the basemap credits, plus the site's own line where the footer is hidden. MapLibre makes it
-  // a compact ⓘ on narrow maps, which expands on a tap.
+  // The map's attribution carries the site's own line beside the basemap credits: there is no footer, so this ⓘ is
+  // where the disclaimer, the source and the copyright live on every screen. MapLibre opens it on first showing;
+  // it is folded once the style has given it its text, so the map starts quiet and a tap unfolds it.
   useEffect(() => {
     const m = map.current
     if (!m) return
@@ -319,7 +320,11 @@ export function MapView({
       customAttribution: attribution ? [MAPLIBRE_CREDIT, attribution] : MAPLIBRE_CREDIT,
     })
     m.addControl(control, 'bottom-right')
+    const fold = () =>
+      m.getContainer().querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show')
+    m.once('idle', fold)
     return () => {
+      m.off('idle', fold)
       if (map.current === m) m.removeControl(control)
     }
   }, [attribution])

@@ -33,6 +33,8 @@ const { mapInstance, overlayInstance, markerInstance } = vi.hoisted(() => {
     mapInstance: {
       addControl: vi.fn(),
       removeControl: vi.fn(),
+      once: vi.fn(),
+      getContainer: vi.fn(() => document.createElement('div')),
       remove: vi.fn(),
       easeTo: vi.fn(),
       jumpTo: vi.fn(),

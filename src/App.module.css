@@ -84,13 +84,3 @@
     height: 2.75rem;
   }
 }
-
-/* The source link and the copyright, at the far end of the footer. */
-.colophon {
-  margin-left: auto;
-  white-space: nowrap;
-}
-
-.colophon a {
-  color: inherit;
-}

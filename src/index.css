@@ -53,8 +53,7 @@ body {
   flex-direction: column;
 }
 
-header,
-footer {
+header {
   padding: 0.5rem 1rem;
   display: flex;
   align-items: baseline;
@@ -68,8 +67,7 @@ header h1 {
   color: var(--accent);
 }
 
-header p,
-footer {
+header p {
   margin: 0;
   color: var(--muted);
   font-size: 0.8rem;
@@ -101,7 +99,6 @@ main > .map {
 @media (max-width: 720px), (max-height: 560px) {
   /* Pinch replaces the zoom buttons; the compass stays, because touch rotates the map easily. */
   header p,
-  footer,
   main .maplibregl-ctrl-group button.maplibregl-ctrl-zoom-in,
   main .maplibregl-ctrl-group button.maplibregl-ctrl-zoom-out {
     display: none;

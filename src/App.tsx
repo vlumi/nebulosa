@@ -19,7 +19,7 @@ import { Toolbar } from './panels/Toolbar'
 import { useNarrow } from './panels/useNarrow'
 import { placeName } from './i18n/placeName'
 import { useStrings } from './i18n/useStrings'
-import { attributionLine, COPYRIGHT, REPO_URL } from './shared/site'
+import { attributionLine } from './shared/site'
 import { resolveTheme, type Theme } from './shared/theme'
 import { useSystemDark } from './shared/useSystemDark'
 import { dispatchShortcut, releaseFocusAfterPointerClick } from './shortcuts'
@@ -150,7 +150,7 @@ function App() {
             selectedSatellite={selectedSatellite}
             theme={theme}
             bottomInset={bottomInset}
-            attribution={narrow ? attributionLine(s) : undefined}
+            attribution={attributionLine(s)}
           />
         </Suspense>
         {app.ride && selectedSatellite && (
@@ -269,12 +269,6 @@ function App() {
         <LiveTimeBar />
         <Help open={app.helpOpen} onToggle={app.setHelpOpen} />
       </main>
-      <footer>
-        <span>{s.footer}</span>
-        <span className={styles.colophon}>
-          <a href={REPO_URL}>{s.source}</a> · {COPYRIGHT}
-        </span>
-      </footer>
     </>
   )
 }
