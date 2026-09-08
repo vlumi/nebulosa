@@ -2,6 +2,20 @@
 
 One capture per milestone, taken from the deployed site with [`scripts/screenshot.mjs`](../../scripts/screenshot.mjs), newest first. The files carry a running number so they sort in order, then a name for what they show; the headings carry the dates. The README shows the latest desktop and phone captures in the dark theme; the rest stay here as a record of how the site grew.
 
+## 2026-09-08 · Credits
+
+![Credits](014-credits.png)
+
+The site after the footer went: the map runs to the foot of the page, and the corner holds two round buttons, the keyboard legend and the credits. STRIX-3 selected over Antarctica with its reach bands, the readout and the timeline strip, the Tokyo pin on the far side; the follow button now sits under the map controls on every screen.
+
+![The credits open](014-credits-about.png)
+
+The ⓘ opened: the name as the link to the source and the copyright, the disclaimer, the data and map credits, the libraries, in a panel of the app's own style above its button. Esc or the button closes it.
+
+<img src="014-credits-phone.png" alt="Credits on a phone" width="260">
+
+The same on a phone (390×844): the sheet closed after the selection, the satellite followed, the ⓘ above the pill row and the legend gone, since a touch screen has no keyboard to speak of.
+
 ## 2026-09-08 · The seat
 
 ![The seat](013-seat.png)
