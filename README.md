@@ -8,9 +8,9 @@ Unofficial demo project; not affiliated with Synspective.
 
 Live at [nebulosa.misaki.fi](https://nebulosa.misaki.fi). [SCOPE.md](SCOPE.md) is the plan it was built from; [ARCHITECTURE.md](ARCHITECTURE.md) explains how it works and the maths behind it.
 
-![The globe in the dark theme with STRIX-3 selected near the north pole: its details, a live readout of where it is and what comes next, a strip of its track with day and night, the radar's reach band beside the track](docs/screenshots/011-theme-dark.png)
+![The globe in the dark theme with STRIX-3 selected over Antarctica: its details, a live readout of where it is and what comes next, a strip of its track with day and night, the radar's reach band beside the track](docs/screenshots/014-credits.png)
 
-<img src="docs/screenshots/010-focused-satellite-phone.png" alt="The same site on a phone: the satellite followed on the globe, the follow button lit under the compass" width="260">
+<img src="docs/screenshots/014-credits-phone.png" alt="The same site on a phone: the satellite followed on the globe, the follow button lit under the compass" width="260">
 
 Every capture, one per milestone and the light theme beside the dark, is shown in [docs/screenshots](docs/screenshots/README.md).
 
@@ -59,7 +59,7 @@ npm run test:e2e # Playwright, in headless Chromium against the built app
 npm run lint     # oxlint
 ```
 
-Stack: React, TypeScript and Vite; zustand for state; CSS Modules; satellite.js for SGP4; deck.gl interleaved into a MapLibre GL basemap with OpenFreeMap tiles; Vitest and React Testing Library for the unit and component tests, Playwright for the browser tests in `e2e/`. `scripts/screenshot.mjs` captures the site with headless Chrome over the DevTools protocol and reports page errors, with options to act on the page first, sweep the pointer across the map, and pick a viewport size.
+Stack: React, TypeScript and Vite; zustand for state; CSS Modules; satellite.js for SGP4; deck.gl interleaved into a MapLibre GL basemap with OpenFreeMap tiles; Vitest and React Testing Library for the unit and component tests, Playwright for the browser tests in `e2e/`. `scripts/screenshot.mjs` captures the site with headless Chrome over the DevTools protocol and reports page errors, with options to act on the page first, sweep the pointer across the map, pick a viewport size, and emulate a touch screen.
 
 ## Deploy
 
