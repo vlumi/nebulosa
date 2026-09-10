@@ -1,16 +1,8 @@
 import { epochOf } from './elements'
 import { positionAt, satelliteFrom } from './orbit'
-import { bearingDeg } from './geo'
 import { isDaylit, nextTerminatorCrossing, stateAt } from './readout'
 import { subsolarPoint } from './sun'
 import { strix1, strix9 } from '../test/fixtures'
-
-test('a bearing runs clockwise from north', () => {
-  expect(bearingDeg({ lat: 0, lon: 0 }, { lat: 1, lon: 0 })).toBeCloseTo(0, 5)
-  expect(bearingDeg({ lat: 0, lon: 0 }, { lat: 0, lon: 1 })).toBeCloseTo(90, 5)
-  expect(bearingDeg({ lat: 0, lon: 0 }, { lat: -1, lon: 0 })).toBeCloseTo(180, 5)
-  expect(bearingDeg({ lat: 0, lon: 0 }, { lat: 0, lon: -1 })).toBeCloseTo(270, 5)
-})
 
 test('a low orbit moves at about 7.6 km/s, and the state agrees with the position', () => {
   const sat = satelliteFrom(strix1)

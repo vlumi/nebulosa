@@ -16,5 +16,6 @@ export const LIBRARIES: Credit[] = [
   ['MapLibre GL', 'https://maplibre.org/'],
   ['deck.gl', 'https://deck.gl/'],
   ['satellite.js', 'https://github.com/shashwatak/satellite-js'],
+  ['geo-coord', 'https://github.com/vlumi/geo-coord'],
   ['React', 'https://react.dev/'],
 ]
