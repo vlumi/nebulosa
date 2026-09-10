@@ -1,4 +1,5 @@
-import { bearingDeg, DEG, destination, EARTH_RADIUS_KM, RAD } from './geo'
+import { destination, initialBearing } from 'geo-coord'
+import { DEG, EARTH_RADIUS_KM, RAD } from './geo'
 import type { LonLat, TrackSample } from './orbit'
 
 /** How far off nadir StriX can steer its beam, per Synspective's SAR data page; which side it looks is not published. */
@@ -20,6 +21,14 @@ export function inReach(offNadirDeg: number): boolean {
   return offNadirDeg >= STEERING.minDeg && offNadirDeg <= STEERING.maxDeg
 }
 
+const point = ([lon, lat]: LonLat) => ({ latitude: lat, longitude: lon })
+
+/** The ground point `distanceKm` away from `from` on `bearing`, on the sphere the rest of the geometry uses. */
+function reach(from: LonLat, bearing: number, distanceKm: number): LonLat {
+  const { latitude, longitude } = destination(point(from), bearing, distanceKm, { radiusKm: EARTH_RADIUS_KM })
+  return [longitude, latitude]
+}
+
 /** Two segments per polygon: small pieces follow the sphere closely, and none can fold over near the poles. */
 const SAMPLES_PER_POLYGON = 2
 
@@ -30,16 +39,15 @@ const SAMPLES_PER_POLYGON = 2
 export function reachRibbons(samples: TrackSample[]): LonLat[][] {
   if (samples.length < 2) return []
   const edges = samples.map((sample, i) => {
-    const point = ([lon, lat]: LonLat) => ({ lon, lat })
     const heading =
       i < samples.length - 1
-        ? bearingDeg(point(sample.lonLat), point(samples[i + 1].lonLat))
-        : bearingDeg(point(samples[i - 1].lonLat), point(sample.lonLat))
+        ? initialBearing(point(sample.lonLat), point(samples[i + 1].lonLat))
+        : initialBearing(point(samples[i - 1].lonLat), point(sample.lonLat))
     const near = groundOffsetKm(STEERING.minDeg, sample.altKm)
     const far = groundOffsetKm(STEERING.maxDeg, sample.altKm)
     const side = (turn: number): [LonLat, LonLat] => [
-      destination(sample.lonLat, heading + turn, near),
-      destination(sample.lonLat, heading + turn, far),
+      reach(sample.lonLat, heading + turn, near),
+      reach(sample.lonLat, heading + turn, far),
     ]
     return { left: side(-90), right: side(90) }
   })

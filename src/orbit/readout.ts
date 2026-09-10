@@ -1,6 +1,7 @@
 import { eciToGeodetic, gstime, propagate } from 'satellite.js'
 import { positionAt, type GeoPoint, type Satellite } from './orbit'
-import { bearingDeg, DEG, RAD } from './geo'
+import { initialBearing } from 'geo-coord'
+import { DEG, RAD } from './geo'
 import { subsolarPoint } from './sun'
 
 export interface SatelliteState extends GeoPoint {
@@ -8,6 +9,8 @@ export interface SatelliteState extends GeoPoint {
   /** Direction of travel over the ground, clockwise from north. */
   headingDeg: number
 }
+
+const coordinates = ({ lat, lon }: { lat: number; lon: number }) => ({ latitude: lat, longitude: lon })
 
 /** Where the satellite is, how fast it moves and which way it heads, at one moment. */
 export function stateAt(sat: Satellite, date: Date): SatelliteState | null {
@@ -17,7 +20,11 @@ export function stateAt(sat: Satellite, date: Date): SatelliteState | null {
   const here = { lon: geo.longitude * DEG, lat: geo.latitude * DEG, altKm: geo.height }
   const next = positionAt(sat, new Date(date.getTime() + 1000))
   const { x, y, z } = pv.velocity
-  return { ...here, speedKmS: Math.hypot(x, y, z), headingDeg: next ? bearingDeg(here, next) : 0 }
+  return {
+    ...here,
+    speedKmS: Math.hypot(x, y, z),
+    headingDeg: next ? initialBearing(coordinates(here), coordinates(next)) : 0,
+  }
 }
 
 /** Whether the ground at a point is on the day side: the sun is above its horizon. */
