@@ -1,4 +1,6 @@
+import { unwrapPath } from 'geo-coord'
 import type { Feature, MultiPolygon, Polygon } from 'geojson'
+import { coordinates, lonLat } from '../orbit/geo'
 import type { LonLat, OrbitFamily, TrackSample } from '../orbit/orbit'
 import { nightPolygon, POLE_CAP } from '../orbit/sun'
 import { reachRibbons } from '../orbit/swath'
@@ -35,18 +37,7 @@ export function nightFeature(date: Date): Feature<Polygon> {
 }
 
 /** A ring that crosses the antimeridian is unwrapped past ±180°, which the tiler handles; a jump within it would not be. */
-function unwrapped(ring: LonLat[]): LonLat[] {
-  let offset = 0
-  return ring.map(([lon, lat], i) => {
-    if (i > 0) {
-      const previous = ring[i - 1][0] + offset
-      const candidate = lon + offset
-      if (candidate - previous > 180) offset -= 360
-      else if (previous - candidate > 180) offset += 360
-    }
-    return [lon + offset, lat]
-  })
-}
+const unwrapped = (ring: LonLat[]): LonLat[] => unwrapPath(ring.map(coordinates)).map(lonLat)
 
 /**
  * The fill ends where Mercator does, at the rim of the blank polar cap: corners beyond it are pulled back onto
