@@ -587,3 +587,44 @@ test('basemap labels that show a name follow the language, once the style loads 
     ['get', 'name'],
   ])
 })
+
+test('a camera request that asks to name a place lands at its zoom, then names it after the settlement the tiles show', () => {
+  const onPlaceName = vi.fn()
+  const place = { id: 'typed', name: '60.17°N 24.94°E', lat: 60.17, lon: 24.94 }
+  render(
+    <MapView
+      satellites={[]}
+      now={new Date()}
+      selected={null}
+      onSelect={vi.fn()}
+      places={[place]}
+      placeId={place.id}
+      onPlaceSelect={vi.fn()}
+      onPlaceMove={vi.fn()}
+      onPlaceAdd={vi.fn()}
+      onPlaceName={onPlaceName}
+      camera={{ kind: 'point', lat: 60.17, lon: 24.94, zoom: 7, namePlaceId: place.id, seq: 1 }}
+    />,
+  )
+  expect(mapInstance.easeTo).toHaveBeenLastCalledWith({ center: [24.94, 60.17], zoom: 7, duration: 600 })
+  const [event, onIdle] = mapInstance.once.mock.calls.find((call) => call[0] === 'idle')!
+  expect(event).toBe('idle')
+  mapInstance.labels = [
+    {
+      sourceLayer: 'place',
+      properties: { class: 'country', name: 'Suomi' },
+      geometry: { type: 'Point', coordinates: [24.94, 60.17] },
+    },
+  ]
+  onIdle()
+  expect(onPlaceName).not.toHaveBeenCalled()
+  mapInstance.labels = [
+    {
+      sourceLayer: 'place',
+      properties: { class: 'city', name: 'Helsinki' },
+      geometry: { type: 'Point', coordinates: [24.95, 60.18] },
+    },
+  ]
+  onIdle()
+  expect(onPlaceName).toHaveBeenCalledWith('typed', 'Helsinki')
+})
