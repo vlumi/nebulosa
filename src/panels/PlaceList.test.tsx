@@ -19,6 +19,7 @@ test('lists places with the selected one pressed; selecting, unselecting, renami
       onRemove={onRemove}
       pinsLocked={false}
       onLocate={vi.fn()}
+      onAdd={vi.fn()}
       onLockChange={onLockChange}
     />,
   )
@@ -52,12 +53,13 @@ test('Escape cancels a rename and focus returns to the pencil', async () => {
       onRemove={vi.fn()}
       pinsLocked={false}
       onLocate={vi.fn()}
+      onAdd={vi.fn()}
       onLockChange={vi.fn()}
     />,
   )
   await userEvent.click(screen.getByRole('button', { name: 'Rename Helsinki' }))
   await userEvent.keyboard('{Escape}')
-  expect(screen.queryByRole('textbox')).toBeNull()
+  expect(screen.queryByRole('textbox', { name: 'Place name' })).toBeNull()
   expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Rename Helsinki' }))
 })
 
@@ -73,6 +75,7 @@ test('the location button asks the browser once and hands over the position with
       onRename={vi.fn()}
       onRemove={vi.fn()}
       pinsLocked={false}
+      onAdd={vi.fn()}
       onLockChange={vi.fn()}
       onLocate={onLocate}
     />,
@@ -102,6 +105,7 @@ test('once the located place exists its row carries the refresh and the add row 
       onRename={vi.fn()}
       onRemove={vi.fn()}
       pinsLocked={false}
+      onAdd={vi.fn()}
       onLockChange={vi.fn()}
       onLocate={vi.fn()}
     />
@@ -113,4 +117,35 @@ test('once the located place exists its row carries the refresh and the add row 
   expect(screen.queryByRole('button', { name: 'Rename My location' })).toBeNull()
   rerender(view([TOKYO]))
   expect(screen.getByRole('button', { name: 'Use my location' })).toBeInTheDocument()
+})
+
+test('typed coordinates in any common shape add a place; what cannot be read is said', async () => {
+  const onAdd = vi.fn()
+  render(
+    <PlaceList
+      places={[TOKYO]}
+      placeId={null}
+      onSelect={vi.fn()}
+      onRename={vi.fn()}
+      onRemove={vi.fn()}
+      pinsLocked={false}
+      onLocate={vi.fn()}
+      onAdd={onAdd}
+      onLockChange={vi.fn()}
+    />,
+  )
+  const input = screen.getByRole('textbox', { name: 'Coordinates' })
+  await userEvent.type(input, 'hello{Enter}')
+  expect(onAdd).not.toHaveBeenCalled()
+  expect(screen.getByText(/Not coordinates/)).toBeInTheDocument()
+  await userEvent.clear(input)
+  await userEvent.type(input, '60.17, 24.94{Enter}')
+  expect(onAdd).toHaveBeenLastCalledWith({ lat: 60.17, lon: 24.94 })
+  expect(input).toHaveValue('')
+  expect(screen.queryByText(/Not coordinates/)).toBeNull()
+  await userEvent.click(input)
+  await userEvent.paste('33°52′8″s 70°38′54″w')
+  await userEvent.keyboard('{Enter}')
+  expect(onAdd.mock.lastCall?.[0].lat).toBeCloseTo(-33.8688, 3)
+  expect(onAdd.mock.lastCall?.[0].lon).toBeCloseTo(-70.6483, 3)
 })

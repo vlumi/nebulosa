@@ -213,6 +213,10 @@ function App() {
                   app.locatePlace(location, name)
                   closeOnPhone()
                 }}
+                onAdd={(location) => {
+                  app.addPlace(location)
+                  closeOnPhone()
+                }}
               />
             </Sheet>
           )}

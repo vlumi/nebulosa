@@ -80,13 +80,13 @@
   background: var(--hover);
 }
 
-.rename {
+.form {
   display: flex;
   gap: 0.35rem;
   padding: 0.15rem 0.4rem;
 }
 
-.rename input {
+.form input {
   flex: 1 1 auto;
   min-width: 0;
   padding: 0.1rem 0.3rem;
@@ -97,7 +97,7 @@
   font: inherit;
 }
 
-.rename button {
+.form button {
   padding: 0.1rem 0.5rem;
   border: 1px solid var(--border);
   border-radius: 0.25rem;

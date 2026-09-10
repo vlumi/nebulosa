@@ -77,6 +77,10 @@ export interface Strings {
     myLocation: string
     placeName: string
     save: string
+    coordinates: string
+    coordinatesHint: string
+    add: string
+    invalidCoordinates: string
     rename: (name: string) => string
     remove: (name: string) => string
     none: string
@@ -207,7 +211,7 @@ export const en: Strings = {
   },
   places: {
     header:
-      'Double-click the map, or press and hold on a phone, to add a place. Passes are computed for the selected one.',
+      'Double-click the map, press and hold on a phone, or type coordinates below to add a place. Passes are computed for the selected one.',
     lockPins: 'Lock pins',
     useLocation: 'Use my location',
     relocate: 'Update my location',
@@ -217,6 +221,10 @@ export const en: Strings = {
     myLocation: 'My location',
     placeName: 'Place name',
     save: 'Save',
+    coordinates: 'Coordinates',
+    coordinatesHint: '35.68, 139.69 or 35°41′N 139°46′E',
+    add: 'Add',
+    invalidCoordinates: 'Not coordinates. Try 35.68, 139.69 or 35°41′N 139°46′E.',
     rename: (name) => `Rename ${name}`,
     remove: (name) => `Remove ${name}`,
     none: 'No places yet.',
@@ -350,7 +358,8 @@ export const ja: Strings = {
     passTitle: (start, end, peakDeg) => `パス ${start}–${end} UTC、最大仰角${peakDeg}°`,
   },
   places: {
-    header: '地図をダブルクリック（スマートフォンでは長押し）して地点を追加。パスは選択中の地点について計算されます。',
+    header:
+      '地図をダブルクリック（スマートフォンでは長押し）するか、下に座標を入力して地点を追加。パスは選択中の地点について計算されます。',
     lockPins: 'ピンを固定',
     useLocation: '現在地を使う',
     relocate: '現在地を更新',
@@ -360,6 +369,10 @@ export const ja: Strings = {
     myLocation: '現在地',
     placeName: '地点名',
     save: '保存',
+    coordinates: '座標',
+    coordinatesHint: '35.68, 139.69 または 35°41′N 139°46′E',
+    add: '追加',
+    invalidCoordinates: '座標として読めません。35.68, 139.69 や 35°41′N 139°46′E の形式で入力してください。',
     rename: (name) => `${name}の名前を変更`,
     remove: (name) => `${name}を削除`,
     none: '地点はまだありません。',

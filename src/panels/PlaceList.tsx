@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Location } from '../orbit/passes'
-import type { Place } from '../places/places'
+import { parseLocation, type Place } from '../places/places'
 import { placeName } from '../i18n/placeName'
 import { useStrings } from '../i18n/useStrings'
 import { formatLocation } from '../shared/format'
@@ -18,6 +18,8 @@ interface Props {
   onLockChange: (locked: boolean) => void
   /** The browser's position, named in the reader's language, for the one located place. */
   onLocate: (location: Location, name: string) => void
+  /** Coordinates typed into the sheet; the place is named after them. */
+  onAdd: (location: Location) => void
 }
 
 type Locating = 'idle' | 'busy' | 'denied' | 'failed'
@@ -31,8 +33,11 @@ export function PlaceList({
   pinsLocked,
   onLockChange,
   onLocate,
+  onAdd,
 }: Props) {
   const t = useStrings()
+  const [typed, setTyped] = useState('')
+  const [invalid, setInvalid] = useState(false)
   const [locating, setLocating] = useState<Locating>('idle')
   const locate = () => {
     const geolocation = typeof navigator !== 'undefined' ? navigator.geolocation : undefined
@@ -75,7 +80,7 @@ export function PlaceList({
             <li key={place.id} className={styles.row}>
               {renaming === place.id ? (
                 <form
-                  className={styles.rename}
+                  className={styles.form}
                   onSubmit={(e) => {
                     e.preventDefault()
                     const name = new FormData(e.currentTarget).get('name')
@@ -151,7 +156,33 @@ export function PlaceList({
             </button>
           </li>
         )}
+        <li className={styles.row}>
+          <form
+            className={styles.form}
+            onSubmit={(e) => {
+              e.preventDefault()
+              const location = parseLocation(typed)
+              setInvalid(location === null)
+              if (!location) return
+              onAdd(location)
+              setTyped('')
+            }}
+          >
+            <input
+              value={typed}
+              aria-label={t.places.coordinates}
+              placeholder={t.places.coordinatesHint}
+              autoComplete="off"
+              onChange={(e) => {
+                setTyped(e.target.value)
+                setInvalid(false)
+              }}
+            />
+            <button type="submit">{t.places.add}</button>
+          </form>
+        </li>
       </ul>
+      {invalid && <p className="muted">{t.places.invalidCoordinates}</p>}
       {locating === 'denied' && <p className="muted">{t.places.locationDenied}</p>}
       {locating === 'failed' && <p className="muted">{t.places.locationFailed}</p>}
       {places.length === 0 && <p className="muted">{t.places.none}</p>}
