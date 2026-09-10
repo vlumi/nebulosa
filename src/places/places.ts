@@ -1,3 +1,4 @@
+import { GeoCoord } from 'geo-coord'
 import type { Location } from '../orbit/passes'
 import { formatLocation } from '../shared/format'
 import { storage } from '../shared/storage'
@@ -60,6 +61,19 @@ export const LOCATED_ID = 'located'
 
 export function locatedPlace(location: Location, name: string): Place {
   return { id: LOCATED_ID, name, lat: location.lat, lon: location.lon, located: true }
+}
+
+/**
+ * Coordinates typed or pasted in any common shape: "35.68, 139.69", "35.6812° N, 139.7671° E",
+ * "35°41′N 139°46′E", or with signs instead of hemispheres; anything else is null.
+ */
+export function parseLocation(text: string): Location | null {
+  try {
+    const { latitude, longitude } = new GeoCoord(text.trim().toUpperCase())
+    return { lat: latitude, lon: longitude }
+  } catch {
+    return null
+  }
 }
 
 export function newPlace(location: Location, name = formatLocation(location)): Place {

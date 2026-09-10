@@ -1,4 +1,4 @@
-import { loadPlaces, newPlace, savePlaces, SEED, SEED_JA, TOKYO } from './places'
+import { loadPlaces, newPlace, parseLocation, savePlaces, SEED, SEED_JA, TOKYO } from './places'
 
 class MemoryStorage {
   private items = new Map<string, string>()
@@ -37,4 +37,15 @@ test('a new place is named after its coordinates and gets a fresh id', () => {
   expect(a.name).toBe('60.17°N 24.94°E')
   expect(newPlace({ lat: 60.17, lon: 24.94 }, 'Helsinki').name).toBe('Helsinki')
   expect(a.id).not.toBe(b.id)
+})
+
+test('coordinates are read from decimal, signed, lettered and DMS text, and not from anything else', () => {
+  expect(parseLocation('35.6812, 139.7671')).toEqual({ lat: 35.6812, lon: 139.7671 })
+  expect(parseLocation(' -33.8688 -70.6483 ')).toEqual({ lat: -33.8688, lon: -70.6483 })
+  expect(parseLocation('35.6812° N, 139.7671° E')).toEqual({ lat: 35.6812, lon: 139.7671 })
+  expect(parseLocation('33.8688°s 70.6483°w')).toEqual({ lat: -33.8688, lon: -70.6483 })
+  expect(parseLocation('35°41′N 139°46′E')?.lat).toBeCloseTo(35.6833, 4)
+  expect(parseLocation('35°41′N 139°46′E')?.lon).toBeCloseTo(139.7667, 4)
+  for (const text of ['', 'hello', '35.68', '91, 0', '35.68, 181', '35,68 139,69'])
+    expect(parseLocation(text)).toBeNull()
 })
