@@ -1,5 +1,7 @@
 import { degreesLat, degreesLong, eciToGeodetic, gstime, json2satrec, propagate, type SatRec } from 'satellite.js'
 import type { Omm } from './elements'
+import { longitudeDelta, splitAtAntimeridian as splitCoordinates } from 'geo-coord'
+import { coordinates, lonLat } from './geo'
 
 export type OrbitFamily = 'sun-synchronous' | 'mid-inclination'
 
@@ -80,7 +82,7 @@ export function nearestSample(samples: TrackSample[], [lon, lat]: LonLat): numbe
   let best = 0
   let bestDistance = Infinity
   samples.forEach(({ lonLat: [sLon, sLat] }, i) => {
-    const dLon = Math.min(Math.abs(sLon - lon), 360 - Math.abs(sLon - lon)) * Math.cos((lat * Math.PI) / 180)
+    const dLon = Math.abs(longitudeDelta(lon, sLon)) * Math.cos((lat * Math.PI) / 180)
     const d = dLon * dLon + (sLat - lat) * (sLat - lat)
     if (d < bestDistance) {
       bestDistance = d
@@ -90,27 +92,7 @@ export function nearestSample(samples: TrackSample[], [lon, lat]: LonLat): numbe
   return best
 }
 
-/**
- * Cuts a path wherever consecutive points jump across the antimeridian, ending one piece at ±180° and
- * starting the next at the opposite edge, so no segment is ever read as going the long way round.
- */
+/** The path cut at the antimeridian so no piece reads as going the long way round, in the renderer's tuples. */
 export function splitAtAntimeridian(path: LonLat[]): LonLat[][] {
-  const pieces: LonLat[][] = []
-  let piece: LonLat[] = []
-  path.forEach(([lon, lat], i) => {
-    if (i > 0) {
-      const [previousLon, previousLat] = path[i - 1]
-      if (Math.abs(lon - previousLon) > 180) {
-        const edge = previousLon > 0 ? 180 : -180
-        const t = (edge - previousLon) / (lon + 2 * edge - previousLon)
-        const edgeLat = previousLat + (lat - previousLat) * t
-        piece.push([edge, edgeLat])
-        pieces.push(piece)
-        piece = [[-edge, edgeLat]]
-      }
-    }
-    piece.push([lon, lat])
-  })
-  pieces.push(piece)
-  return pieces.filter((p) => p.length > 1)
+  return splitCoordinates(path.map(coordinates)).map((piece) => piece.map(lonLat))
 }
