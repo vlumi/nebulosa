@@ -1,3 +1,4 @@
+import { compassIndex, formatCoordinates } from 'geo-coord'
 import { en, type Strings } from '../i18n/strings'
 
 const iso = (t: Date | number) => new Date(t).toISOString()
@@ -44,13 +45,14 @@ export function formatOffset(simMs: number, realMs: number, s: Strings = en): st
   return `${sign}${parts.join(' ')}`
 }
 
+/** "35.68°N 139.69°E". */
 export function formatLocation({ lat, lon }: { lat: number; lon: number }): string {
-  return `${Math.abs(lat).toFixed(2)}°${lat >= 0 ? 'N' : 'S'} ${Math.abs(lon).toFixed(2)}°${lon >= 0 ? 'E' : 'W'}`
+  return formatCoordinates({ latitude: lat, longitude: lon }, { precision: 2 })
 }
 
 /** Eight-point compass direction for an azimuth in degrees clockwise from north. */
 export function compassPoint(azimuthDeg: number, s: Strings = en): string {
-  return s.units.compass[Math.round((((azimuthDeg % 360) + 360) % 360) / 45) % 8]
+  return s.units.compass[compassIndex(azimuthDeg, 8)]
 }
 
 /** "45 s", "23 min", "1 h 12 min" for a span ahead. */
