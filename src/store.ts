@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { Ghost } from './map/layers'
+import { NAMING_ZOOM } from './map/labels'
 import { DEFAULT_SPAN, type TrackSpan } from './orbit/orbit'
 import { DEFAULT_FILTERS, type Location, type Pass, type PassFilters } from './orbit/passes'
 import {
@@ -13,6 +14,7 @@ import {
   type PlacesState,
 } from './places/places'
 import { loadLang, saveLang, type Lang } from './i18n/strings'
+import { formatLocation } from './shared/format'
 import { loadThemeChoice, saveThemeChoice, type ThemeChoice } from './shared/theme'
 import { liveClock, scrubbedTo, withPaused, type Clock } from './time/clock'
 
@@ -29,9 +31,13 @@ export const NOTHING: Selection = { noradId: null, ghost: null, activePass: null
 
 export type Sheet = 'satellites' | 'places' | 'passes'
 
-/** A request to move the camera once: to a satellite, at a moment if given, or to a point. `seq` keeps repeats distinct. */
+/**
+ * A request to move the camera once: to a satellite, at a moment if given, or to a point, at a zoom if given.
+ * `namePlaceId` asks the map to name that place after the nearest label once it has landed. `seq` keeps repeats distinct.
+ */
 export type CameraRequest = { seq: number } & (
-  { kind: 'satellite'; noradId: number; timeMs?: number } | { kind: 'point'; lat: number; lon: number }
+  | { kind: 'satellite'; noradId: number; timeMs?: number }
+  | { kind: 'point'; lat: number; lon: number; zoom?: number; namePlaceId?: string }
 )
 
 interface State extends PlacesState {
@@ -74,6 +80,10 @@ interface Actions {
   setAboutOpen: (open: boolean) => void
   /** `name` from the map's labels when there is one nearby; else the coordinates. */
   addPlace: (location: Location, name?: string) => void
+  /** A place from typed coordinates: selected, flown to, and named by the map once it has landed. */
+  addTypedPlace: (location: Location) => void
+  /** The name the map found for a place still called by its coordinates. */
+  namePlace: (id: string, name: string) => void
   /** The one located place, added or moved to the browser's position, selected, and flown to. */
   locatePlace: (location: Location, name: string) => void
   /** Select a place, or none; from the list the map also centers on it. */
@@ -168,6 +178,24 @@ export const useApp = create<State & Actions>((set, get) => ({
     else set({ selection: NOTHING })
   },
   addPlace: (location, name) => set((s) => ({ places: [...s.places, newPlace(location, name)] })),
+  addTypedPlace: (location) =>
+    set((s) => {
+      const place = newPlace(location)
+      return {
+        places: [...s.places, place],
+        placeId: place.id,
+        camera: {
+          kind: 'point',
+          lat: place.lat,
+          lon: place.lon,
+          zoom: NAMING_ZOOM,
+          namePlaceId: place.id,
+          seq: nextSeq(s),
+        },
+      }
+    }),
+  namePlace: (id, name) =>
+    set((s) => ({ places: s.places.map((p) => (p.id === id && p.name === formatLocation(p) ? { ...p, name } : p)) })),
   selectPlace: (id, fly = false) =>
     set((s) => {
       const place = s.places.find((p) => p.id === id)

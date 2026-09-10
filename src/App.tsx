@@ -214,7 +214,7 @@ function App() {
                   closeOnPhone()
                 }}
                 onAdd={(location) => {
-                  app.addPlace(location)
+                  app.addTypedPlace(location)
                   closeOnPhone()
                 }}
               />
@@ -344,6 +344,7 @@ function LiveMap({
     selectPlace,
     movePlace,
     addPlace,
+    namePlace,
   } = useApp()
   const probe: Hover | null = useMemo(() => {
     if (selection.probeMs === null || !selectedSatellite) return null
@@ -363,6 +364,7 @@ function LiveMap({
       onPlaceMove={movePlace}
       pinsLocked={pinsLocked}
       onPlaceAdd={addPlace}
+      onPlaceName={namePlace}
       ghost={selection.ghost}
       probe={probe}
       span={span}

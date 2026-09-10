@@ -239,3 +239,18 @@ test('the help and the about panels share the corner, so opening one closes the 
   expect(s().aboutOpen).toBe(false)
   expect(s().helpOpen).toBe(true)
 })
+
+test('a typed place is selected and flown to at the naming zoom; the name the map finds replaces only the coordinates', () => {
+  const s = () => useApp.getState()
+  s().addTypedPlace({ lat: 60.17, lon: 24.94 })
+  const added = s().places[1]
+  expect(added.name).toBe('60.17°N 24.94°E')
+  expect(s().placeId).toBe(added.id)
+  expect(s().camera).toEqual({ kind: 'point', lat: 60.17, lon: 24.94, zoom: 7, namePlaceId: added.id, seq: 1 })
+  s().namePlace(added.id, 'Helsinki')
+  expect(s().places[1].name).toBe('Helsinki')
+  s().namePlace(added.id, 'Espoo')
+  expect(s().places[1].name).toBe('Helsinki')
+  s().namePlace('tokyo', 'Edo')
+  expect(s().places[0].name).toBe('Tokyo')
+})

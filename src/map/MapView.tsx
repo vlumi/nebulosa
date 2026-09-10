@@ -57,6 +57,8 @@ interface Props {
   /** A double click, or a long press on a touch screen; `name` is the nearest place label the basemap shows there, if
    * any. */
   onPlaceAdd: (location: Location, name?: string) => void
+  /** The name found for the place a camera request asked to name, once the map has landed. */
+  onPlaceName?: (id: string, name: string) => void
   ghost?: Ghost | null
   /** A point to show as if hovered, driven from the keyboard; the pointer wins while it is over a track. */
   probe?: Hover | null
@@ -86,6 +88,7 @@ export function MapView({
   onPlaceMove,
   pinsLocked = false,
   onPlaceAdd,
+  onPlaceName,
   ghost = null,
   probe = null,
   span = DEFAULT_SPAN,
@@ -107,6 +110,7 @@ export function MapView({
 
   // The map and overlay are created once; their callbacks read the latest props through these.
   const placeAdd = useLatest(onPlaceAdd)
+  const placeName = useLatest(onPlaceName)
   const select = useLatest(onSelect)
   const currentTime = useLatest(now)
   const followBreak = useLatest(onFollowBreak)
@@ -325,7 +329,15 @@ export function MapView({
     if (!camera || camera.seq === flown.current) return
     flown.current = camera.seq
     if (camera.kind === 'point') {
-      map.current?.easeTo({ center: [camera.lon, camera.lat], duration: 600 })
+      const m = map.current
+      const { lon, lat, zoom, namePlaceId } = camera
+      m?.easeTo({ center: [lon, lat], ...(zoom === undefined ? {} : { zoom }), duration: 600 })
+      // The labels near the place exist only once its tiles have come in and the map has settled on them.
+      if (m && namePlaceId)
+        m.once('idle', () => {
+          const name = nearestLabel(m, m.project([lon, lat]), language.current, { countries: false })
+          if (name) placeName.current?.(namePlaceId, name)
+        })
       return
     }
     if (following.current) return
