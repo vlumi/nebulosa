@@ -4,7 +4,7 @@ Ground-track visualizer for the Synspective StriX SAR constellation, from public
 
 **The name:** *Strix nebulosa*, the great gray owl: same genus as the StriX satellites, the iconic owl of Finland, and Latin for "cloudy", so an owl named *cloudy* for satellites built to see through clouds. Owls see in the dark; so does SAR.
 
-**Status:** unofficial demo project, not affiliated with Synspective. All data is public (NORAD GP data via CelesTrak). Milestones M0 to M6 below were delivered on 2026-09-04, SAR reach and the globe on the two days after, the shell (M7) and places (M8) on 2026-09-05, the focused satellite (M9) and the theme (M10) on 2026-09-06, the Japanese interface (M11) on 2026-09-07, the view from the seat (M12) on 2026-09-08; everything in [Next](#next) is done, and [docs/screenshots](docs/screenshots/README.md) holds one capture per milestone.
+**Status:** unofficial demo project, not affiliated with Synspective. All data is public (NORAD GP data via CelesTrak). Milestones M0 to M6 below were delivered on 2026-09-04, SAR reach and the globe on the two days after, the shell (M7) and places (M8) on 2026-09-05, the focused satellite (M9) and the theme (M10) on 2026-09-06, the Japanese interface (M11) on 2026-09-07, the view from the seat (M12) on 2026-09-08; everything in [Next](#next) is done; the credits panel, typed places and the geo-coord library followed on 2026-09-08 to 10, and [docs/screenshots](docs/screenshots/README.md) holds one capture per milestone.
 
 ## Data
 
@@ -17,6 +17,7 @@ Ground-track visualizer for the Synspective StriX SAR constellation, from public
 
 - **App:** React + TypeScript + Vite
 - **Propagation:** satellite.js (SGP4)
+- **Coordinates:** [geo-coord](https://github.com/vlumi/geo-coord), the project's own npm library, for parsing any notation, formatting, great-circle geodesy and antimeridian-safe paths; the app keeps only its constants
 - **Rendering:** deck.gl interleaved into a MapLibre GL basemap (OpenFreeMap vector tiles, free, no API key), flat or globe
 - **Testing:** Vitest + React Testing Library; the map wiring is tested with the map libraries mocked; Playwright drives the built app in headless Chromium for the browser tests; headless Chrome captures over the DevTools protocol check the rendered result by eye
 - **CI:** GitHub Actions, lint/test/build on push and pull requests
@@ -74,7 +75,7 @@ Five pieces of UI work and two chores, ordered so that each lands on a settled b
 ### Chores, first and independent (done)
 
 - **en-US everywhere.** A dozen British spellings across code comments, test names and the docs: colour, centre, kilometres, the great grey owl. One pass, one PR, no conflicts with anything below.
-- **Resize bug.** Resizing the window leaves the deck.gl overlay at its old size while the basemap re-lays out, so tracks and satellites drift off the map, globe and flat alike. Reproduced by shrinking the map container; re-applying the overlay's props on MapLibre's resize event does not cure it, so the fault is in the beta module's own resize handling. Next probe is to set the overlay's width and height explicitly from the container on that event, and failing that, to recreate the overlay. Small, isolated, worth doing before the shell so the shell's own resizes are trustworthy.
+- **Resize bug.** Resizing the window left the deck.gl overlay offset by exactly the height change while the basemap re-laid out. The fault was one branch in luma.gl's canvas context, which kept its default framebuffer at the old size when the canvas owner did the resizing; reported and fixed upstream (visgl/luma.gl#3177, #3178), shipped in 9.4.1, and the app's stopgap handler went with it. The MapLibre camera helper's undefined roll, found while building the seat, went the same way (maplibre/maplibre-gl-js#8373, in 6.9).
 
 ### M7 — shell (done)
 
@@ -88,7 +89,8 @@ The two panels cover the whole screen on a phone, and choosing something should 
 
 ### M8 — places (done)
 
-- **Several pins**, not one. Add a place with a long press on a phone or a double click on desktop; name it from the reverse geocode if cheap, else from its coordinates; remove it from the list.
+- **Several pins**, not one. Add a place with a long press on a phone or a double click on desktop; name it after the nearest settlement label the basemap is showing, so no service is asked and no coordinates leave the browser, else after its coordinates; remove it from the list.
+- **Typed coordinates** (added 2026-09-10): a row under the list takes coordinates in any common notation, decimal, degrees-minutes-seconds, hemisphere letters or signs, a geo: URI, through geo-coord's parser; the map flies there and names the place from the labels it finds, or keeps the coordinates when no settlement is in reach.
 - **One place selected at a time, or none.** Passes are computed for the selected place; with none selected the passes button says so and the list is empty. Unselecting is a tap on the selected place.
 - **Jump to a place** from its row, the same way a satellite row centers the map.
 - **My location** (added 2026-09-07): the last row of the list places one pin from the browser's location, refreshed from its row, drawn as a target and never dragged; opt-in, nothing asks on load.
