@@ -68,7 +68,7 @@ export function locatedPlace(location: Location, name: string): Place {
  * "35°41′N 139°46′E", "N35.68 E139.77", a geo: URI, or signed numbers; anything else is null.
  */
 export function parseLocation(text: string): Location | null {
-  const coordinates = tryParseCoordinates(text.toUpperCase())
+  const coordinates = tryParseCoordinates(text)
   return coordinates && { lat: coordinates.latitude, lon: coordinates.longitude }
 }
 
