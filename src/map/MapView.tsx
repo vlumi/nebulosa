@@ -27,12 +27,6 @@ import { usePins } from './usePins'
 import { useLatest } from '../shared/useLatest'
 import { useThrottled } from '../shared/useThrottled'
 
-/** luma's canvas context behind the overlay's deck, reached only to resize the framebuffer it keeps for the canvas. */
-interface InterleavedDeck {
-  device?: {
-    getDefaultCanvasContext?: () => { getCurrentFramebuffer?: () => { resize?: (size: [number, number]) => void } }
-  }
-}
 const LONG_PRESS_MS = 600
 // MapLibre 6 resolves its worker relative to its own script URL, which a bundled app does not provide.
 setWorkerUrl(maplibreWorkerUrl)
@@ -235,19 +229,6 @@ export function MapView({
         const element = marker.getElement()
         element.style.pointerEvents = element.style.opacity === '0' ? 'none' : ''
       }
-    })
-    // luma.gl (9.4.0) keeps a framebuffer object for the canvas, and its height sets the y-flip of every
-    // viewport drawn into it. luma's deferred resize refreshes that object only when luma itself has to change
-    // the canvas size; MapLibre has already resized the canvas by then, so the object keeps the old height and
-    // the overlay draws offset by exactly the resize. Everything else follows on its own: deck re-measures
-    // through luma's ResizeObserver, and MapLibre's move event drops the module's cached viewport.
-    // Reported as visgl/luma.gl#3177, fix in visgl/luma.gl#3178 (CanvasSurface tracks the configured size). Once
-    // the lockfile's @luma.gl/core carries it, delete this handler, the InterleavedDeck type and their test.
-    map.current.on('resize', () => {
-      const canvas = map.current?.getCanvas()
-      const deck = (overlay.current as unknown as { _deck?: InterleavedDeck } | null)?._deck
-      if (!canvas || !deck) return
-      deck.device?.getDefaultCanvasContext?.().getCurrentFramebuffer?.()?.resize?.([canvas.width, canvas.height])
     })
     map.current.addControl(new NavigationControl({ visualizePitch: true }), 'top-right')
     overlay.current = new MapLibreOverlay({

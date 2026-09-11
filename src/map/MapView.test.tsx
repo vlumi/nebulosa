@@ -361,29 +361,6 @@ test('the initial zoom fits the container: the globe to the shorter side, the fl
   expect(fitZoom(8000, 8000, true)).toBe(5)
 })
 
-test('a map resize refreshes the framebuffer luma keeps for the canvas without touching the canvas', () => {
-  const sats = [strix1, strix9].map(satelliteFrom)
-  render(
-    <MapView
-      satellites={sats}
-      now={epochOf(strix1)}
-      selected={null}
-      onSelect={vi.fn()}
-      places={[tokyoPlace]}
-      placeId="tokyo"
-      onPlaceSelect={vi.fn()}
-      onPlaceMove={vi.fn()}
-      onPlaceAdd={vi.fn()}
-    />,
-  )
-  const framebuffer = { resize: vi.fn() }
-  const deck = { device: { getDefaultCanvasContext: () => ({ getCurrentFramebuffer: () => framebuffer }) } }
-  ;(overlayInstance as unknown as { _deck: unknown })._deck = deck
-  act(() => mapInstance.handlers['resize']())
-  expect(framebuffer.resize).toHaveBeenCalledWith([1280, 960])
-  expect(overlayInstance.setProps).not.toHaveBeenCalledWith(expect.objectContaining({ width: expect.anything() }))
-})
-
 test('a pin behind the globe is invisible and cannot be grabbed', () => {
   render(
     <MapView
