@@ -2,6 +2,12 @@
 
 One capture per milestone, taken from the deployed site with [`scripts/screenshot.mjs`](../../scripts/screenshot.mjs), newest first. The files carry a running number so they sort in order, then a name for what they show; the headings carry the dates. The README shows the latest desktop and phone captures in the dark theme; the rest stay here as a record of how the site grew.
 
+## 2026-09-10 · Typed places
+
+![A typed place](015-typed-place.png)
+
+Coordinates typed into the places sheet: `60.17, 24.94` went into the row under the list, the map flew there at zoom 7 and, once its tiles had settled, named the place Helsinki after the nearest settlement label, the way a dropped pin is named. The parser behind the row is [geo-coord](https://github.com/vlumi/geo-coord), so decimal, degrees-minutes-seconds, hemisphere letters or signs and geo: URIs all work.
+
 ## 2026-09-08 · Credits
 
 ![Credits](014-credits.png)
