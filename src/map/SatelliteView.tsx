@@ -9,6 +9,7 @@ import { stateAt } from '../orbit/readout'
 import { compassPoint, formatOffset, hhmmss } from '../shared/format'
 import { BASEMAPS, PALETTES, type Theme } from '../shared/theme'
 import { useFrame } from '../time/frame'
+import { useLatest } from '../shared/useLatest'
 import { labelLanguage } from './labels'
 import { NIGHT_LAYER, nightFeature, nightPaint, REACH_LAYER, REACH_OPACITY, reachFeature, reachFill } from './surface'
 import styles from './SatelliteView.module.css'
@@ -75,8 +76,8 @@ export function SatelliteView({ satellite, theme, lang, reach, onBack }: Props) 
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<MapLibre>(null)
   const look = useRef({ yaw: 0, pitch: PITCH.start })
-  const reachShown = useRef(reach)
-  reachShown.current = reach
+  const reachShown = useLatest(reach)
+  const language = useLatest(lang)
   const [hud, setHud] = useState<{ timeMs: number; nowMs: number; altKm: number; headingDeg: number } | null>(null)
 
   useEffect(() => {
@@ -117,7 +118,7 @@ export function SatelliteView({ satellite, theme, lang, reach, onBack }: Props) 
     m.on('style.load', () => {
       m.setProjection({ type: 'globe' })
       m.setVerticalFieldOfView(FOV)
-      labelLanguage(m, lang)
+      labelLanguage(m, language.current)
       const { timeMs } = useFrame.getState()
       const date = new Date(timeMs)
       m.addSource(NIGHT_LAYER, { type: 'geojson', data: nightFeature(date), buffer: SEAM_BUFFER, tolerance: 0 })
@@ -180,7 +181,7 @@ export function SatelliteView({ satellite, theme, lang, reach, onBack }: Props) 
       map.current = null
     }
     // The map is built once per satellite and theme; the language and the look are applied to it in place.
-  }, [satellite, theme])
+  }, [satellite, theme, language, reachShown])
 
   useEffect(() => {
     if (map.current?.isStyleLoaded()) labelLanguage(map.current, lang)
