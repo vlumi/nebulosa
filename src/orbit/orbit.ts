@@ -1,7 +1,6 @@
 import { degreesLat, degreesLong, eciToGeodetic, gstime, json2satrec, propagate, type SatRec } from 'satellite.js'
 import type { Omm } from './elements'
-import { longitudeDelta, splitAtAntimeridian as splitCoordinates } from 'geo-coord'
-import { coordinates, lonLat } from './geo'
+import { fromLonLat, longitudeDelta, splitAtAntimeridian as splitCoordinates, toLonLat } from 'geo-coord'
 
 export type OrbitFamily = 'sun-synchronous' | 'mid-inclination'
 
@@ -94,5 +93,5 @@ export function nearestSample(samples: TrackSample[], [lon, lat]: LonLat): numbe
 
 /** The path cut at the antimeridian so no piece reads as going the long way round, in the renderer's tuples. */
 export function splitAtAntimeridian(path: LonLat[]): LonLat[][] {
-  return splitCoordinates(path.map(coordinates)).map((piece) => piece.map(lonLat))
+  return splitCoordinates(path.map(fromLonLat)).map((piece) => piece.map(toLonLat))
 }

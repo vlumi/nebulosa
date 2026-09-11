@@ -1,5 +1,5 @@
-import { destination, initialBearing } from 'geo-coord'
-import { coordinates, DEG, EARTH_RADIUS_KM, lonLat, RAD } from './geo'
+import { destination, fromLonLat, initialBearing, toLonLat } from 'geo-coord'
+import { DEG, EARTH_RADIUS_KM, RAD } from './geo'
 import type { LonLat, TrackSample } from './orbit'
 
 /** How far off nadir StriX can steer its beam, per Synspective's SAR data page; which side it looks is not published. */
@@ -23,7 +23,7 @@ export function inReach(offNadirDeg: number): boolean {
 
 /** The ground point `distanceKm` away from `from` on `bearing`, on the sphere the rest of the geometry uses. */
 function reach(from: LonLat, bearing: number, distanceKm: number): LonLat {
-  return lonLat(destination(coordinates(from), bearing, distanceKm, { radiusKm: EARTH_RADIUS_KM }))
+  return toLonLat(destination(fromLonLat(from), bearing, distanceKm, { radiusKm: EARTH_RADIUS_KM }))
 }
 
 /** Two segments per polygon: small pieces follow the sphere closely, and none can fold over near the poles. */
@@ -38,8 +38,8 @@ export function reachRibbons(samples: TrackSample[]): LonLat[][] {
   const edges = samples.map((sample, i) => {
     const heading =
       i < samples.length - 1
-        ? initialBearing(coordinates(sample.lonLat), coordinates(samples[i + 1].lonLat))
-        : initialBearing(coordinates(samples[i - 1].lonLat), coordinates(sample.lonLat))
+        ? initialBearing(fromLonLat(sample.lonLat), fromLonLat(samples[i + 1].lonLat))
+        : initialBearing(fromLonLat(samples[i - 1].lonLat), fromLonLat(sample.lonLat))
     const near = groundOffsetKm(STEERING.minDeg, sample.altKm)
     const far = groundOffsetKm(STEERING.maxDeg, sample.altKm)
     const side = (turn: number): [LonLat, LonLat] => [
