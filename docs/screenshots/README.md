@@ -8,6 +8,10 @@ One capture per milestone, taken from the deployed site with [`scripts/screensho
 
 Coordinates typed into the places sheet: `60.17, 24.94` went into the row under the list, the map flew there at zoom 7 and, once its tiles had settled, named the place Helsinki after the nearest settlement label, the way a dropped pin is named. The parser behind the row is [geo-coord](https://github.com/vlumi/geo-coord), so decimal, degrees-minutes-seconds, hemisphere letters or signs and geo: URIs all work.
 
+<img src="015-typed-place-phone.png" alt="Typing coordinates on a phone" width="260">
+
+The same row on a phone (390×844), a degrees-minutes notation typed and not yet sent; the sheet closes after adding, as it does after locating. The ⓘ in the corner gives way while a sheet is open, since the sheet's last row reaches it.
+
 ## 2026-09-08 · Credits
 
 ![Credits](014-credits.png)

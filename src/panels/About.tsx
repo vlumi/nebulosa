@@ -5,6 +5,8 @@ import styles from './About.module.css'
 interface Props {
   open: boolean
   onToggle: (open: boolean) => void
+  /** A sheet is open: on a phone it reaches the corner, so the closed button gives way to it. */
+  underSheet?: boolean
 }
 
 const Links = ({ credits }: { credits: Credit[] }) => (
@@ -21,10 +23,10 @@ const Links = ({ credits }: { credits: Credit[] }) => (
 )
 
 /** The corner bottom-right: the credits behind an ⓘ button, on every screen. */
-export function About({ open, onToggle }: Props) {
+export function About({ open, onToggle, underSheet = false }: Props) {
   const s = useStrings()
   return (
-    <div className={styles.about}>
+    <div className={styles.about} data-open={open ? '' : undefined} data-under-sheet={underSheet ? '' : undefined}>
       {open && (
         <div className={styles.panel} role="region" aria-label={s.about.title}>
           <p>
