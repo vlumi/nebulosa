@@ -44,11 +44,10 @@ const LOOK_AT_MAX_LAT = 84
  * look-at point on the map: MapLibre defines the camera by the ground point it looks at, in Mercator coordinates.
  * The pitch that puts that point exactly on the limit is found by bisection, so the dip is continuous; stepping
  * it would snap the view between two headings frame by frame, since meridians converge fast up there.
- * An explicit roll is passed because left out, the helper returns the key as undefined and the jump makes NaN of it.
  */
 function cameraAt(m: MapLibre, at: { lon: number; lat: number; altKm: number }, bearing: number, pitch: number) {
   const options = (p: number) =>
-    m.calculateCameraOptionsFromCameraLngLatAltRotation([at.lon, at.lat], at.altKm * 1000, bearing, p, 0)
+    m.calculateCameraOptionsFromCameraLngLatAltRotation([at.lon, at.lat], at.altKm * 1000, bearing, p)
   const onMap = (o: ReturnType<typeof options>) => Math.abs((o.center as { lat: number }).lat) <= LOOK_AT_MAX_LAT
   const wanted = options(pitch)
   if (onMap(wanted)) return wanted
