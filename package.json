@@ -23,7 +23,7 @@
     "@deck.gl/layers": "^9.4.0",
     "@deck.gl/maplibre": "^9.4.0",
     "@math.gl/core": "^4.1.0",
-    "geo-coord": "^0.3.0",
+    "geo-coord": "^1.0.0",
     "maplibre-gl": "^6.7.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
