@@ -9,7 +9,8 @@ export default defineConfig({
     alias: [{ find: /^#wasm-(single|multi)-thread$/, replacement: 'data:text/javascript,export default null' }],
   },
   build: {
-    chunkSizeWarningLimit: 1000,
+    // The MapLibre vendor chunk, hashed and cached across deploys, is 1031 kB at 6.9 and sets the limit; the warning is for app code.
+    chunkSizeWarningLimit: 1100,
     rolldownOptions: {
       output: {
         codeSplitting: {
