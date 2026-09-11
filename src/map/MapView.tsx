@@ -345,7 +345,7 @@ export function MapView({
     const at = camera.timeMs === undefined ? currentTime.current : new Date(camera.timeMs)
     const p = sat && positionAt(sat, at)
     if (p) map.current?.easeTo({ center: [p.lon, p.lat], duration: 600 })
-  }, [camera, following, satellites, currentTime])
+  }, [camera, following, satellites, currentTime, language, placeName])
 
   // Until the style has loaded the sources do not exist; the load handler above then takes the latest data.
   useEffect(() => {
