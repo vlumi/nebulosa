@@ -57,4 +57,9 @@
   .about {
     bottom: calc(var(--bottom-inset, 0px) + 0.75rem);
   }
+
+  /* A sheet on a phone reaches the corner; the closed button gives way to the sheet's last row, an open panel stays. */
+  .about[data-under-sheet]:not([data-open]) {
+    display: none;
+  }
 }

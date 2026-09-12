@@ -169,8 +169,11 @@ test('on a phone the map comes first: one sheet at a time, and choosing somethin
   expect(screen.queryByRole('complementary')).toBeNull()
   expect(within(screen.getByRole('banner')).getByRole('button', { name: 'Globe or flat map' })).toBeInTheDocument()
 
+  const about = screen.getByRole('button', { name: 'About this site' }).parentElement
+  expect(about).not.toHaveAttribute('data-under-sheet')
   await userEvent.click(screen.getByRole('button', { name: /^Satellites/ }))
   expect(screen.getByRole('complementary', { name: 'Constellation' })).toBeInTheDocument()
+  expect(about).toHaveAttribute('data-under-sheet')
   await userEvent.click(screen.getByRole('button', { name: /^Passes/ }))
   expect(screen.queryByRole('complementary', { name: 'Constellation' })).toBeNull()
   const passes = within(screen.getByRole('complementary', { name: 'Passes' }))

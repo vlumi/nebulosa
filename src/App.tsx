@@ -278,7 +278,7 @@ function App() {
         )}
         <LiveTimeBar />
         <Help open={app.helpOpen} onToggle={app.setHelpOpen} />
-        <About open={app.aboutOpen} onToggle={app.setAboutOpen} />
+        <About open={app.aboutOpen} onToggle={app.setAboutOpen} underSheet={app.sheet !== null} />
       </main>
     </>
   )
