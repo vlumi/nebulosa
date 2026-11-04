@@ -40,13 +40,17 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
-    "@vitest/coverage-v8": "^5.0.0",
+    "@vitest/coverage-v8": "^5.1.0",
     "jsdom": "^30.0.1",
     "markdownlint-cli2": "^0.24.0",
     "oxlint": "^1.81.0",
     "prettier": "^3.9.6",
     "typescript": "~7.0.2",
     "vite": "^8.3.5",
-    "vitest": "^5.0.0"
+    "vitest": "^5.1.0"
+  },
+  "overrides": {
+    "katex": "^0.18.2",
+    "re2js": "^2.9.1"
   }
 }
